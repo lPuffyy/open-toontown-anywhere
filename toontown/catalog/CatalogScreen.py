@@ -80,6 +80,8 @@ class CatalogScreen(DirectFrame):
         self.accept(localAvatar.uniqueName('emblemsChange'), self.__emblemChange)
         deliveryText = 'setDeliverySchedule-%s' % base.localAvatar.doId
         self.accept(deliveryText, self.remoteUpdate)
+        self.accept('aspectRatioChanged', self.__updateClarabelleRegion)
+        self.__updateClarabelleRegion()
         base.setBackgroundColor(Vec4(0.529, 0.29, 0.286, 1))
         render.hide()
         DirectFrame.show(self)
@@ -100,6 +102,7 @@ class CatalogScreen(DirectFrame):
         taskMgr.doMethodLater(10.0, self.__handleNoAck, 'ackTimeOut')
 
     def hide(self):
+        self.ignore('aspectRatioChanged')
         self.ignore('CatalogItemPurchaseRequest')
         self.ignore('CatalogItemGiftPurchaseRequest')
         self.ignore('DeliveryManagerAck')
@@ -714,6 +717,16 @@ class CatalogScreen(DirectFrame):
         self.loadClarabelle()
         return
 
+    def __clarabelleRegion(self):
+        # Clarabelle's window sits inside the catalog's picture, which is centred on the screen. The numbers were laid out for a 4:3
+        # window as fractions of its width; as distances from the centre (aspect2d units) they hold on any shape of screen.
+        aspect = base.getAspectRatio()
+        return ((0.16 / aspect + 1.0) / 2.0, (0.8267 / aspect + 1.0) / 2.0, 0.52, 0.85)
+
+    def __updateClarabelleRegion(self):
+        if hasattr(self, 'cDr'):
+            self.cDr.setDimensions(*self.__clarabelleRegion())
+
     def loadClarabelle(self):
         self.cRender = NodePath('cRender')
         self.cCamera = self.cRender.attachNewNode('cCamera')
@@ -725,7 +738,7 @@ class CatalogScreen(DirectFrame):
         self.cCamNode.setLens(self.cLens)
         self.cCamNode.setScene(self.cRender)
         self.cCam = self.cCamera.attachNewNode(self.cCamNode)
-        self.cDr = base.win.makeDisplayRegion(0.56, 0.81, 0.52, 0.85)
+        self.cDr = base.win.makeDisplayRegion(*self.__clarabelleRegion())
         self.cDr.setSort(1)
         self.cDr.setClearDepthActive(1)
         self.cDr.setClearColorActive(1)

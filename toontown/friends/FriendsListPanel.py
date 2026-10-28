@@ -146,7 +146,13 @@ class FriendsListPanel(DirectFrame, StateData.StateData):
         self.title = DirectLabel(parent=self, relief=None, text='', text_scale=TTLocalizer.FLPtitle, text_fg=(0, 0.1, 0.4, 1), pos=(0.007, 0.0, 0.2))
         background_image = gui.find('**/FriendsBox_Open')
         self['image'] = background_image
-        self.setPos(1.1, 0, 0.54)
+        if base.getAspectRatio() > 4.0 / 3.0 + 0.01 and hasattr(base, 'a2dRightCenter'):
+            # a wide screen: hang the panel from the right edge, the same place the page's layout would move it to a moment later,
+            # so it does not appear at the 4:3 spot and then slide over
+            self.reparentTo(base.a2dRightCenter)
+            self.setPos(1.1 - 4.0 / 3.0, 0, 0.54)
+        else:
+            self.setPos(1.1, 0, 0.54)
         self.scrollList = DirectScrolledList(parent=self, relief=None, incButton_image=(gui.find('**/FndsLst_ScrollUp'),
          gui.find('**/FndsLst_ScrollDN'),
          gui.find('**/FndsLst_ScrollUp_Rllvr'),

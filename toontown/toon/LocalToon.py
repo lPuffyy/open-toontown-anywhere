@@ -308,6 +308,7 @@ class LocalToon(DistributedToon.DistributedToon, LocalAvatar.LocalAvatar):
             if self.__gardeningGuiFake:
                 self.__gardeningGuiFake.destroy()
             del self.__gardeningGuiFake
+            taskMgr.remove(self.uniqueName('clarabelleAlign'))
             if self.__clarabelleButton:
                 self.__clarabelleButton.destroy()
             del self.__clarabelleButton
@@ -991,14 +992,21 @@ class LocalToon(DistributedToon.DistributedToon, LocalAvatar.LocalAvatar):
         if show:
             claraXPos += AdjustmentForNewsButton
             notifyXPos += AdjustmentForNewsButton
-        newPos = (claraXPos - 0.1, 1.0, 0.45)
-        self.__clarabelleButton.setPos(newPos)
+        self.__clarabelleButton.setPos(self.__clarabellePos(self.__clarabelleScale, show))
         if self.__catalogNotifyDialog == None or self.__catalogNotifyDialog.frame == None:
             return
         notifyPos = self.__catalogNotifyDialog.frame.getPos()
         notifyPos[0] = notifyXPos
         self.__catalogNotifyDialog.frame.setPos(notifyPos)
         return
+
+    def __clarabellePos(self, scale, newsShown):
+        """The Clarabelle medallion hangs from the top-right corner, to the left of the friends button, so it is in the same place on every
+        screen shape and clear of the notch (it used to sit at a 4:3 position and was cut off at the top of a wide phone). The medallion's
+        picture is off to one side of its origin, so this aims its centre."""
+        centerX = -0.7 + (AdjustmentForNewsButton if newsShown else 0.0)
+        centerZ = -0.16
+        return (centerX + 1.0623 * scale, 1.0, centerZ - 1.0184 * scale)
 
     def loadClarabelleGui(self):
         if self.__clarabelleButton:
@@ -1012,14 +1020,12 @@ class LocalToon(DistributedToon.DistributedToon, LocalAvatar.LocalAvatar):
         icon.setColor(white)
         claraXPos = ClaraBaseXPos
         newScale = oldScale = 0.5
-        newPos = (claraXPos, 1.0, 0.37)
         if WantNewsPage:
-            claraXPos += AdjustmentForNewsButton
-            oldPos = ((claraXPos, 1.0, 0.37),)
             newScale = oldScale * ToontownGlobals.NewsPageScaleAdjust
-            newPos = (claraXPos - 0.1, 1.0, 0.45)
+        self.__clarabelleScale = newScale
+        newPos = self.__clarabellePos(newScale, False)
         self.__clarabelleButton = DirectButton(relief=None, image=circle, text='', text_fg=(1, 1, 1, 1), text_shadow=(0, 0, 0, 1), text_scale=0.1, text_pos=(-1.06, 1.06), text_font=ToontownGlobals.getInterfaceFont(), pos=newPos, scale=newScale, command=self.__handleClarabelleButton)
-        self.__clarabelleButton.reparentTo(aspect2d, DGG.BACKGROUND_SORT_INDEX - 1)
+        self.__clarabelleButton.reparentTo(base.a2dTopRight, DGG.BACKGROUND_SORT_INDEX - 1)
         button = self.__clarabelleButton.stateNodePath[0]
         self.__clarabelleFlash = Sequence(LerpColorInterval(button, 2, white, blendType='easeInOut'), LerpColorInterval(button, 2, rgba, blendType='easeInOut'))
         self.__clarabelleFlash.loop()
@@ -1038,8 +1044,45 @@ class LocalToon(DistributedToon.DistributedToon, LocalAvatar.LocalAvatar):
             self.clarabelleNewsPageCollision(True)
         self.__clarabelleButton.show()
         self.__clarabelleFlash.resume()
+        self.__alignClarabelle()
+        taskMgr.remove(self.uniqueName('clarabelleAlign'))
+        taskMgr.doMethodLater(0.25, self.__clarabelleAlignTask, self.uniqueName('clarabelleAlign'))
+
+    def __buttonBounds(self, button):
+        """(left, right, bottom, top) of a button's picture on the screen (aspect2d units), or None. A button's pictures hang from its own
+        little node tree, so their bounds have to be carried over to the screen by the button's transform."""
+        box = button.stateNodePath[0].getTightBounds()
+        if box is None:
+            return None
+        mat = button.getMat(aspect2d)
+        lo, hi = mat.xformPoint(box[0]), mat.xformPoint(box[1])
+        return (min(lo[0], hi[0]), max(lo[0], hi[0]), min(lo[2], hi[2]), max(lo[2], hi[2]))
+
+    def __alignClarabelle(self):
+        """Sit the medallion right beside the friends button, level with it. The friends button is moved by the page's screen-edge layout
+        (it can land anywhere along the right edge, clear of the notch), so this follows where it actually is instead of guessing."""
+        try:
+            if not self.__clarabelleButton or self.__clarabelleButton.isHidden() or self.bFriendsList.isHidden():
+                return
+            friends = self.__buttonBounds(self.bFriendsList)
+            medal = self.__buttonBounds(self.__clarabelleButton)
+            if friends is None or medal is None:
+                return
+            dx = (friends[0] - 0.04) - medal[1]
+            dz = (friends[2] + friends[3]) / 2.0 - (medal[2] + medal[3]) / 2.0
+            if abs(dx) > 0.002 or abs(dz) > 0.002:
+                self.__clarabelleButton.setPos(aspect2d, self.__clarabelleButton.getPos(aspect2d) + Vec3(dx, 0, dz))
+        except Exception:
+            self.notify.warning('could not line up the Clarabelle button')
+
+    def __clarabelleAlignTask(self, task):
+        if not self.__clarabelleButton or self.__clarabelleButton.isHidden():
+            return task.done
+        self.__alignClarabelle()
+        return task.again
 
     def hideClarabelleGui(self):
+        taskMgr.remove(self.uniqueName('clarabelleAlign'))
         if self.__clarabelleButton:
             self.__clarabelleButton.hide()
             self.__clarabelleFlash.pause()
@@ -1201,6 +1244,21 @@ class LocalToon(DistributedToon.DistributedToon, LocalAvatar.LocalAvatar):
             self.seeGhosts = 1
         DistributedToon.DistributedToon.setGhostMode(self, flag)
 
+    def __clarabelleNoticeSeen(self, state):
+        """True when this exact notice was already shown to this toon on this device. In the browser the answer is kept in its own storage
+        (the game's files vanish with the page), so the pop-up and the ring come once for each new catalog or delivery, not at every launch.
+        The Clarabelle button stays until the catalog is opened."""
+        key = 'otclara_%s' % self.doId
+        try:
+            import platform
+            store = platform.window.localStorage
+            if str(store.getItem(key)) == state:
+                return True
+            store.setItem(key, state)
+        except Exception:
+            pass
+        return False
+
     def newCatalogNotify(self):
         if not self.gotCatalogNotify:
             return
@@ -1258,6 +1316,8 @@ class LocalToon(DistributedToon.DistributedToon, LocalAvatar.LocalAvatar):
             oldStr += TTLocalizer.MailNotifyNewItems
             message = (oldStr,)
         if message == None:
+            return
+        if self.__clarabelleNoticeSeen('%s:%s:%s:%s:%s:%s:%s' % (self.catalogScheduleCurrentWeek, self.catalogNotify, self.mailboxNotify, self.awardNotify, self.simpleMailNotify, self.inviteMailNotify, len(self.mailboxContents))):
             return
         if self.__catalogNotifyDialog:
             self.__catalogNotifyDialog.cleanup()

@@ -51,6 +51,8 @@ class DistributedPhoneAI(DistributedFurnitureItemAI):
         if house is not None:
             numHouseItems = len(house.atticItems) + len(house.atticWallpaper) + len(house.atticWindows) + len(house.interiorItems)
         self.sendUpdateToAvatarId(avId, 'setLimits', [numHouseItems])
+        if av is not None and av.catalogNotify == ToontownGlobals.NewItems:
+            av.b_setCatalogNotify(ToontownGlobals.OldItems, av.mailboxNotify)         # looked at it: no more "new catalog" at each login
         self.d_setMovie(PhoneGlobals.PHONE_MOVIE_PICKUP, avId)
 
     def avatarExit(self):
