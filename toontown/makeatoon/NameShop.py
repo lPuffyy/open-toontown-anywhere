@@ -121,8 +121,24 @@ class NameShop(StateData.StateData):
         self.updateLists()
         self.__listsChanged()
 
+    def __publishTypeButton(self, task=None):
+        """In the browser, tell the page where the Type a Name button is (its centre, as fractions of the window), so a tap on it can open the
+        phone's keyboard in the same tap (a phone only opens the keyboard from a real tap, and the game opens its text box a moment after)."""
+        try:
+            import platform
+            where = ''
+            if not self.typeANameButton.isEmpty() and not self.typeANameButton.isHidden():
+                p = self.typeANameButton.getPos(render2d)
+                where = '%.4f,%.4f' % ((p[0] + 1.0) / 2.0, (1.0 - p[2]) / 2.0)
+            platform.window.ttr.typeBtn = where
+        except Exception:
+            return None
+        return task.again if task is not None else None
+
     def enter(self, toon, usedNames, warp):
         self.notify.debug('enter')
+        taskMgr.remove('nameShopTypeBtn')
+        taskMgr.doMethodLater(0.3, self.__publishTypeButton, 'nameShopTypeBtn')
         self.newwarp = warp
         self.avExists = warp
         if self.avExists:
@@ -222,6 +238,12 @@ class NameShop(StateData.StateData):
 
     def exit(self):
         self.notify.debug('exit')
+        taskMgr.remove('nameShopTypeBtn')
+        try:
+            import platform
+            platform.window.ttr.typeBtn = ''
+        except Exception:
+            pass
         if self.isLoaded == 0:
             return None
         self.ignore('next')
