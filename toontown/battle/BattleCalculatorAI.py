@@ -734,7 +734,7 @@ class BattleCalculatorAI:
                  0,
                  0]
                 self.toonSkillPtsGained[id] = expList
-            expList[trk] = min(ExperienceCap, expList[trk] + (lvl + 1) * self.__skillCreditMultiplier * GagXpBoost)
+            expList[trk] = min(getExperienceCap(), expList[trk] + (lvl + 1) * self.__skillCreditMultiplier * getGagXpBoost())
         return
 
     def __clearTgtDied(self, tgt, lastAtk, currAtk):

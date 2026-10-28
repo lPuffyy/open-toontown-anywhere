@@ -1,6 +1,7 @@
 from .ToontownGlobals import *
 import math
 from . import TTLocalizer
+from . import GameConfig
 BattleCamFaceOffFov = 30.0
 BattleCamFaceOffPos = Point3(0, -10, 4)
 BattleCamDefaultPos = Point3(0, -8.6, 16.5)
@@ -100,10 +101,16 @@ UnpaidMaxSkills = [Levels[0][1] - 1,
  Levels[4][4] - 1,
  Levels[5][4] - 1,
  Levels[6][1] - 1]
-# Gag training points are multiplied by this. The server credits them and the client shows the same numbers on the gag buttons, so both read it
-# from here. The cap on points per track in one battle grows with it, so a big battle is still a true multiple.
-GagXpBoost = 4
-ExperienceCap = 200 * GagXpBoost
+# Gag training points are multiplied by this. It is a setting (gameconfig.json, see GameConfig.py), so it can change without a rebuild; the
+# server credits the points and the client shows the same numbers on the gag buttons, both reading it from here. The cap on points per
+# track in one battle grows with it, so a big battle is still a true multiple.
+def getGagXpBoost():
+    return GameConfig.get('gag_xp_boost', 4)
+
+
+def getExperienceCap():
+    return int(200 * max(1, getGagXpBoost()))
+
 
 def gagIsPaidOnly(track, level):
     return Levels[track][level] > UnpaidMaxSkills[track]

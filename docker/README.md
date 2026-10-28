@@ -64,3 +64,20 @@ The browser client (the page, its Python glue, and the scripts that build the do
   built from <https://github.com/Astron/Astron> at the commit named in the Dockerfile.
 - **Optional Discord status.** If `/ot/data/discord_webhook` exists (one line, a webhook address), `docker/discord_status.py` keeps one message
   updated with the number of toons playing. It does nothing without that file.
+
+## Game settings (no rebuild)
+
+Settings the person running the server may want to change live in one small file, `gameconfig.json`, in the data folder
+(`/ot/data/gameconfig.json`):
+
+```
+{"gag_xp_boost": 4}
+```
+
+| Setting | Default | What it does |
+|---|---|---|
+| `gag_xp_boost` | `4` | Multiplies the gag training points credited for each hit. The per-battle cap per track grows with it (200 times the boost). `1` is the original rate. |
+
+The server looks at the file again every few seconds, so a change reaches the next battle without a restart. The browser game reads the same file
+(served as `/gameconfig.json`) when the page starts the game, so players pick the change up the next time they load the page. A missing file, or a
+missing or invalid setting, means the default. The web server serves this file to everyone, so keep secrets out of it.

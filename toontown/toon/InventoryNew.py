@@ -314,7 +314,7 @@ class InventoryNew(InventoryBase.InventoryBase, DirectFrame):
             mult = self.__battleCreditMultiplier
             if self.__respectInvasions:
                 mult *= self.__invasionCreditMultiplier
-            self.setDetailCredit(track, (level + 1) * mult * GagXpBoost)
+            self.setDetailCredit(track, (level + 1) * mult * getGagXpBoost())
         else:
             self.setDetailCredit(track, None)
         self.detailCreditLabel.show()
@@ -323,7 +323,7 @@ class InventoryNew(InventoryBase.InventoryBase, DirectFrame):
     def setDetailCredit(self, track, credit):
         if credit != None:
             if self.toon.earnedExperience:
-                maxCredit = ExperienceCap - self.toon.earnedExperience[track]
+                maxCredit = getExperienceCap() - self.toon.earnedExperience[track]
                 credit = min(credit, maxCredit)
             credit = int(credit * 10 + 0.5)
             if credit % 10 == 0:
@@ -996,7 +996,7 @@ class InventoryNew(InventoryBase.InventoryBase, DirectFrame):
 
     def itemIsCredit(self, track, level):
         if self.toon.earnedExperience:
-            if self.toon.earnedExperience[track] >= ExperienceCap:
+            if self.toon.earnedExperience[track] >= getExperienceCap():
                 return 0
         if self.battleCreditLevel == None:
             return 1
