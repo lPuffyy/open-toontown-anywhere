@@ -77,7 +77,19 @@ Settings the person running the server may want to change live in one small file
 | Setting | Default | What it does |
 |---|---|---|
 | `gag_xp_boost` | `4` | Multiplies the gag training points credited for each hit. The per-battle cap per track grows with it (200 times the boost). `1` is the original rate. |
+| `typed_names` | `"auto"` | `"auto"`: the server approves typed toon names that pass its checks. `"off"`: players must pick a name from the lists. |
 
 The server looks at the file again every few seconds, so a change reaches the next battle without a restart. The browser game reads the same file
 (served as `/gameconfig.json`) when the page starts the game, so players pick the change up the next time they load the page. A missing file, or a
 missing or invalid setting, means the default. The web server serves this file to everyone, so keep secrets out of it.
+
+## Typed toon names
+
+When a player types a name, the server judges it itself (`otp/login/NameJudge.py`) and either accepts it on the spot or rejects it with the game's
+standard message. It checks the length (2 to 24 characters, at most 4 words), the game's own name rules, that it is not an NPC's name, a list of
+blocked words, and that no other toon already has the name. Every decision is written to the server log as a `typed-name` event.
+
+The blocked-word list is only a starter (kept ROT13-encoded so the repository does not spell the words out). Add your own, one per line, to
+`/ot/data/blocked_names.txt`; the server reads the file again when it changes. Words of 4 letters or fewer only count when they are a whole word,
+so names like "Hancock" are fine; longer words also count inside a longer run of letters. This stops the obvious cases only. To switch typed names
+off completely, set `"typed_names": "off"` in `gameconfig.json`.

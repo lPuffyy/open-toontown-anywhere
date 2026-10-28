@@ -19,6 +19,7 @@ from direct.distributed.MsgTypes import (
 
 from otp.otpbase import OTPGlobals
 
+from otp.login import NameJudge
 from toontown.makeatoon.NameGenerator import NameGenerator
 from toontown.toon.ToonDNA import ToonDNA
 from toontown.toonbase import TTLocalizer
@@ -621,12 +622,21 @@ class SetNameTypedOperation(AvatarOperation):
         self.__handleJudgeName()
 
     def __handleJudgeName(self):
-        status = 1  # TODO Make this useful
-        if self.avId and status:
+        # The server approves typed names itself (see NameJudge): 2 = accepted, 0 = rejected. (1 would mean "waiting for a person to review
+        # it", and nothing here reviews names, so it is not used.)
+        name = NameJudge.clean(self.name)
+        problem = NameJudge.judge(name)
+        status = 0 if problem else 2
+        self.loginManager.air.writeServerEvent('typed-name', self.avId, self.sender, '%s|%s' % (name, problem or 'accepted'))
+        if problem:
+            self.notify.info('typed name rejected (%s): %r' % (problem, name))
+        elif self.avId:
+            NameJudge.rememberName(name)
             self.loginManager.air.dbInterface.updateObject(self.loginManager.air.dbId, self.avId,
                                                            self.loginManager.air.dclassesByName['DistributedToonUD'],
-                                                           {'WishNameState': ('PENDING',),
-                                                            'WishName': (self.name,)})
+                                                           {'WishNameState': ('LOCKED',),
+                                                            'WishName': ('',),
+                                                            'setName': (name,)})
 
         self.loginManager.sendUpdateToAccountId(self.sender, 'nameTypedResponse', [self.avId, status])
         self._handleDone()
