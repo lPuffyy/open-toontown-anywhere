@@ -100,7 +100,10 @@ UnpaidMaxSkills = [Levels[0][1] - 1,
  Levels[4][4] - 1,
  Levels[5][4] - 1,
  Levels[6][1] - 1]
-ExperienceCap = 200
+# Gag training points are multiplied by this. The server credits them and the client shows the same numbers on the gag buttons, so both read it
+# from here. The cap on points per track in one battle grows with it, so a big battle is still a true multiple.
+GagXpBoost = 4
+ExperienceCap = 200 * GagXpBoost
 
 def gagIsPaidOnly(track, level):
     return Levels[track][level] > UnpaidMaxSkills[track]
