@@ -17,6 +17,7 @@ import codecs
 import os
 import re
 import time
+import traceback
 
 from direct.directnotify import DirectNotifyGlobal
 
@@ -138,3 +139,16 @@ def judge(name):
     if name.lower() in _usedNames():
         return 'already taken'
     return None
+
+
+def decide(name):
+    """(the cleaned name, None or the reason it was rejected). Never raises: a bug in the checks counts as a rejection."""
+    try:
+        name = clean(name)
+        problem = judge(name)
+    except Exception:
+        notify.warning('judging a typed name failed: ' + traceback.format_exc())
+        return clean(str(name)), 'internal error'
+    if problem:
+        notify.info('typed name rejected (%s): %r' % (problem, name))
+    return name, problem

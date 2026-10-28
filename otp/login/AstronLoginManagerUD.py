@@ -1,5 +1,6 @@
 import json
 import time
+import traceback
 import os
 from datetime import datetime
 
@@ -624,19 +625,22 @@ class SetNameTypedOperation(AvatarOperation):
     def __handleJudgeName(self):
         # The server approves typed names itself (see NameJudge): 2 = accepted, 0 = rejected. (1 would mean "waiting for a person to review
         # it", and nothing here reviews names, so it is not used.)
-        name = NameJudge.clean(self.name)
-        problem = NameJudge.judge(name)
+        # Whatever goes wrong while judging, the player gets an answer (a rejection) and the UberDOG keeps running: an exception here would stop
+        # the UberDOG, and the container restarts everything when that happens.
+        name, problem = NameJudge.decide(self.name)
         status = 0 if problem else 2
-        self.loginManager.air.writeServerEvent('typed-name', self.avId, self.sender, '%s|%s' % (name, problem or 'accepted'))
-        if problem:
-            self.notify.info('typed name rejected (%s): %r' % (problem, name))
-        elif self.avId:
-            NameJudge.rememberName(name)
-            self.loginManager.air.dbInterface.updateObject(self.loginManager.air.dbId, self.avId,
-                                                           self.loginManager.air.dclassesByName['DistributedToonUD'],
-                                                           {'WishNameState': ('LOCKED',),
-                                                            'WishName': ('',),
-                                                            'setName': (name,)})
+        try:
+            self.loginManager.air.writeServerEvent('typed-name', self.avId, self.sender, '%s|%s' % (name, problem or 'accepted'))
+            if not problem and self.avId:
+                NameJudge.rememberName(name)
+                self.loginManager.air.dbInterface.updateObject(self.loginManager.air.dbId, self.avId,
+                                                               self.loginManager.air.dclassesByName['DistributedToonUD'],
+                                                               {'WishNameState': ('LOCKED',),
+                                                                'WishName': ('',),
+                                                                'setName': (name,)})
+        except Exception:
+            NameJudge.notify.warning('could not record a typed name: ' + traceback.format_exc())
+            status = 0
 
         self.loginManager.sendUpdateToAccountId(self.sender, 'nameTypedResponse', [self.avId, status])
         self._handleDone()
