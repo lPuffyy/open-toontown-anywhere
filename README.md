@@ -1,55 +1,52 @@
-> **This is a fork of [Open Toontown](https://github.com/open-toontown/open-toontown) for Toontown: Anywhere.** The `anywhere` branch has
-> our changes (Astron compatibility, a server-side friend manager, invasions, the Districts page and more) and a Docker image
-> that runs the whole server: see [docker/README.md](docker/README.md). It also holds [`otpy`](otpy), a pure-Python replacement for the
-> compiled `libotp` / `libtoontown`, so the game can run in a browser and on a plain Linux server. The browser client and the
-> operations notes are in [Toontown: Anywhere](https://github.com/lPuffyy/toontown-anywhere). The original README follows.
+# Open Toontown: Anywhere
 
-# Open Toontown
-This repository contains the code for Open Toontown, based on the latest version of Disney's Toontown Online (sv1.0.47.38).
+A fork of [Open Toontown](https://github.com/open-toontown/open-toontown), the code of Disney's Toontown Online (sv1.0.47.38), made to
+run the game for [Toontown: Anywhere](https://github.com/lPuffyy/toontown-anywhere): the whole server in one Docker image, and a
+client that runs in a web browser.
 
-# Setup
-After cloning the repository, you will need to clone the [resources](https://github.com/open-toontown/resources) repository inside the directory where you cloned the source repo.
+What this fork adds (everything is on the `anywhere` branch, the default):
 
-Secondly, you would have to install and use a specific version of Panda3D, which includes `libotp` and `libtoontown`.  You can use the prebuilt installers for your operating system here:
+- **A Docker image of the whole server**: Astron, the UberDOG, three districts, a WebSocket bridge, a sign-in service and nginx.
+- **[`otpy`](otpy)**: a pure-Python replacement for the compiled `libotp` and `libtoontown`, so the game runs on a plain Linux server and in a browser.
+- Astron compatibility, a server-side friend manager, cross-district friends, invasions, the Districts page, fishing and quest fixes.
+- The Disney classic characters are removed.
 
-## Windows
+## Run the server
 
-You can install Panda3D SDK through the 32-bit (x86) or 64-bit (x86_64) installers here:
+You need [Docker](https://docs.docker.com/get-docker/) and a copy of the game's **resources** (the art, sound and DNA files). They are
+Disney's, so they are not in this repository or in the image: you supply them. The
+[open-toontown/resources](https://github.com/open-toontown/resources) repository has them. The folder you mount must have `phase_3`,
+`phase_4` and the rest directly inside it.
 
-[Panda3D SDK for Windows (Python 3.9, x86, Last Updated: January 11, 2023)](https://mega.nz/file/6UsARa7R#pg5KgxW0NgkHEl_k0fK6NbBK8LfdEcDGZ6NsVeWwDKM)
-
-[Panda3D SDK for Windows (Python 3.9, x86_64, Last Updated: January 11, 2023)](https://mega.nz/file/uAMxEKqL#yQfS9UPpYHzKYDR5vq-LF5gxxLa6HUmxLUp65uzneVo)
-
-If you install Panda3D outside the default directory (or use the x86 installer), you may have to change the `PPYTHON_PATH` file located in the root directory and change it to your install directory.
-
-## macOS 10.9+
-[Panda3D Wheel for macOS 10.9+ (Python3.9, x86_64)](https://drive.google.com/file/d/1_6WJxrkNfwisK5pe5ubJJy1psEp0IIft/view?usp=sharing)
-
-Installing the provided Panda3D wheel requires Python 3.9, which is not installed on your system by default whatsoever.  We recommend installing Python 3.9 through [Homebrew](https://brew.sh/) (Make sure that the xcode command line tools are installed first `xcode-select --install`): 
-```shell
-$ brew install python@3.9
 ```
-(This will symlink Python 3.9 to `python3.9` and pip to `pip3`).
-
-After installing Python 3.9.  You can then install the wheel by using pip:
-```shell
-$ pip install panda3d-1.11.0-cp39-cp39-macosx_10_9_x86_64.whl
+docker run -d --name open-toontown --restart unless-stopped -p 7380:80 \
+  -v /srv/ot/resources:/ot/src/resources:ro \
+  -v /srv/ot/databases:/ot/src/astron/databases \
+  -v /srv/ot/data:/ot/data \
+  ghcr.io/lpuffyy/open-toontown-anywhere:latest
 ```
-## Linux (Building your own)
-If you use Linux, or are interested in building Panda3D yourself, head on over to [our Panda3D fork](https://github.com/open-toontown/panda3d) and read the "Building Panda3D" section on the README file there.
 
-# Starting the Server and Game
-To start the server and run the game locally, go to your platform directory (`win32` for Windows, `darwin` for Mac and `linux` for Linux), and make sure you start the following scripts in order:
+Or with Compose: put the three folders next to [`docker/docker-compose.yml`](docker/docker-compose.yml) and run
+`docker compose -f docker/docker-compose.yml up -d`.
 
-`Astron Server -> UberDOG (UD) Server -> AI (District) Server -> Game Client`
+Wait about two and a half minutes. The server is ready when `/srv/ot/data/logs/ai1.log`, `ai2.log` and `ai3.log` each end with `Done.`.
+Only port 80 inside the container is published; do not publish Astron's own ports.
 
-Be sure to wait till the servers have finished booting before starting the next.  If done correctly, you should be able to make your toon and play the game!  There is no support for Magic Words (commands) yet, [but it is currently in the works!](https://github.com/open-toontown/open-toontown/projects/1)
+To build the image yourself instead of pulling it: `docker build -f docker/Dockerfile -t open-toontown-anywhere .`
 
-# Contributing
-Submitting issues and Pull Requests are encouraged and welcome.
+More (mounts, staff accounts, sign-in, what is inside the image): [docker/README.md](docker/README.md).
 
-How you commit changes is your choice, but please include what you did and a basic description so that we know exactly what was modified. Here are some examples:
+## Play
 
-* `minigames: Fix crash when entering the trolley`
-* `racing: Fix possible race condition when two racers tied`
-* `golf: Refix wonky physics once and for all (hopefully)`
+The browser client, and the scripts that build its download packs from your resources, are in
+[Toontown: Anywhere](https://github.com/lPuffyy/toontown-anywhere) (its `web/` folder).
+
+## Running without Docker
+
+The upstream way (Panda3D SDK, then Astron, UberDOG, a district and the client by hand from `win32`, `darwin` or `linux`) still works
+for development; see the [upstream README](https://github.com/open-toontown/open-toontown#setup).
+
+## License and credits
+
+Open Toontown is the work of its contributors; this fork adds our own changes on top. See [LICENSE](LICENSE). Panda3D files in
+`docker/overlay` keep their own license (`docker/overlay/LICENSE-Panda3D.txt`).
