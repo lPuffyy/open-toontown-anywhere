@@ -8,6 +8,10 @@ mkdir -p /ot/data/phone_logs /ot/data/backups /ot/data/logs /ot/src/astron/datab
 [ -f /ot/data/users.json ] || echo '{"open_registration": true, "users": {}}' > /ot/data/users.json
 chmod 666 /ot/data/users.json
 L=/ot/data/logs
+# the services write their own log files (so they survive in the data folder); show them in `docker logs` / the Zima's Logs tab too
+for f in auth bridge discord astron ud ai1 ai2 ai3 client; do touch $L/$f.log; done
+echo "Open Toontown: starting. The three districts open one after another, about two and a half minutes."
+tail -n 0 -F $L/auth.log $L/bridge.log $L/discord.log $L/astron.log $L/ud.log $L/ai1.log $L/ai2.log $L/ai3.log $L/client.log 2>/dev/null &
 nginx
 python -u /ot/auth_service.py > $L/auth.log 2>&1 &
 python -u /ot/wsbridge.py > $L/bridge.log 2>&1 &

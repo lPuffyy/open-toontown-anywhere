@@ -4,6 +4,9 @@ services:
     image: ghcr.io/lpuffyy/open-toontown-anywhere:latest
     # build: { context: .., dockerfile: docker/Dockerfile }       # to build it here instead
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }     # the game's logs are also printed here, so keep them from piling up
     ports:
       - "7380:80"
     volumes:
