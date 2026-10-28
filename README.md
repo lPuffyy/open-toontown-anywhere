@@ -1,3 +1,9 @@
+> **This is a fork of [Open Toontown](https://github.com/open-toontown/open-toontown) for Toontown: Anywhere.** The `anywhere` branch has
+> our changes (Astron compatibility, a server-side friend manager, invasions, the Districts page and more) and a Docker image
+> that runs the whole server: see [docker/README.md](docker/README.md). It also holds [`otpy`](otpy), a pure-Python replacement for the
+> compiled `libotp` / `libtoontown`, so the game can run in a browser and on a plain Linux server. The browser client and the
+> operations notes are in [Toontown: Anywhere](https://github.com/lPuffyy/toontown-anywhere). The original README follows.
+
 # Open Toontown
 This repository contains the code for Open Toontown, based on the latest version of Disney's Toontown Online (sv1.0.47.38).
 

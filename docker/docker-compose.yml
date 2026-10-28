@@ -1,0 +1,12 @@
+# docker compose -f docker/docker-compose.yml up -d
+services:
+  open-toontown:
+    image: ghcr.io/lpuffyy/open-toontown-anywhere:latest
+    # build: { context: .., dockerfile: docker/Dockerfile }       # to build it here instead
+    restart: unless-stopped
+    ports:
+      - "7380:80"
+    volumes:
+      - ./resources:/ot/src/resources:ro       # the game's resources (not included): phase_3, phase_4, ...
+      - ./databases:/ot/src/astron/databases
+      - ./data:/ot/data

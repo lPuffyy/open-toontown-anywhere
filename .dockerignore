@@ -1,0 +1,17 @@
+.git
+.github
+resources
+astron/databases
+astron/logs
+astron/win32
+astron/darwin
+win32
+darwin
+logs
+data/*_buildings.json
+**/__pycache__
+**/*.pyc
+**/*.bak*
+docker/overlay/**/__pycache__
+vscode.code-workspace
+PPYTHON_PATH
