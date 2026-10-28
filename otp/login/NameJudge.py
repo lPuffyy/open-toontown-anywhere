@@ -7,10 +7,17 @@ The checks, in order:
   4. blocked words (below)
   5. not the same as a name another toon already has
 
-The blocked words are a STARTER list. It is kept ROT13-encoded so the repository does not spell the words out, and it is extended by an
-optional file, /ot/data/blocked_names.txt (one word per line, "#" starts a comment; read again when the file changes). Short words (4 letters
-or fewer) only count as a whole word; longer ones also count inside a longer run of letters. Look-alike characters (0 for o, 1 for i, 3 for e,
-4 for a, 5 for s, 7 for t, @ for a, $ for s) and repeated letters are evened out first. A filter like this stops the obvious cases; it cannot
+Blocked words. The built-in lists are a STARTER set, kept ROT13-encoded so the repository does not spell the words out. Add your own to the
+optional file /ot/data/blocked_names.txt (one word per line, "#" starts a comment; the file is read again when it changes):
+
+    word        blocked as a whole word (also with a common ending: s, es, y, ed, er, ers, ing, head, face, hat, hole)
+    *word       blocked anywhere inside a name (for words that are never innocent, like the strong built-in ones)
+    !word       allowed: an innocent name that would otherwise be caught
+
+Before matching, the name is flattened so common tricks do not work: capitals, accents and full-width letters are removed, letters from other
+alphabets that look like Latin ones (a Cyrillic "o", a Greek "a") are turned into the Latin letter, look-alike characters (0 for o, 1 for i,
+3 for e, 4 for a, 5 for s, 7 for t, @ for a, $ for s, ! for i) are turned into letters, spaces, dots and dashes between letters are ignored for
+the "anywhere inside" words ("f u c k"), and repeated letters are shortened ("fuuuck"). A filter like this stops the obvious cases; it cannot
 stop every determined player, so extend the file as you see names you do not want.
 """
 import codecs
@@ -18,6 +25,7 @@ import os
 import re
 import time
 import traceback
+import unicodedata
 
 from direct.directnotify import DirectNotifyGlobal
 
@@ -26,14 +34,30 @@ from toontown.toonbase import GameConfig
 
 notify = DirectNotifyGlobal.directNotify.newCategory('NameJudge')
 
-_SEED = ('shpx shx shd fuvg fuvggl ovgpu phag qvpx pbpx chffl nffubyr onfgneq juber fyhg avttre avttn avtre snttbg snt ergneq ergneqrq '
-         'encr encvfg anmv uvgyre cbea cravf intvan nahf phz wvmm gvgf obbof obbo qvyqb zbyrfg crqb crqbcuvyr xxx')
+# strong words count anywhere inside a name; weak ones (short, or common inside innocent words like Scunthorpe or Hancock) only as a whole word
+_STRONG = ('shpx fuvg ovgpu juber fyhg avttre avttn snttbg ergneq crqbcuvyr cnrqbcuvyr zbyrfg qvyqb wvmm nffubyr nefrubyr onfgneq chffl cravf '
+           'intvan uvgyre zbgureshpx pbpxfhpxre obyybpxf jnaxre gjng genaal oybjwbo unaqwbo evzwbo phzfubg betnfz znfgheong xvyylbhefrys pbpnvar cbea wnpxnff qhzonff nffung nffjvcr')
+_WEAK = ('shx shd spx sipx cuhpx fulg fuvvg avtre avtn snt sntf qlxr encr encvfg anmv phz gvgf obbof obbo qvpx pbpx phag nahf nany frk frkl '
+         'ahqr anxrq xxx crqb xlf pbba wvunq penc nff nefr cvff gneq urebva xvxr puvax tbbx fcvp jrgonpx ornare ubzb')
+_ALLOW = 'chfflpng chffljvyybj'
+ENDINGS = ('', 's', 'es', 'y', 'ed', 'er', 'ers', 'ing', 'head', 'face', 'hat', 'hole')
+
 BLOCKED_FILE = os.environ.get('OT_BLOCKED_NAMES_FILE', '/ot/data/blocked_names.txt')
 DB_FOLDER = os.environ.get('OT_ASTRONDB', 'astron/databases/astrondb')
 MIN_LENGTH, MAX_LENGTH, MAX_WORDS = 2, 24, 4
-LOOKALIKE = {ord('0'): 'o', ord('1'): 'i', ord('3'): 'e', ord('4'): 'a', ord('5'): 's', ord('7'): 't', ord('@'): 'a', ord('$'): 's', ord('!'): 'i'}
 
-_blocked = {'mtime': None, 'checked': 0.0, 'words': None}
+LOOKALIKE = {ord('0'): 'o', ord('1'): 'i', ord('3'): 'e', ord('4'): 'a', ord('5'): 's', ord('7'): 't', ord('@'): 'a', ord('$'): 's', ord('!'): 'i'}
+# letters of other alphabets that look like Latin letters
+CONFUSABLES = {
+    'а': 'a', 'е': 'e', 'о': 'o', 'р': 'p', 'с': 'c', 'х': 'x', 'у': 'y', 'і': 'i', 'ј': 'j',
+    'ѕ': 's', 'һ': 'h', 'к': 'k', 'м': 'm', 'т': 't', 'н': 'h', 'в': 'b', 'ԁ': 'd', 'ԛ': 'q',
+    'ο': 'o', 'α': 'a', 'ε': 'e', 'ι': 'i', 'ν': 'v', 'ρ': 'p', 'υ': 'u', 'κ': 'k', 'τ': 't',
+    'χ': 'x', 'ı': 'i', 'ɡ': 'g', 'ƒ': 'f', 'ø': 'o', 'đ': 'd', 'ł': 'l', 'ħ': 'h', 'ŧ': 't', 'ᴀ': 'a', 'ᴄ': 'c', 'ᴇ': 'e', 'ɪ': 'i', 'ᴏ': 'o', 'ᴛ': 't',
+}
+_TRANSLATE = dict(LOOKALIKE)
+_TRANSLATE.update({ord(k): v for k, v in CONFUSABLES.items()})
+
+_blocked = {'mtime': None, 'checked': 0.0, 'lists': None}
 _used = {'checked': 0.0, 'names': set()}
 _npc = {'names': None}
 
@@ -42,43 +66,61 @@ def _evenOut(text):
     return re.sub(r'(.)\1+', r'\1', text)
 
 
-def _blockedWords():
+def _flatten(text):
+    """Lower case, accents and width variants removed, look-alike characters turned into letters. Not yet reduced to letters only."""
+    text = unicodedata.normalize('NFKD', str(text).lower())
+    text = ''.join(c for c in text if not unicodedata.combining(c))
+    return text.translate(_TRANSLATE)
+
+
+def _squash(text):
+    """The flattened text with only letters left and runs of the same letter shortened to one."""
+    return _evenOut(''.join(c for c in _flatten(text) if c.isalpha()))
+
+
+def _lists():
+    """(strong words, weak words, allowed words), all squashed. Built in, plus the file when there is one."""
     now = time.time()
-    if _blocked['words'] is not None and now - _blocked['checked'] < 10.0:
-        return _blocked['words']
+    if _blocked['lists'] is not None and now - _blocked['checked'] < 10.0:
+        return _blocked['lists']
     _blocked['checked'] = now
     try:
         mtime = os.stat(BLOCKED_FILE).st_mtime
     except OSError:
         mtime = None
-    if _blocked['words'] is None or mtime != _blocked['mtime']:
-        words = set(codecs.decode(_SEED, 'rot13').split())
+    if _blocked['lists'] is None or mtime != _blocked['mtime']:
+        strong = set(codecs.decode(_STRONG, 'rot13').split())
+        weak = set(codecs.decode(_WEAK, 'rot13').split())
+        allow = set(codecs.decode(_ALLOW, 'rot13').split())
         if mtime is not None:
             try:
                 with open(BLOCKED_FILE, encoding='utf8') as f:
-                    words |= set(w.strip().lower() for w in f if w.strip() and not w.startswith('#'))
+                    for line in f:
+                        w = line.strip().lower()
+                        if not w or w.startswith('#'):
+                            continue
+                        if w.startswith('*'):
+                            strong.add(w[1:])
+                        elif w.startswith('!'):
+                            allow.add(w[1:])
+                        else:
+                            weak.add(w)
             except OSError:
                 pass
-        _blocked['words'] = set(_evenOut(w) for w in words)
+        _blocked['lists'] = (set(filter(None, map(_squash, strong))), set(filter(None, map(_squash, weak))), set(filter(None, map(_squash, allow))))
         _blocked['mtime'] = mtime
-    return _blocked['words']
-
-
-def _squash(text):
-    """lower case, look-alikes turned into letters, only letters kept, runs of the same letter shortened to one"""
-    text = text.lower().translate(LOOKALIKE)
-    return _evenOut(''.join(c for c in text if c.isalpha()))
+    return _blocked['lists']
 
 
 def containsBlockedWord(name):
-    tokens = [_squash(t) for t in re.split(r"[\s\-'.,]+", name) if t]
+    strong, weak, allow = _lists()
+    tokens = [_squash(t) for t in re.split(r"[\s\-'.,_]+", _flatten(name)) if t]
+    tokens = [t for t in tokens if t and t not in allow]
     joined = ''.join(tokens)
-    for word in _blockedWords():
-        if word in tokens:
-            return True
-        if len(word) >= 5 and word in joined:
-            return True
-    return False
+    if any(word in joined for word in strong):
+        return True
+    forms = set(w + e for w in strong | weak for e in ENDINGS)
+    return any(t in forms for t in tokens)
 
 
 def _usedNames():
