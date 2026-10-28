@@ -138,7 +138,7 @@ class PartyCogActivity(DirectObject):
 
     def createDoorTimer(self, team):
         timer = ToontownTimer(useImage=False, highlightNearEnd=False)
-        timer['text_font'] = ToontownGlobals.getMinnieFont()
+        timer['text_font'] = ToontownGlobals.getMillieFont()
         timer.setFontColor(PartyGlobals.CogActivityColors[team])
         timer.setScale(7.0)
         timer.setPos(0.2, -0.03, 0.0)

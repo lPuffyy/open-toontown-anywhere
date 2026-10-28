@@ -1,4 +1,6 @@
 from panda3d.core import *
+from direct.directnotify import DirectNotifyGlobal
+from panda3d.otp import Nametag, NametagFloat3d
 from toontown.toonbase.ToonBaseGlobal import *
 from toontown.toonbase import ToontownGlobals
 from direct.distributed.ClockDelta import *

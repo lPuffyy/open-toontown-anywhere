@@ -65,7 +65,9 @@ class AvatarChoice(DirectButton):
         self.buttonBgs.append(self.pickAToonGui.find('**/tt_t_gui_pat_squareBlue'))
         self.buttonBgs.append(self.pickAToonGui.find('**/tt_t_gui_pat_squarePink'))
         self.buttonBgs.append(self.pickAToonGui.find('**/tt_t_gui_pat_squareYellow'))
-        self['image'] = self.buttonBgs[position]
+        # no coloured square behind the slot any more: the toon / "Make A Toon" text sit straight on the backdrop, so give the button a fixed
+        # clickable area where the square used to be
+        self['frameSize'] = (-0.43, 0.43, -0.40, 0.40)
         self.setScale(1.01)
         if self.mode is AvatarChoice.MODE_LOCKED:
             self['command'] = self.__handleTrialer
@@ -93,9 +95,10 @@ class AvatarChoice(DirectButton):
             self['text0_scale'] = 0.1
             self['text1_scale'] = TTLocalizer.ACmakeAToon
             self['text2_scale'] = TTLocalizer.ACmakeAToon
-            self['text0_fg'] = (0, 1, 0.8, 0.5)
-            self['text1_fg'] = (0, 1, 0.8, 1)
-            self['text2_fg'] = (0.3, 1, 0.9, 1)
+            self['text0_fg'] = (1, 1, 1, 0.85)
+            self['text1_fg'] = (1, 0.92, 0.3, 1)
+            self['text2_fg'] = (1, 0.92, 0.3, 1)
+            self['text_shadow'] = (0, 0, 0, 0.55)
         else:
             self['command'] = self.__handleChoice
             self['text'] = ('', TTLocalizer.AvatarChoicePlayThisToon, TTLocalizer.AvatarChoicePlayThisToon)

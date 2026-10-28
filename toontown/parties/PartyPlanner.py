@@ -1,4 +1,5 @@
 import calendar
+from panda3d.otp import CFSpeech, Nametag, NametagFloat2d, NametagGroup
 from datetime import datetime
 from datetime import timedelta
 from panda3d.core import Vec3, Vec4, Point3, TextNode, VBase4

@@ -1,4 +1,5 @@
 from otp.otpgui.OTPDialog import *
+from otp.otpbase import OTPLocalizer
 
 class TTDialog(OTPDialog):
 

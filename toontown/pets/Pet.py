@@ -1,4 +1,6 @@
 from panda3d.core import *
+from panda3d.otp import CFSpeech, CFThought
+from panda3d.otp import NametagGroup
 from direct.directnotify import DirectNotifyGlobal
 from direct.interval.IntervalGlobal import *
 from direct.fsm.ClassicFSM import *

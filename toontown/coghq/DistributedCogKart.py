@@ -1,4 +1,5 @@
 import math
+from toontown.hood import ZoneUtil
 from panda3d.core import CollisionSphere, CollisionNode, Vec3, Point3, deg2Rad
 from direct.interval.IntervalGlobal import Sequence, Func, Parallel, ActorInterval, Wait, Parallel, LerpHprInterval, ProjectileInterval, LerpPosInterval
 from direct.directnotify import DirectNotifyGlobal

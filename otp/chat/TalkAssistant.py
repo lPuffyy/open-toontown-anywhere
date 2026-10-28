@@ -630,6 +630,11 @@ class TalkAssistant(DirectObject.DirectObject):
              message,
              [],
              0])
+            # the server does not send a client's own broadcast back to it, so show our own message here (and swallow an echo if one does come)
+            av = base.localAvatar
+            av.displayTalk(message)
+            self.receiveOpenTalk(av.doId, av.getName(), 0, None, message)
+            av._talkSentLocal = getattr(av, '_talkSentLocal', 0) + 1
             messenger.send('chatUpdate', [message, chatFlags])
         return error
 

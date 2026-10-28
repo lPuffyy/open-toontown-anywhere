@@ -1,4 +1,5 @@
 from panda3d.core import *
+from panda3d.toontown import *
 from direct.showbase.PythonUtil import weightedChoice, randFloat, lerp
 from direct.showbase.PythonUtil import contains, list2dict, clampScalar
 from direct.directnotify import DirectNotifyGlobal
@@ -516,6 +517,10 @@ class DistributedPetAI(DistributedSmoothNodeAI.DistributedSmoothNodeAI, PetLooke
             self.mood.setComponent(mood, value, announce=0)
 
         self.requiredMoodComponents = {}
+        # a doodle left on its own for a while gets bored, lonely and hungry: drift its moods across the time since it was last out
+        away = min(max(0, self.getCurEpochTimestamp() - self.lastSeenTimestamp), 14 * 24 * 3600)
+        if away > 60:
+            self.mood.driftMood(dt=float(away))
         self.brain = PetBrain.PetBrain(self)
         self.mover = Mover.Mover(self)
         self.lockMover = Mover.Mover(self)

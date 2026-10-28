@@ -10,7 +10,6 @@ from direct.showbase.MessengerGlobal import messenger
 
 from otp.distributed.TelemetryLimiter import RotationLimitToH, TLGatherAllAvs
 
-from toontown.classicchars import CCharPaths
 from toontown.hood.Place import Place
 from toontown.quest import Quests
 from toontown.toon.DeathForceAcknowledge import DeathForceAcknowledge
@@ -55,7 +54,8 @@ class Playground(Place):
                             'quest',
                             'purchase',
                             'stopped',
-                            'fishing']),
+                            'fishing',
+                            'pet']),
             State('stickerBook',
                         self.enterStickerBook,
                         self.exitStickerBook, [
@@ -187,6 +187,11 @@ class Playground(Place):
                         self.enterFishing,
                         self.exitFishing, [
                             'walk']),
+            State('pet',
+                        self.enterPet,
+                        self.exitPet, [
+                            'walk',
+                            'trialerFA']),
             State('final',
                         self.enterFinal,
                         self.exitFinal, [
@@ -303,26 +308,6 @@ class Playground(Place):
 
     def hidePaths(self):
         self.hideDebugPointText()
-
-    def showPathPoints(self, paths, waypoints = None):
-        self.hideDebugPointText()
-        lines = LineSegs()
-        lines.setColor(1, 0, 0, 1)
-        for name, pointDef in list(paths.items()):
-            self.showDebugPointText(name, pointDef[0])
-            for connectTo in pointDef[1]:
-                toDef = paths[connectTo]
-                fromP = pointDef[0]
-                toP = toDef[0]
-                lines.moveTo(fromP[0], fromP[1], fromP[2] + 2.0)
-                wpList = CCharPaths.getWayPoints(name, connectTo, paths, waypoints)
-                for wp in wpList:
-                    lines.drawTo(wp[0], wp[1], wp[2] + 2.0)
-                    self.showDebugPointText('*', wp)
-
-                lines.drawTo(toP[0], toP[1], toP[2] + 2.0)
-
-        self.debugText.attachNewNode(lines.create())
 
     def hideDebugPointText(self):
         if hasattr(self, 'debugText'):

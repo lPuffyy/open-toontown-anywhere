@@ -1,4 +1,5 @@
 from panda3d.core import *
+from panda3d.otp import NametagGlobals
 from direct.distributed.ClockDelta import *
 from direct.gui.DirectGui import *
 from direct.interval.IntervalGlobal import ivalMgr
@@ -83,6 +84,7 @@ class ToontownClientRepository(OTPClientRepository.OTPClientRepository):
         self.avatarFriendsManager = self.generateGlobalObject(OtpDoGlobals.OTP_DO_ID_AVATAR_FRIENDS_MANAGER, 'AvatarFriendsManager')
         self.playerFriendsManager = self.generateGlobalObject(OtpDoGlobals.OTP_DO_ID_PLAYER_FRIENDS_MANAGER, 'TTPlayerFriendsManager')
         self.speedchatRelay = self.generateGlobalObject(OtpDoGlobals.OTP_DO_ID_TOONTOWN_SPEEDCHAT_RELAY, 'TTSpeedchatRelay')
+        self.toonPresence = self.generateGlobalObject(OtpDoGlobals.OTP_DO_ID_TOON_PRESENCE, 'ToonPresence')
         self.deliveryManager = self.generateGlobalObject(OtpDoGlobals.OTP_DO_ID_TOONTOWN_DELIVERY_MANAGER, 'DistributedDeliveryManager')
         if ConfigVariableBool('want-code-redemption', 1).value:
             self.codeRedemptionManager = self.generateGlobalObject(OtpDoGlobals.OTP_DO_ID_TOONTOWN_CODE_REDEMPTION_MANAGER, 'TTCodeRedemptionMgr')
@@ -143,7 +145,7 @@ class ToontownClientRepository(OTPClientRepository.OTPClientRepository):
         self.acceptedScreen.setScale(0.667)
         self.acceptedScreen.reparentTo(aspect2d)
         buttons = loader.loadModel('phase_3/models/gui/dialog_box_buttons_gui')
-        self.acceptedBanner = DirectLabel(parent=self.acceptedScreen, relief=None, text=OTPLocalizer.CRNameCongratulations, text_scale=0.18, text_fg=Vec4(0.6, 0.1, 0.1, 1), text_pos=(0, 0.05), text_font=getMinnieFont())
+        self.acceptedBanner = DirectLabel(parent=self.acceptedScreen, relief=None, text=OTPLocalizer.CRNameCongratulations, text_scale=0.18, text_fg=Vec4(0.6, 0.1, 0.1, 1), text_pos=(0, 0.05), text_font=getMillieFont())
         newName = avatarChoice.approvedName
         self.acceptedText = DirectLabel(parent=self.acceptedScreen, relief=None, text=OTPLocalizer.CRNameAccepted % newName, text_scale=0.125, text_fg=Vec4(0, 0, 0, 1), text_pos=(0, -0.15))
         self.okButton = DirectButton(parent=self.acceptedScreen, image=(buttons.find('**/ChtBx_OKBtn_UP'), buttons.find('**/ChtBx_OKBtn_DN'), buttons.find('**/ChtBx_OKBtn_Rllvr')), relief=None, text='Ok', scale=1.5, text_scale=0.05, text_pos=(0.0, -0.1), pos=(0, 0, -1), command=self.__handleCongrats, extraArgs=[avatarChoice])
@@ -834,12 +836,14 @@ class ToontownClientRepository(OTPClientRepository.OTPClientRepository):
         return 1
 
     def removeFriend(self, avatarId):
-        base.localAvatar.sendUpdate('friendsNotify', [base.localAvatar.doId, 1], sendToId=avatarId)
-        datagram = PyDatagram()
-        datagram.addUint16(CLIENT_REMOVE_FRIEND)
-        datagram.addUint32(avatarId)
-        self.send(datagram)
-        self.estateMgr.removeFriend(base.localAvatar.doId, avatarId)
+        # the server passes this on to the friend's phone (a client cannot send to a toon it cannot see) and our own district drops the friend
+        self.toonPresence.up_removeFriend(avatarId)
+        base.localAvatar.sendUpdate('removeFriend', [avatarId])
+        self.friendsOnline.pop(avatarId, None)
+        try:
+            self.estateMgr.removeFriend(base.localAvatar.doId, avatarId)
+        except Exception:
+            pass
         for pair in base.localAvatar.friendsList:
             friendId = pair[0]
             if friendId == avatarId:
@@ -880,6 +884,11 @@ class ToontownClientRepository(OTPClientRepository.OTPClientRepository):
             if callback:
                 callback()
             return
+        # Astron's client agent has no CLIENT_GET_PET_DETAILS, so the pet's details can't be asked for: the live pet object in the
+        # playground serves the pet panels, and nothing waits on the friends-map entry
+        if callback:
+            callback()
+        return
 
         def petDetailsCallback(petAvatar):
             handle = PetHandle.PetHandle(petAvatar)

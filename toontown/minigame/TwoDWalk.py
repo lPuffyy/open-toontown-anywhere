@@ -1,4 +1,5 @@
 from .OrthoWalk import *
+from direct.directnotify import DirectNotifyGlobal
 
 class TwoDWalk(OrthoWalk):
     notify = DirectNotifyGlobal.directNotify.newCategory('TwoDWalk')

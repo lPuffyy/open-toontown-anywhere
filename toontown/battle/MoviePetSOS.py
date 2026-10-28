@@ -1,4 +1,5 @@
 from direct.interval.IntervalGlobal import *
+from panda3d.otp import CFSpeech, CFTimeout
 from .BattleProps import *
 from .BattleSounds import *
 from direct.directnotify import DirectNotifyGlobal

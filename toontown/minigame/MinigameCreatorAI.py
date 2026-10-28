@@ -51,11 +51,11 @@ def createMinigame(air, playerArray, trolleyZone, minigameZone = None, previousG
         randomList = list(copy.copy(ToontownGlobals.MinigamePlayerMatrix[len(playerArray)]))
         if simbase.air.useAllMinigames and len(playerArray) > 1:
             randomList = list(copy.copy(ToontownGlobals.MinigameIDs))
-            for gameId in [ToontownGlobals.TravelGameId]:
+            for gameId in [ToontownGlobals.TravelGameId, ToontownGlobals.PatternGameId]:
                 if gameId in randomList:
                     randomList.remove(gameId)
 
-        for gameId in [ToontownGlobals.TravelGameId]:
+        for gameId in [ToontownGlobals.TravelGameId, ToontownGlobals.PatternGameId]:
             if gameId in randomList:
                 randomList.remove(gameId)
 

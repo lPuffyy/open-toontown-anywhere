@@ -1,4 +1,5 @@
 from . import CogHood
+from toontown.toonbase import TTLocalizer
 from toontown.toonbase import ToontownGlobals
 from toontown.coghq import BossbotCogHQLoader
 from toontown.hood import ZoneUtil

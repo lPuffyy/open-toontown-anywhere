@@ -1,3 +1,4 @@
+from toontown.toonbase import ToontownBattleGlobals
 from panda3d.core import *
 from panda3d.otp import *
 from direct.interval.IntervalGlobal import *
@@ -165,11 +166,11 @@ class DistributedLevelBattle(DistributedBattle.DistributedBattle):
             TauntCamHeight = random.choice((MidTauntCamHeight, 1, 11))
             camTrack = Sequence()
             camTrack.append(Func(camera.reparentTo, suitLeader))
-            camTrack.append(Func(base.camLens.setFov, self.camFOFov))
+            camTrack.append(Func(ToontownBattleGlobals.setBattleFov, self.camFOFov))
             camTrack.append(Func(camera.setPos, TauntCamX, TauntCamY, TauntCamHeight))
             camTrack.append(Func(camera.lookAt, suitLeader, suitOffsetPnt))
             camTrack.append(Wait(delay))
-            camTrack.append(Func(base.camLens.setFov, self.camFov))
+            camTrack.append(Func(ToontownBattleGlobals.setBattleFov, self.camFov))
             camTrack.append(Func(camera.wrtReparentTo, self))
             camTrack.append(Func(camera.setPos, self.camFOPos))
             camTrack.append(Func(camera.lookAt, suit))

@@ -32,7 +32,7 @@ class MailboxInteractiveProp(InteractiveAnimatedProp.InteractiveAnimatedProp):
                                         None,
                                         3,
                                         10)),
-     ToontownGlobals.DonaldsDock: (('tt_a_ara_dod_mailbox_idle0',
+     ToontownGlobals.DockHarbor: (('tt_a_ara_dod_mailbox_idle0',
                                     3,
                                     10,
                                     'tt_a_ara_dod_mailbox_idle0settle',
@@ -56,7 +56,7 @@ class MailboxInteractiveProp(InteractiveAnimatedProp.InteractiveAnimatedProp):
                                     None,
                                     3,
                                     10)),
-     ToontownGlobals.DaisyGardens: (('tt_a_ara_dga_mailbox_idle0',
+     ToontownGlobals.GardenGrove: (('tt_a_ara_dga_mailbox_idle0',
                                      3,
                                      10,
                                      'tt_a_ara_dga_mailbox_idle0settle',
@@ -80,7 +80,7 @@ class MailboxInteractiveProp(InteractiveAnimatedProp.InteractiveAnimatedProp):
                                      None,
                                      3,
                                      10)),
-     ToontownGlobals.MinniesMelodyland: (('tt_a_ara_mml_mailbox_idle0',
+     ToontownGlobals.MelodyMeadow: (('tt_a_ara_mml_mailbox_idle0',
                                           3,
                                           10,
                                           'tt_a_ara_mml_mailbox_idle0settle',
@@ -128,7 +128,7 @@ class MailboxInteractiveProp(InteractiveAnimatedProp.InteractiveAnimatedProp):
                                   None,
                                   3,
                                   10)),
-     ToontownGlobals.DonaldsDreamland: (('tt_a_ara_ddl_mailbox_idleSleep0',
+     ToontownGlobals.SlumberSprings: (('tt_a_ara_ddl_mailbox_idleSleep0',
                                          3,
                                          10,
                                          None,
@@ -153,29 +153,29 @@ class MailboxInteractiveProp(InteractiveAnimatedProp.InteractiveAnimatedProp):
                                          0,
                                          0))}
     ZoneToIdleIntoFightAnims = {ToontownGlobals.ToontownCentral: 'tt_a_ara_ttc_mailbox_idleIntoFight',
-     ToontownGlobals.DonaldsDock: 'tt_a_ara_dod_mailbox_idleIntoFight',
-     ToontownGlobals.DaisyGardens: 'tt_a_ara_dga_mailbox_idleIntoFight',
-     ToontownGlobals.MinniesMelodyland: 'tt_a_ara_mml_mailbox_idleIntoFight',
+     ToontownGlobals.DockHarbor: 'tt_a_ara_dod_mailbox_idleIntoFight',
+     ToontownGlobals.GardenGrove: 'tt_a_ara_dga_mailbox_idleIntoFight',
+     ToontownGlobals.MelodyMeadow: 'tt_a_ara_mml_mailbox_idleIntoFight',
      ToontownGlobals.TheBrrrgh: 'tt_a_ara_tbr_mailbox_idleIntoFight',
-     ToontownGlobals.DonaldsDreamland: 'tt_a_ara_ddl_mailbox_idleIntoFight'}
+     ToontownGlobals.SlumberSprings: 'tt_a_ara_ddl_mailbox_idleIntoFight'}
     ZoneToVictoryAnims = {ToontownGlobals.ToontownCentral: 'tt_a_ara_ttc_mailbox_victoryDance',
-     ToontownGlobals.DonaldsDock: 'tt_a_ara_dod_mailbox_victoryDance',
-     ToontownGlobals.DaisyGardens: 'tt_a_ara_dga_mailbox_victoryDance',
-     ToontownGlobals.MinniesMelodyland: 'tt_a_ara_mml_mailbox_victoryDance',
+     ToontownGlobals.DockHarbor: 'tt_a_ara_dod_mailbox_victoryDance',
+     ToontownGlobals.GardenGrove: 'tt_a_ara_dga_mailbox_victoryDance',
+     ToontownGlobals.MelodyMeadow: 'tt_a_ara_mml_mailbox_victoryDance',
      ToontownGlobals.TheBrrrgh: 'tt_a_ara_tbr_mailbox_victoryDance',
-     ToontownGlobals.DonaldsDreamland: 'tt_a_ara_ddl_mailbox_victoryDance'}
+     ToontownGlobals.SlumberSprings: 'tt_a_ara_ddl_mailbox_victoryDance'}
     ZoneToSadAnims = {ToontownGlobals.ToontownCentral: 'tt_a_ara_ttc_mailbox_fightSad',
-     ToontownGlobals.DonaldsDock: 'tt_a_ara_dod_mailbox_fightSad',
-     ToontownGlobals.DaisyGardens: 'tt_a_ara_dga_mailbox_fightSad',
-     ToontownGlobals.MinniesMelodyland: 'tt_a_ara_mml_mailbox_fightSad',
+     ToontownGlobals.DockHarbor: 'tt_a_ara_dod_mailbox_fightSad',
+     ToontownGlobals.GardenGrove: 'tt_a_ara_dga_mailbox_fightSad',
+     ToontownGlobals.MelodyMeadow: 'tt_a_ara_mml_mailbox_fightSad',
      ToontownGlobals.TheBrrrgh: 'tt_a_ara_tbr_mailbox_fightSad',
-     ToontownGlobals.DonaldsDreamland: 'tt_a_ara_ddl_mailbox_fightSad'}
+     ToontownGlobals.SlumberSprings: 'tt_a_ara_ddl_mailbox_fightSad'}
     ZoneToFightAnims = {ToontownGlobals.ToontownCentral: ('tt_a_ara_ttc_mailbox_fightBoost', 'tt_a_ara_ttc_mailbox_fightCheer', 'tt_a_ara_ttc_mailbox_fightIdle'),
-     ToontownGlobals.DonaldsDock: ('tt_a_ara_dod_mailbox_fightBoost', 'tt_a_ara_dod_mailbox_fightCheer', 'tt_a_ara_dod_mailbox_fightIdle'),
-     ToontownGlobals.DaisyGardens: ('tt_a_ara_dga_mailbox_fightBoost', 'tt_a_ara_dga_mailbox_fightCheer', 'tt_a_ara_dga_mailbox_fightIdle'),
-     ToontownGlobals.MinniesMelodyland: ('tt_a_ara_mml_mailbox_fightBoost', 'tt_a_ara_mml_mailbox_fightCheer', 'tt_a_ara_mml_mailbox_fightIdle'),
+     ToontownGlobals.DockHarbor: ('tt_a_ara_dod_mailbox_fightBoost', 'tt_a_ara_dod_mailbox_fightCheer', 'tt_a_ara_dod_mailbox_fightIdle'),
+     ToontownGlobals.GardenGrove: ('tt_a_ara_dga_mailbox_fightBoost', 'tt_a_ara_dga_mailbox_fightCheer', 'tt_a_ara_dga_mailbox_fightIdle'),
+     ToontownGlobals.MelodyMeadow: ('tt_a_ara_mml_mailbox_fightBoost', 'tt_a_ara_mml_mailbox_fightCheer', 'tt_a_ara_mml_mailbox_fightIdle'),
      ToontownGlobals.TheBrrrgh: ('tt_a_ara_tbr_mailbox_fightBoost', 'tt_a_ara_tbr_mailbox_fightCheer', 'tt_a_ara_tbr_mailbox_fightIdle'),
-     ToontownGlobals.DonaldsDreamland: ('tt_a_ara_ddl_mailbox_fightBoost', 'tt_a_ara_ddl_mailbox_fightCheer', 'tt_a_ara_ddl_mailbox_fightIdle')}
+     ToontownGlobals.SlumberSprings: ('tt_a_ara_ddl_mailbox_fightBoost', 'tt_a_ara_ddl_mailbox_fightCheer', 'tt_a_ara_ddl_mailbox_fightIdle')}
     IdlePauseTime = base.config.GetFloat('prop-idle-pause-time', 0.0)
 
     def __init__(self, node):

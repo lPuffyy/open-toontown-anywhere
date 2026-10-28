@@ -60,14 +60,14 @@ AREA_DATA[ToontownGlobals.ToontownCentral]['PATHANIMREL'] = (0,
  2)
 AREA_DATA[ToontownGlobals.ToontownCentral]['ANIMATIONS'] = ([('wave', 2.0), (None, 1.0), (None, 1.0)], [('slip-forward', 2.0), (None, 1.0), (None, 1.0)], [('shrug', 2.0), (None, 1.0)])
 AREA_DATA[ToontownGlobals.ToontownCentral]['MOVEMODES'] = ([('walk', 1.0), ('run', 0.4)], [('run', 0.4)], [('walk', 1.0), ('sad-walk', 2.5)])
-AREA_DATA[ToontownGlobals.DonaldsDock] = {}
-AREA_DATA[ToontownGlobals.DonaldsDock]['FILMCOUNT'] = 28
-AREA_DATA[ToontownGlobals.DonaldsDock]['TIME'] = 110
-AREA_DATA[ToontownGlobals.DonaldsDock]['CAMERA_INTIAL_POSTION'] = Point3(0, 50, 20)
-AREA_DATA[ToontownGlobals.DonaldsDock]['DNA_TRIO'] = ('phase_6/dna/storage_DD_sz.dna', 'phase_6/dna/storage_DD.dna', 'phase_6/dna/donalds_dock_sz.dna')
-AREA_DATA[ToontownGlobals.DonaldsDock]['TRIPOD_OFFSET'] = Point3(0, -4.0, 9.0)
-AREA_DATA[ToontownGlobals.DonaldsDock]['START_HPR'] = Point3(218.211, -6.7879, 0)
-AREA_DATA[ToontownGlobals.DonaldsDock]['PATHS'] = ([Point3(-115.6, 39.4, 5.692),
+AREA_DATA[ToontownGlobals.DockHarbor] = {}
+AREA_DATA[ToontownGlobals.DockHarbor]['FILMCOUNT'] = 28
+AREA_DATA[ToontownGlobals.DockHarbor]['TIME'] = 110
+AREA_DATA[ToontownGlobals.DockHarbor]['CAMERA_INTIAL_POSTION'] = Point3(0, 50, 20)
+AREA_DATA[ToontownGlobals.DockHarbor]['DNA_TRIO'] = ('phase_6/dna/storage_DD_sz.dna', 'phase_6/dna/storage_DD.dna', 'phase_6/dna/donalds_dock_sz.dna')
+AREA_DATA[ToontownGlobals.DockHarbor]['TRIPOD_OFFSET'] = Point3(0, -4.0, 9.0)
+AREA_DATA[ToontownGlobals.DockHarbor]['START_HPR'] = Point3(218.211, -6.7879, 0)
+AREA_DATA[ToontownGlobals.DockHarbor]['PATHS'] = ([Point3(-115.6, 39.4, 5.692),
   Point3(-109.9, -14, 5.692),
   Point3(-112.652, -46.7, 5.692),
   Point3(-68.9, -74.7, 5.692),
@@ -100,27 +100,27 @@ AREA_DATA[ToontownGlobals.DonaldsDock]['PATHS'] = ([Point3(-115.6, 39.4, 5.692),
   Point3(-42.954, -25.706, 0.2),
   Point3(-55.102, 4.041, 0.2),
   Point3(-54.247, 16.051, 0.2)])
-AREA_DATA[ToontownGlobals.DonaldsDock]['PATHANIMREL'] = (0,
+AREA_DATA[ToontownGlobals.DockHarbor]['PATHANIMREL'] = (0,
  0,
  1,
  2,
  3)
-AREA_DATA[ToontownGlobals.DonaldsDock]['ANIMATIONS'] = ([('wave', 2.0), (None, 1.0)],
+AREA_DATA[ToontownGlobals.DockHarbor]['ANIMATIONS'] = ([('wave', 2.0), (None, 1.0)],
  [('slip-forward', 2.0), (None, 1.0), (None, 1.0)],
  [('shrug', 2.0), (None, 1.0)],
  [(None, 1.0)])
-AREA_DATA[ToontownGlobals.DonaldsDock]['MOVEMODES'] = ([('walk', 1.0)],
+AREA_DATA[ToontownGlobals.DockHarbor]['MOVEMODES'] = ([('walk', 1.0)],
  [('run', 0.4)],
  [('walk', 1.0), ('sad-walk', 2.5)],
  [('swim', 1.0)])
-AREA_DATA[ToontownGlobals.DaisyGardens] = {}
-AREA_DATA[ToontownGlobals.DaisyGardens]['FILMCOUNT'] = 26
-AREA_DATA[ToontownGlobals.DaisyGardens]['TIME'] = 100
-AREA_DATA[ToontownGlobals.DaisyGardens]['CAMERA_INTIAL_POSTION'] = Point3(0, 50, 20)
-AREA_DATA[ToontownGlobals.DaisyGardens]['DNA_TRIO'] = ('phase_8/dna/storage_DG_sz.dna', 'phase_8/dna/storage_DG.dna', 'phase_8/dna/daisys_garden_sz.dna')
-AREA_DATA[ToontownGlobals.DaisyGardens]['TRIPOD_OFFSET'] = Point3(0, 0, 6.0)
-AREA_DATA[ToontownGlobals.DaisyGardens]['START_HPR'] = Point3(0.0, 0.0, 0.0)
-AREA_DATA[ToontownGlobals.DaisyGardens]['PATHS'] = ([Point3(-37.252, 25.513, 0.025),
+AREA_DATA[ToontownGlobals.GardenGrove] = {}
+AREA_DATA[ToontownGlobals.GardenGrove]['FILMCOUNT'] = 26
+AREA_DATA[ToontownGlobals.GardenGrove]['TIME'] = 100
+AREA_DATA[ToontownGlobals.GardenGrove]['CAMERA_INTIAL_POSTION'] = Point3(0, 50, 20)
+AREA_DATA[ToontownGlobals.GardenGrove]['DNA_TRIO'] = ('phase_8/dna/storage_DG_sz.dna', 'phase_8/dna/storage_DG.dna', 'phase_8/dna/daisys_garden_sz.dna')
+AREA_DATA[ToontownGlobals.GardenGrove]['TRIPOD_OFFSET'] = Point3(0, 0, 6.0)
+AREA_DATA[ToontownGlobals.GardenGrove]['START_HPR'] = Point3(0.0, 0.0, 0.0)
+AREA_DATA[ToontownGlobals.GardenGrove]['PATHS'] = ([Point3(-37.252, 25.513, 0.025),
   Point3(-30.032, 37.9, 0.025),
   Point3(-38.694, 50.631, 0.025),
   Point3(-52.1, 52.926, 0.025),
@@ -146,20 +146,20 @@ AREA_DATA[ToontownGlobals.DaisyGardens]['PATHS'] = ([Point3(-37.252, 25.513, 0.0
   Point3(75.228, 66.869, 0.025),
   Point3(69.468, 23.798, 0.025),
   Point3(46.43, 20.473, 0.025)])
-AREA_DATA[ToontownGlobals.DaisyGardens]['PATHANIMREL'] = (0,
+AREA_DATA[ToontownGlobals.GardenGrove]['PATHANIMREL'] = (0,
  0,
  1,
  2)
-AREA_DATA[ToontownGlobals.DaisyGardens]['ANIMATIONS'] = ([('wave', 2.0), (None, 1.0)], [('jump', 2.0), (None, 1.0), (None, 1.0)], [('bow', 2.0), ('happy-dance', 2.0), (None, 1.0)])
-AREA_DATA[ToontownGlobals.DaisyGardens]['MOVEMODES'] = ([('walk', 1.0), ('run', 0.4)], [('run', 0.4)], [('walk', 1.0), ('run', 0.4)])
-AREA_DATA[ToontownGlobals.MinniesMelodyland] = {}
-AREA_DATA[ToontownGlobals.MinniesMelodyland]['FILMCOUNT'] = 23
-AREA_DATA[ToontownGlobals.MinniesMelodyland]['TIME'] = 95
-AREA_DATA[ToontownGlobals.MinniesMelodyland]['CAMERA_INTIAL_POSTION'] = Point3(0, -50, 20)
-AREA_DATA[ToontownGlobals.MinniesMelodyland]['DNA_TRIO'] = ('phase_6/dna/storage_MM_sz.dna', 'phase_6/dna/storage_MM.dna', 'phase_6/dna/minnies_melody_land_sz.dna')
-AREA_DATA[ToontownGlobals.MinniesMelodyland]['TRIPOD_OFFSET'] = Point3(0, 0, 6.0)
-AREA_DATA[ToontownGlobals.MinniesMelodyland]['START_HPR'] = Point3(71.3028, -3.12932, 0)
-AREA_DATA[ToontownGlobals.MinniesMelodyland]['PATHS'] = ([Point3(-42.35, -16.0, -12.476),
+AREA_DATA[ToontownGlobals.GardenGrove]['ANIMATIONS'] = ([('wave', 2.0), (None, 1.0)], [('jump', 2.0), (None, 1.0), (None, 1.0)], [('bow', 2.0), ('happy-dance', 2.0), (None, 1.0)])
+AREA_DATA[ToontownGlobals.GardenGrove]['MOVEMODES'] = ([('walk', 1.0), ('run', 0.4)], [('run', 0.4)], [('walk', 1.0), ('run', 0.4)])
+AREA_DATA[ToontownGlobals.MelodyMeadow] = {}
+AREA_DATA[ToontownGlobals.MelodyMeadow]['FILMCOUNT'] = 23
+AREA_DATA[ToontownGlobals.MelodyMeadow]['TIME'] = 95
+AREA_DATA[ToontownGlobals.MelodyMeadow]['CAMERA_INTIAL_POSTION'] = Point3(0, -50, 20)
+AREA_DATA[ToontownGlobals.MelodyMeadow]['DNA_TRIO'] = ('phase_6/dna/storage_MM_sz.dna', 'phase_6/dna/storage_MM.dna', 'phase_6/dna/minnies_melody_land_sz.dna')
+AREA_DATA[ToontownGlobals.MelodyMeadow]['TRIPOD_OFFSET'] = Point3(0, 0, 6.0)
+AREA_DATA[ToontownGlobals.MelodyMeadow]['START_HPR'] = Point3(71.3028, -3.12932, 0)
+AREA_DATA[ToontownGlobals.MelodyMeadow]['PATHS'] = ([Point3(-42.35, -16.0, -12.476),
   Point3(-23.7, -49.0, -12.476),
   Point3(12.4, -62.1, -12.476),
   Point3(37.8, -31.163, -12.476),
@@ -185,15 +185,15 @@ AREA_DATA[ToontownGlobals.MinniesMelodyland]['PATHS'] = ([Point3(-42.35, -16.0, 
   Point3(26.374, -73.664, -14.645),
   Point3(14.322, -89.378, -14.562),
   Point3(61.594, -91.931, -14.524)])
-AREA_DATA[ToontownGlobals.MinniesMelodyland]['PATHANIMREL'] = (0,
+AREA_DATA[ToontownGlobals.MelodyMeadow]['PATHANIMREL'] = (0,
  0,
  1,
  2)
-AREA_DATA[ToontownGlobals.MinniesMelodyland]['ANIMATIONS'] = ([('wave', 2.0), (None, 1.0)], [('jump', 2.0),
+AREA_DATA[ToontownGlobals.MelodyMeadow]['ANIMATIONS'] = ([('wave', 2.0), (None, 1.0)], [('jump', 2.0),
   ('slip-forward', 2.0),
   (None, 1.0),
   (None, 1.0)], [('shrug', 2.0), ('confused', 2.0), (None, 1.0)])
-AREA_DATA[ToontownGlobals.MinniesMelodyland]['MOVEMODES'] = ([('walk', 1.0), ('run', 0.4)], [('run', 0.4)], [('walk', 1.0), ('sad-walk', 2.5)])
+AREA_DATA[ToontownGlobals.MelodyMeadow]['MOVEMODES'] = ([('walk', 1.0), ('run', 0.4)], [('run', 0.4)], [('walk', 1.0), ('sad-walk', 2.5)])
 AREA_DATA[ToontownGlobals.TheBrrrgh] = {}
 AREA_DATA[ToontownGlobals.TheBrrrgh]['FILMCOUNT'] = 21
 AREA_DATA[ToontownGlobals.TheBrrrgh]['TIME'] = 90
@@ -234,14 +234,14 @@ AREA_DATA[ToontownGlobals.TheBrrrgh]['ANIMATIONS'] = ([('wave', 2.0), (None, 1.0
   ('angry', 2.0),
   (None, 1.0)])
 AREA_DATA[ToontownGlobals.TheBrrrgh]['MOVEMODES'] = ([('walk', 1.0), ('running-jump', 0.4)], [('run', 0.4)], [('walk', 1.0), ('sad-walk', 2.5)])
-AREA_DATA[ToontownGlobals.DonaldsDreamland] = {}
-AREA_DATA[ToontownGlobals.DonaldsDreamland]['FILMCOUNT'] = 18
-AREA_DATA[ToontownGlobals.DonaldsDreamland]['TIME'] = 85
-AREA_DATA[ToontownGlobals.DonaldsDreamland]['CAMERA_INTIAL_POSTION'] = Point3(0, 50, 20)
-AREA_DATA[ToontownGlobals.DonaldsDreamland]['DNA_TRIO'] = ('phase_8/dna/storage_DL_sz.dna', 'phase_8/dna/storage_DL.dna', 'phase_8/dna/donalds_dreamland_sz.dna')
-AREA_DATA[ToontownGlobals.DonaldsDreamland]['TRIPOD_OFFSET'] = Point3(0, 0, 6.0)
-AREA_DATA[ToontownGlobals.DonaldsDreamland]['START_HPR'] = Point3(-137.183, -9.06236, 0)
-AREA_DATA[ToontownGlobals.DonaldsDreamland]['PATHS'] = ([Point3(-51.222, 90.874, 0.025),
+AREA_DATA[ToontownGlobals.SlumberSprings] = {}
+AREA_DATA[ToontownGlobals.SlumberSprings]['FILMCOUNT'] = 18
+AREA_DATA[ToontownGlobals.SlumberSprings]['TIME'] = 85
+AREA_DATA[ToontownGlobals.SlumberSprings]['CAMERA_INTIAL_POSTION'] = Point3(0, 50, 20)
+AREA_DATA[ToontownGlobals.SlumberSprings]['DNA_TRIO'] = ('phase_8/dna/storage_DL_sz.dna', 'phase_8/dna/storage_DL.dna', 'phase_8/dna/donalds_dreamland_sz.dna')
+AREA_DATA[ToontownGlobals.SlumberSprings]['TRIPOD_OFFSET'] = Point3(0, 0, 6.0)
+AREA_DATA[ToontownGlobals.SlumberSprings]['START_HPR'] = Point3(-137.183, -9.06236, 0)
+AREA_DATA[ToontownGlobals.SlumberSprings]['PATHS'] = ([Point3(-51.222, 90.874, 0.025),
   Point3(0.715, 94.789, 0.025),
   Point3(30.715, 94.0, 0.025),
   Point3(69.181, 93.45, 0.025),
@@ -264,13 +264,13 @@ AREA_DATA[ToontownGlobals.DonaldsDreamland]['PATHS'] = ([Point3(-51.222, 90.874,
   Point3(-10.49, 15.537, -13.974),
   Point3(-25.728, -14.665, -13.975),
   Point3(-43.923, -32.324, -14.634)])
-AREA_DATA[ToontownGlobals.DonaldsDreamland]['PATHANIMREL'] = (0,
+AREA_DATA[ToontownGlobals.SlumberSprings]['PATHANIMREL'] = (0,
  0,
  1,
  2)
-AREA_DATA[ToontownGlobals.DonaldsDreamland]['ANIMATIONS'] = ([('wave', 2.0), (None, 1.0)], [('applause', 2.0),
+AREA_DATA[ToontownGlobals.SlumberSprings]['ANIMATIONS'] = ([('wave', 2.0), (None, 1.0)], [('applause', 2.0),
   ('jump', 2.0),
   ('slip-forward', 2.0),
   (None, 1.0),
   (None, 1.0)], [('shrug', 2.0), ('angry', 2.0), (None, 1.0)])
-AREA_DATA[ToontownGlobals.DonaldsDreamland]['MOVEMODES'] = ([('walk', 1.0), ('catch-run', 0.4)], [('run', 0.4), ('running-jump', 0.4)], [('walk', 1.0), ('sad-walk', 2.5)])
+AREA_DATA[ToontownGlobals.SlumberSprings]['MOVEMODES'] = ([('walk', 1.0), ('catch-run', 0.4)], [('run', 0.4), ('running-jump', 0.4)], [('walk', 1.0), ('sad-walk', 2.5)])

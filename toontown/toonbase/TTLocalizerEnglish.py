@@ -10,7 +10,7 @@ InterfaceFont = 'phase_3/models/fonts/ImpressBT.ttf'
 ToonFont = 'phase_3/models/fonts/ImpressBT.ttf'
 SuitFont = 'phase_3/models/fonts/vtRemingtonPortable.ttf'
 SignFont = 'phase_3/models/fonts/MickeyFont'
-MinnieFont = 'phase_3/models/fonts/MinnieFont'
+MillieFont = 'phase_3/models/fonts/MinnieFont'
 FancyFont = 'phase_3/models/fonts/Comedy'
 NametagFonts = ('phase_3/models/fonts/AnimGothic',
  'phase_3/models/fonts/Aftershock',
@@ -49,35 +49,35 @@ GM_NAMES = ('TOON COUNCIL',
 BuildingNametagFont = 'phase_3/models/fonts/MickeyFont'
 BuildingNametagShadow = None
 ProductPrefix = 'TT'
-Mickey = 'Mickey'
-VampireMickey = 'VampireMickey'
-Minnie = 'Minnie'
-WitchMinnie = 'WitchMinnie'
-Donald = 'Donald'
-DonaldDock = 'DonaldDock'
-FrankenDonald = 'FrankenDonald'
-Daisy = 'Daisy'
-SockHopDaisy = 'SockHopDaisy'
-Goofy = 'Goofy'
-SuperGoofy = 'SuperGoofy'
-Pluto = 'Pluto'
-WesternPluto = 'WesternPluto'
+Moe = 'Moe'
+VampireMoe = 'VampireMoe'
+Millie = 'Millie'
+WitchMillie = 'WitchMillie'
+Dudley = 'Dudley'
+DudleyDock = 'DudleyDock'
+FrankenDudley = 'FrankenDudley'
+Dottie = 'Dottie'
+SockHopDottie = 'SockHopDottie'
+Gus = 'Gus'
+SuperGus = 'SuperGus'
+Pippin = 'Pippin'
+WesternPippin = 'WesternPippin'
 Flippy = 'Flippy'
-Chip = 'Chip'
-Dale = 'Dale'
-JailbirdDale = 'JailbirdDale'
-PoliceChip = 'PoliceChip'
+Nib = 'Nib'
+Acorn = 'Acorn'
+JailbirdAcorn = 'JailbirdAcorn'
+PoliceNib = 'PoliceNib'
 lTheBrrrgh = 'The Brrrgh'
-lDaisyGardens = 'Daisy Gardens'
-lDonaldsDock = "Donald's Dock"
-lDonaldsDreamland = "Donald's Dreamland"
-lMinniesMelodyland = "Minnie's Melodyland"
+lGardenGrove = 'Garden Grove'
+lDockHarbor = "Dock Harbor"
+lSlumberSprings = "Slumber Springs"
+lMelodyMeadow = "Melody Meadow"
 lToontownCentral = 'Toontown Central'
 lToonHQ = 'Toon HQ'
 lSellbotHQ = 'Sellbot HQ'
-lGoofySpeedway = 'Goofy Speedway'
-lOutdoorZone = "Chip 'n Dale's Acorn Acres"
-lGolfZone = "Chip 'n Dale's MiniGolf"
+lSpeedwayPark = 'Speedway Park'
+lOutdoorZone = "Acorn Acres"
+lGolfZone = "Acorn MiniGolf"
 lPartyHood = 'Party Grounds'
 GlobalStreetNames = {20000: ('to', 'on', 'Tutorial Terrace'),
  1000: ('to the', 'in the', 'Playground'),
@@ -125,15 +125,15 @@ GlobalStreetNames = {20000: ('to', 'on', 'Tutorial Terrace'),
  13400: ('to the', 'in the', 'Lawbot B Office'),
  13500: ('to the', 'in the', 'Lawbot C Office'),
  13600: ('to the', 'in the', 'Lawbot D Office')}
-DonaldsDock = ('to', 'in', lDonaldsDock)
+DockHarbor = ('to', 'in', lDockHarbor)
 ToontownCentral = ('to', 'in', lToontownCentral)
 TheBrrrgh = ('to', 'in', lTheBrrrgh)
-MinniesMelodyland = ('to', 'in', lMinniesMelodyland)
-DaisyGardens = ('to', 'in', lDaisyGardens)
+MelodyMeadow = ('to', 'in', lMelodyMeadow)
+GardenGrove = ('to', 'in', lGardenGrove)
 OutdoorZone = ('to', 'in', lOutdoorZone)
 FunnyFarm = ('to the', 'in the', 'Funny Farm')
-GoofySpeedway = ('to', 'in', lGoofySpeedway)
-DonaldsDreamland = ('to', 'in', lDonaldsDreamland)
+SpeedwayPark = ('to', 'in', lSpeedwayPark)
+SlumberSprings = ('to', 'in', lSlumberSprings)
 BossbotHQ = ('to', 'in', 'Bossbot HQ')
 SellbotHQ = ('to', 'in', 'Sellbot HQ')
 CashbotHQ = ('to', 'in', 'Cashbot HQ')
@@ -165,7 +165,7 @@ lNo = 'No'
 sleep_auto_reply = '%s is sleeping right now'
 lHQOfficerF = 'HQ Officer'
 lHQOfficerM = 'HQ Officer'
-MickeyMouse = 'Mickey Mouse'
+MoeMouse = 'Moe'
 AIStartDefaultDistrict = 'Sillyville'
 Cog = 'Cog'
 Cogs = 'Cogs'
@@ -506,7 +506,7 @@ QuestsItemDict = {1: ['Pair of Glasses', 'Pairs of Glasses', 'a '],
  5009: ['Bag of Bird Seed', 'Bags of Bird Seed', 'a '],
  5010: ['Sprocket', 'Sprockets', 'a '],
  5011: ['Salad', 'Salads', 'a '],
- 5012: ['Key to ' + lDaisyGardens, 'Keys to ' + lDaisyGardens, 'a '],
+ 5012: ['Key to ' + lGardenGrove, 'Keys to ' + lGardenGrove, 'a '],
  5013: [lSellbotHQ + ' Blueprints', lSellbotHQ + ' HQ Blueprints', 'some '],
  5014: [lSellbotHQ + ' Memo', lSellbotHQ + ' Memos', 'a '],
  5015: [lSellbotHQ + ' Memo', lSellbotHQ + ' Memos', 'a '],
@@ -842,9 +842,9 @@ QuestDialogDict = {160: {GREETING: '',
  3207: {QUEST: 'Hi, _avName_! Thanks for coming by!\x07A bunch of Double Talkers just broke in and stole a stack of postcards from my counter.\x07Please go out and defeat all those Double Talkers to get my postcards back!',
         INCOMPLETE_PROGRESS: "That's not enough postcards! Keep looking!",
         COMPLETE: 'Oh, thank you! Now I can deliver the mail on time! Here is your reward...'},
- 3208: {QUEST: "We've been getting complaints from the residents lately about all of the Cold Callers.\x07See if you can defeat 10 Cold Callers to help out your fellow Toons in " + lDaisyGardens + '.'},
- 3209: {QUEST: 'Thanks for taking care of those Cold Callers!\x07But now the Telemarketers have gotten out of hand.\x07Defeat 10 Telemarketers in ' + lDaisyGardens + ' and come back here for your reward.'},
- 3247: {QUEST: "We've been getting complaints from the residents lately about all of the Bloodsuckers.\x07See if you can defeat 20 Bloodsuckers to help out your fellow Toons in " + lDaisyGardens + '.'},
+ 3208: {QUEST: "We've been getting complaints from the residents lately about all of the Cold Callers.\x07See if you can defeat 10 Cold Callers to help out your fellow Toons in " + lGardenGrove + '.'},
+ 3209: {QUEST: 'Thanks for taking care of those Cold Callers!\x07But now the Telemarketers have gotten out of hand.\x07Defeat 10 Telemarketers in ' + lGardenGrove + ' and come back here for your reward.'},
+ 3247: {QUEST: "We've been getting complaints from the residents lately about all of the Bloodsuckers.\x07See if you can defeat 20 Bloodsuckers to help out your fellow Toons in " + lGardenGrove + '.'},
  3210: {QUEST: 'Oh no, The Squirting Flower on Maple Street just ran out of flowers!\x07Take them ten of your own squirting flowers to help out.\x07Make sure you have 10 squirting flowers in your inventory first.',
         LEAVING: '',
         INCOMPLETE_PROGRESS: "I need to have 10 squirting flowers. You don't have enough!"},
@@ -868,23 +868,23 @@ QuestDialogDict = {160: {GREETING: '',
  3245: {QUEST: 'Good job! Now we need a sprocket from a Back Stabber for comparison.\x07These sprockets are harder to catch, so keep trying.'},
  3246: {QUEST: 'Great! Now we need just one more sprocket.\x07This time, we need a sprocket from a Spin Doctor.\x07When you catch one, bring it back for your reward.'},
  3220: {QUEST: "I just heard that _toNpcName_ was asking around for you.\x07Why don't you drop by and see what she wants?_where_"},
- 3221: {QUEST: 'Hi, _avName_! There you are!\x07I heard you were quite an expert in squirt attacks.\x07I need someone to set a good example for all the Toons in ' + lDaisyGardens + '.\x07Use your squirt attacks to defeat a bunch of Cogs.\x07Encourage your friends to use squirt too.\x07When you have defeated 20 Cogs, come back here for a reward!'},
+ 3221: {QUEST: 'Hi, _avName_! There you are!\x07I heard you were quite an expert in squirt attacks.\x07I need someone to set a good example for all the Toons in ' + lGardenGrove + '.\x07Use your squirt attacks to defeat a bunch of Cogs.\x07Encourage your friends to use squirt too.\x07When you have defeated 20 Cogs, come back here for a reward!'},
  3222: {QUEST: "It's time to demonstrate your Toonmanship.\x07If you successfully reclaim a number of Cog buildings, you'll earn the right to carry three quests.\x07First, defeat any two Cog buildings.\x07Feel free to call on your friends to help you out."},
  3223: {QUEST: 'Great job on those buildings!\x07Now, defeat two more buildings.\x07These buildings must be at least two stories high, or higher.'},
  3224: {QUEST: 'Fantastic!\x07Now just defeat two more buildings.\x07These buildings must be at least three stories high.\x07When you finish, come back for your reward!',
         COMPLETE: 'You did it, _avName_!\x07You demonstrated your superior Toonmanship.',
         GREETING: ''},
  3225: {QUEST: "_toNpcName_ says she needs some help.\x07Why don't you go see what you can do to help out?_where_"},
- 3235: {QUEST: "Oh, this is the salad I ordered!\x07Thank you for bringing it to me.\x07All those Cogs must have frightened away _toNpcName_'s regular delivery person again.\x07Why don't you do us a favor and defeat some of the Cogs out there?\x07Defeat 10 Cogs in " + lDaisyGardens + ' and then report back to _toNpcName_.',
+ 3235: {QUEST: "Oh, this is the salad I ordered!\x07Thank you for bringing it to me.\x07All those Cogs must have frightened away _toNpcName_'s regular delivery person again.\x07Why don't you do us a favor and defeat some of the Cogs out there?\x07Defeat 10 Cogs in " + lGardenGrove + ' and then report back to _toNpcName_.',
         INCOMPLETE_PROGRESS: "You're working on defeating Cogs for me?\x07That's wonderful! Keep up the good work!",
         COMPLETE: 'Oh, thank you so much for defeating those Cogs!\x07Now maybe I can keep my regular delivery schedule.\x07Your reward is...',
         INCOMPLETE_WRONG_NPC: "Go tell _toNpcName_ about the Cogs you've defeated._where_"},
  3236: {QUEST: 'There are far too many Lawbots out there.\x07You can do your part to help!\x07Defeat 3 Lawbot buildings.'},
  3237: {QUEST: 'Great job on those Lawbot buildings!\x07But now there are too many Sellbots!\x07Defeat 3 Sellbot buildings, then come back for your reward.'},
- 3238: {QUEST: 'Oh no! A "Mingler" Cog has stolen the Key to ' + lDaisyGardens + '!\x07See if you can recover it.\x07Remember, The Mingler can be found only inside Sellbot buildings.'},
- 3239: {QUEST: "You found a key all right, but it isn't the right one!\x07We need the Key to " + lDaisyGardens + '.\x07Keep looking! A "Mingler" Cog still has it!'},
- 3242: {QUEST: 'Oh no! A Legal Eagle Cog has stolen the Key to ' + lDaisyGardens + '!\x07See if you can recover it.\x07Remember, Legal Eagles can be found only inside Lawbot buildings.'},
- 3243: {QUEST: "You found a key all right, but it isn't the right one!\x07We need the Key to " + lDaisyGardens + '.\x07Keep looking! A Legal Eagle Cog still has it!'},
+ 3238: {QUEST: 'Oh no! A "Mingler" Cog has stolen the Key to ' + lGardenGrove + '!\x07See if you can recover it.\x07Remember, The Mingler can be found only inside Sellbot buildings.'},
+ 3239: {QUEST: "You found a key all right, but it isn't the right one!\x07We need the Key to " + lGardenGrove + '.\x07Keep looking! A "Mingler" Cog still has it!'},
+ 3242: {QUEST: 'Oh no! A Legal Eagle Cog has stolen the Key to ' + lGardenGrove + '!\x07See if you can recover it.\x07Remember, Legal Eagles can be found only inside Lawbot buildings.'},
+ 3243: {QUEST: "You found a key all right, but it isn't the right one!\x07We need the Key to " + lGardenGrove + '.\x07Keep looking! A Legal Eagle Cog still has it!'},
  3240: {QUEST: "I've just heard from _toNpcName_ that a Legal Eagle stole a bag of his bird seed.\x07Defeat Legal Eagles until you recover Bud's bird seed, and take it to him.\x07Legal Eagles are only found inside Lawbot buildings._where_",
         COMPLETE: 'Oh, thank you so much for finding my bird seed!\x07Your reward is...',
         INCOMPLETE_WRONG_NPC: 'Good job getting that bird seed back!\x07Now take it to _toNpcName_._where_'},
@@ -1476,7 +1476,7 @@ QuestDialogDict = {160: {GREETING: '',
  6281: {QUEST: "Head over and call on Teddy Blair. He's got a job for you._where_"},
  6282: {GREETING: '',
         LEAVING: '',
-        QUEST: "What did you say? No, I don't have a fob for you.\x07Oh, a job! Why didn't you say so? You'll need to speak up.\x07Those Cogs make it hard to hibernate. If you'll help make Dreamland quieter,\x07I'll give you a little something.",
+        QUEST: "What did you say? No, I don't have a fob for you.\x07Oh, a job! Why didn't you say so? You'll need to speak up.\x07Those Cogs make it hard to hibernate. If you'll help make Slumber Springs quieter,\x07I'll give you a little something.",
         INCOMPLETE_PROGRESS: "You beat the bogs? What bogs?\x07Oh, the Cogs! Why didn't you say so?\x07Hmm, it's still pretty loud. How 'bout you defeat a few more?",
         COMPLETE: "You had fun? Huh? Oh!\x07You're done! Great. Really nice of you to help out this way.\x07I found this in the back room but I don't have any use for it.\x07Maybe you'll find something to do with it. So long, _avName_!"},
  6291: {QUEST: 'Cogs broke into the First Security Blanket Bank! Go see William Teller and see if you can help.'},
@@ -1963,12 +1963,12 @@ ReportPanelCategoryHacking = 'Hacking'
 ReportPanelConfirmations = ('You are about to report that %s has used obscene, bigoted or sexually explicit language.',
  'You are about to report that %s is being unsafe by giving out or requesting a phone number, address, last name, email address, password or account name.',
  'You are about to report that %s is bullying, harassing, or using extreme behavior to disrupt the game.',
- "You are about to report that %s has created a name that does not follow Disney's House Rules.",
+ "You are about to report that %s has created a name that does not follow the House Rules.",
  'You are about to report that %s has hacked/tampered with the game or used third party software.')
 ReportPanelWarning = "We take reporting very seriously. Your report will be viewed by a Moderator who will take appropriate action for anyone breaking our rules. If your account is found to have participated in breaking the rules, or if you make false reports or abuse the 'Report a Player' system, a Moderator may take action against your account. Are you absolutely sure you want to report this player?"
 ReportPanelThanks = 'Thank you! Your report has been sent to a Moderator for review. There is no need to contact us again about the issue. The moderation team will take appropriate action for a player found breaking our rules.'
 ReportPanelRemovedFriend = 'We have automatically removed %s from your Toon Friends List.'
-ReportPanelRemovedPlayerFriend = 'We have automatically removed %s as a Player friend so as such you will not see them as your friend in any Disney product.'
+ReportPanelRemovedPlayerFriend = 'We have automatically removed %s as a Player friend so as such you will not see them as your friend in any product.'
 ReportPanelAlreadyReported = 'You have already reported %s during this session. A Moderator will review your previous report.'
 IgnorePanelTitle = 'Ignore A Player'
 IgnorePanelAddIgnore = 'Would you like to ignore %s for the rest of this session?'
@@ -2015,7 +2015,7 @@ SpokenMoods = {'neutral': 'neutral',
  'restlessness': ["I'm sooo restless!!!"],
  'playfulness': ["Let's play, Let's play, Let's play, Let's play, Let's play, Let's play, Let's play, Let's play, Let's play...", 'Play with me or I dig up some flowers!', 'Lets run around and  around and around and around and around and around...'],
  'loneliness': ['Where have you been?', 'Wanna cuddle?', 'I want to go with you when you fight Cogs!'],
- 'fatigue': ['That swim in the pond really tired me out!', 'Being a Doodle is exhausting!', 'I gotta get to Dreamland!'],
+ 'fatigue': ['That swim in the pond really tired me out!', 'Being a Doodle is exhausting!', 'I gotta get to Slumber Springs!'],
  'confusion': ['Where am I? Who are you again?', "What's a Toon-up again?", "Whoa, I'm standing between you and the Cogs! Run away!"],
  'anger': ['... and you wonder why I never give you a Toon-up?!!!', 'You always leave me behind!', 'You love your gags more than you love me!'],
  'surprise': ['Of course Doodles can talk!', 'Toons can talk?!!', 'Whoa, where did you come from?'],
@@ -2082,7 +2082,7 @@ ToonHealJokes = [['What goes TICK-TICK-TICK-WOOF?', 'A watchdog! '],
  ['What did the hat say to the scarf?', 'You hang around while I go on a head.'],
  ["What's the best parting gift?", 'A comb.'],
  ['What kind of cats like to go bowling?', 'Alley cats.'],
- ["What's wrong if you keep seeing talking animals?", "You're having Disney spells."],
+ ["What's wrong if you keep seeing talking animals?", "You're having silly spells."],
  ['What did one eye say to the other?', 'Between you and me, something smells.'],
  ["What's round, white and giggles?", 'A tickled onion.'],
  ['What do you get when you cross Bambi with a ghost?', 'Bamboo.'],
@@ -2138,15 +2138,15 @@ ToonHealJokes = [['What goes TICK-TICK-TICK-WOOF?', 'A watchdog! '],
  ['Why are elephants big and gray?', "Because if they were small and yellow they'd be canaries."],
  ['If athletes get tennis elbow what do astronauts get?', 'Missile toe.'],
  ['Did you hear about the man who hated Santa?', 'He suffered from Claustrophobia.'],
- ['Why did ' + Donald + ' sprinkle sugar on his pillow?', 'Because he wanted to have sweet dreams.'],
- ['Why did ' + Goofy + ' take his comb to the dentist?', 'Because it had lost all its teeth.'],
- ['Why did ' + Goofy + ' wear his shirt in the bath?', 'Because the label said wash and wear.'],
+ ['Why did ' + Dudley + ' sprinkle sugar on his pillow?', 'Because he wanted to have sweet dreams.'],
+ ['Why did ' + Gus + ' take his comb to the dentist?', 'Because it had lost all its teeth.'],
+ ['Why did ' + Gus + ' wear his shirt in the bath?', 'Because the label said wash and wear.'],
  ['Why did the dirty chicken cross the road?', 'For some fowl purpose.'],
  ["Why didn't the skeleton go to the party?", 'He had no body to go with.'],
  ['Why did the burglar take a shower?', 'To make a clean getaway.'],
  ['Why does a sheep have a woolly coat?', "Because he'd look silly in a plastic one."],
  ['Why do potatoes argue all the time?', "They can't see eye to eye."],
- ['Why did ' + Pluto + ' sleep with a banana peel?', 'So he could slip out of bed in the morning.'],
+ ['Why did ' + Pippin + ' sleep with a banana peel?', 'So he could slip out of bed in the morning.'],
  ['Why did the mouse wear brown sneakers?', 'His white ones were in the wash.'],
  ['Why are false teeth like stars?', 'They come out at night.'],
  ['Why are Saturday and Sunday so strong?', 'Because the others are weekdays.'],
@@ -2156,7 +2156,7 @@ ToonHealJokes = [['What goes TICK-TICK-TICK-WOOF?', 'A watchdog! '],
  ['What do you get if you cross a dog with a phone?', 'A golden receiver.'],
  ['What do you get if you cross an elephant with a shark?', 'Swimming trunks with sharp teeth.'],
  ['What did the tablecloth say to the table?', "Don't move, I've got you covered."],
- ['Did you hear about the time ' + Goofy + ' ate a candle?', 'He wanted a light snack.'],
+ ['Did you hear about the time ' + Gus + ' ate a candle?', 'He wanted a light snack.'],
  ['What did the balloon say to the pin?', 'Hi Buster.'],
  ['What did the big chimney say to the little chimney?', "You're too young to smoke."],
  ['What did the carpet say to the floor?', 'I got you covered.'],
@@ -2224,7 +2224,7 @@ ToonHealJokes = [['What goes TICK-TICK-TICK-WOOF?', 'A watchdog! '],
  ['What do you get if you cross a railway engine with a stick of gum?', 'A chew-chew train.'],
  ['What would you get if you crossed an elephant with a computer?', 'A big know-it-all.'],
  ['What would you get if you crossed an elephant with a skunk?', 'A big stinker.'],
- ['Why did ' + MickeyMouse + ' take a trip to outer space?', 'He wanted to find ' + Pluto + '.']]
+ ['Why did ' + MoeMouse + ' take a trip to outer space?', 'He wanted to find ' + Pippin + '.']]
 MovieHealLaughterMisses = ('hmm',
  'heh',
  'ha',
@@ -2746,7 +2746,7 @@ SuitAttackTaunts = {'Audit': ["I believe your books don't balance.",
               "You aren't above the law!",
               'There should be a law against you.',
               "There's no ex post facto with me!",
-              "The opinions expressed in this attack are not those of Disney's Toontown Online.",
+              "The opinions expressed in this attack are not those of Toontown.",
               'We cannot be held responsible for damages suffered in this attack.',
               'Your results for this attack may vary.',
               'This attack is void where prohibited.',
@@ -3107,13 +3107,13 @@ FADoorCodes_TALK_TO_HQ_TOM = 'Go get your reward from Toon Headquarters!'
 FADoorCodes_SUIT_APPROACHING = None
 FADoorCodes_BUILDING_TAKEOVER = "Watch out! There's a Cog in there!"
 FADoorCodes_SB_DISGUISE_INCOMPLETE = "You'll get caught going in there as a Toon! You need to complete your Sellbot Disguise first!\n\nBuild your Sellbot Disguise out of parts from the Factory."
-FADoorCodes_CB_DISGUISE_INCOMPLETE = "You'll get caught going in there as a Toon! You need to complete your Cashbot Disguise first!\n\nBuild your Cashbot Disguise by doing ToonTasks in Donald's Dreamland."
-FADoorCodes_LB_DISGUISE_INCOMPLETE = "You'll get caught going in there as a Toon! You need to complete your Lawbot Disguise first!\n\nBuild your Lawbot Disguise by doing the ToonTasks after Donald's Dreamland."
-FADoorCodes_BB_DISGUISE_INCOMPLETE = "You'll get caught going in there as a Toon! You need to complete your Bossbot Disguise first!\n\nBuild your Bossbot Disguise by doing the ToonTasks after Donald's Dreamland."
+FADoorCodes_CB_DISGUISE_INCOMPLETE = "You'll get caught going in there as a Toon! You need to complete your Cashbot Disguise first!\n\nBuild your Cashbot Disguise by doing ToonTasks in Slumber Springs."
+FADoorCodes_LB_DISGUISE_INCOMPLETE = "You'll get caught going in there as a Toon! You need to complete your Lawbot Disguise first!\n\nBuild your Lawbot Disguise by doing the ToonTasks after Slumber Springs."
+FADoorCodes_BB_DISGUISE_INCOMPLETE = "You'll get caught going in there as a Toon! You need to complete your Bossbot Disguise first!\n\nBuild your Bossbot Disguise by doing the ToonTasks after Slumber Springs."
 KnockKnockContestJokes = {2100: ['Wally', "Wally's not looking, hit him with a pie!"],
  2200: {28: ['Biscuit', 'Biscuit out of here the Cogs are coming!'],
         41: ['Dewey', 'Dewey want to go defeat some more Cogs?'],
-        40: ['Minnie', "Minnie people have asked that, and it's driving me crazy!"],
+        40: ['Many', "Many people have asked that, and it's driving me crazy!"],
         27: ['Disguise', 'Disguise where the Cogs fly!']},
  2300: ['Justin', 'Justin other couple of Cog parts and off we go!'],
  3300: {10: ['Aladdin', 'Aladdin HQ wants a word with you.'],
@@ -3143,7 +3143,7 @@ KnockKnockJokes = [['Who', "Bad echo in here, isn't there?"],
  ['Cozy', "Cozy who's knocking will you?"],
  ['Sam', 'Sam person who knocked on the door last time.'],
  ['Fozzie', 'Fozzie hundredth time, my name is ' + Flippy + '.'],
- ['Deduct', Donald + ' Deduct.'],
+ ['Deduct', Dudley + ' Deduct.'],
  ['Max', 'Max no difference, just open the door.'],
  ['N.E.', 'N.E. body you like, let me in.'],
  ['Amos', 'Amos-quito bit me.'],
@@ -3177,7 +3177,7 @@ KnockKnockJokes = [['Who', "Bad echo in here, isn't there?"],
  ['Thermos', 'Thermos be a better knock knock joke than this.'],
  ['Sultan', 'Sultan Pepper.'],
  ['Vaughan', 'Vaughan day my prince will come.'],
- ['Donald', 'Donald come baby, cradle and all.'],
+ ['Down', 'Down will come baby, cradle and all.'],
  ['Lettuce', "Lettuce in, won't you?"],
  ['Ivor', 'Ivor sore hand from knocking on your door!'],
  ['Isabel', 'Isabel broken, because I had to knock.'],
@@ -3267,7 +3267,7 @@ SharedChatterComments = ["That's a great name, %.",
  "It's fun helping my friends.",
  "A-hem, are you lost?  Don't forget your map is in your shticker Book.",
  'Try not to get tied up in the ' + Cogs + "' Red Tape.",
- 'I hear ' + Daisy + ' has planted some new flowers in her garden.',
+ 'I hear ' + Dottie + ' has planted some new flowers in her garden.',
  'If you press the Page Up key, you can look up!',
  'If you help take over Cog buildings, you can earn a bronze star!',
  'If you press the Tab key, you can see different views of your surroundings!',
@@ -3284,375 +3284,8 @@ SharedChatterGoodbyes = ['I have to go now, bye!',
  "I'm going to join a group and stop some " + Cogs + '.',
  'It was nice to see you today, %.',
  "I have a lot to do today. I'd better get busy."]
-MickeyChatter = (['Welcome to ' + lToontownCentral + '.', 'Hi, my name is ' + Mickey + ". What's yours?"], ['Hey, have you seen ' + Donald + '?',
-  "I'm going to go watch the fog roll in at " + lDonaldsDock + '.',
-  'If you see my pal ' + Goofy + ', say hi to him for me.',
-  'I hear ' + Daisy + ' has planted some new flowers in her garden.'], ["I'm going to MelodyLand to see " + Minnie + '!',
-  "Gosh, I'm late for my date with " + Minnie + '!',
-  "Looks like it's time for " + Pluto + "'s dinner.",
-  "I think I'll go swimming at " + lDonaldsDock + '.',
-  "It's time for a nap. I'm going to Dreamland."])
-WinterMickeyCChatter = (["Hi, I'm Merry Mickey!",
-  'Welcome to Tinseltown... I mean, Toontown!',
-  'Happy Winter Holiday!',
-  'Happy Winter Holiday, %'], ['Sing your seasonal cheer at Joy Buzzers to the World and Joy is sure to return the favor!',
-  'Golly, these halls sure are decked!',
-  'Sing your seasonal cheer at Joy Buzzers to the World and Joy is sure to return the favor!',
-  'Just look at those tree lights! What a sight!',
-  'Sing your seasonal cheer at Joy Buzzers to the World and Joy is sure to return the favor!',
-  'Not a creature is stirring, except this mouse!',
-  'Sing your seasonal cheer at Joy Buzzers to the World and Joy is sure to return the favor!',
-  'I love this time of year!',
-  'Sing your seasonal cheer at Joy Buzzers to the World and Joy is sure to return the favor!',
-  "I'm feeling jolly, how about you?",
-  'Sing your seasonal cheer at Joy Buzzers to the World and Joy is sure to return the favor!',
-  'Know any good carols?',
-  'Sing your seasonal cheer at Joy Buzzers to the World and Joy is sure to return the favor!',
-  'Oh boy! I love Winter Holiday!',
-  'Sing your seasonal cheer at Joy Buzzers to the World and Joy is sure to return the favor!',
-  "I think I'll trade my gloves for mittens!"], ['Have a happy Winter Holiday!',
-  'Warm wishes to you!',
-  'Shucks, sorry you have to go. So long!',
-  "I'm going caroling with Minnie!"])
-ValentinesMickeyChatter = (["Hi, I'm Mickey!",
-  'Welcome to ValenToontown Central!',
-  "Happy ValenToon's Day!",
-  "Happy ValenToon's Day, %"], ['Love is in the air! And butterflies!',
-  'Those hearts are good for Laff boosts!',
-  'I hope Minnie likes what I got her!',
-  "The Cattlelog has lots of ValenToon's Day gifts!",
-  "Throw a ValenToon's Day party!",
-  'Show the Cogs you love them with a pie in the face!',
-  "I'm taking Minnie out to the Kooky Cafe!",
-  'Will Minnie want chocolates or flowers?'], ['I loved having you visit!', "Tell Minnie I'll pick her up soon!"])
-WinterMickeyDChatter = (["Hi, I'm Merry Mickey!",
-  'Welcome to Tinseltown... I mean, Toontown!',
-  'Happy Winter Holiday!',
-  'Happy Winter Holiday, %'], ['Golly, these halls sure are decked!',
-  'Just look at those tree lights! What a sight!',
-  'Not a creature is stirring, except this mouse!',
-  'I love this time of year!',
-  "I'm feeling jolly, how about you?",
-  'Know any good carols?',
-  'Oh boy! I love Winter Holiday!',
-  "I think I'll trade my gloves for mittens!"], ['Have a happy Winter Holiday!',
-  'Warm wishes to you!',
-  'Shucks, sorry you have to go. So long!',
-  "I'm going caroling with Minnie!"])
-VampireMickeyChatter = (['Welcome to ' + lToontownCentral + '.',
-  'Hi, my name is ' + Mickey + ". What's yours?",
-  'Happy Halloween!',
-  'Happy Halloween, %!',
-  'Welcome to Tombtown... I mean Toontown!'], ['If you think playing tricks is All Fun and Games, go see Lazy Hal for a treat!',
-  "It's fun to dress up for Halloween!",
-  'If you think playing tricks is All Fun and Games, go see Lazy Hal for a treat!',
-  'Do you like my costume?',
-  'If you think playing tricks is All Fun and Games, go see Lazy Hal for a treat!',
-  '%, watch out for Bloodsucker Cogs!',
-  'If you think playing tricks is All Fun and Games, go see Lazy Hal for a treat!',
-  "Aren't the Halloween decorations great?",
-  'If you think playing tricks is All Fun and Games, go see Lazy Hal for a treat!',
-  'Beware of black cats!',
-  'If you think playing tricks is All Fun and Games, go see Lazy Hal for a treat!',
-  'Did you see the Toon with the pumpkin head?',
-  'If you think playing tricks is All Fun and Games, go see Lazy Hal for a treat!',
-  'Boo!  Did I scare you?',
-  'If you think playing tricks is All Fun and Games, go see Lazy Hal for a treat!',
-  "Don't forget to brush your fangs!",
-  'If you think playing tricks is All Fun and Games, go see Lazy Hal for a treat!',
-  "I'm a vampire, but not a Bloodsucker!",
-  'If you think playing tricks is All Fun and Games, go see Lazy Hal for a treat!',
-  "I hope you're enjoying our Halloween fun!",
-  'If you think playing tricks is All Fun and Games, go see Lazy Hal for a treat!',
-  'Vampires are really popular this year!'], ["I'm going to check out the cool Halloween decorations.",
-  "I'm going to MelodyLand to surprise " + Minnie + '!',
-  "I'm going to sneak up on another Toon!  Shhh!",
-  "I'm going trick-or-treating!",
-  'Shhh, sneak with me.'])
-FieldOfficeMickeyChatter = ['Have you heard about the new Mover & Shaker Field Offices?']
-MinnieChatter = (['Welcome to Melodyland.', 'Hi, my name is ' + Minnie + ". What's yours?"], ['The hills are alive with the sound of music!',
-  'You have a cool outfit, %.',
-  'Hey, have you seen ' + Mickey + '?',
-  'If you see my friend ' + Goofy + ', say hi to him for me.',
-  'Wow, there are lots of ' + Cogs + ' near ' + Donald + "'s Dreamland.",
-  "I heard it's foggy at the " + lDonaldsDock + '.',
-  'Be sure and try the maze in ' + lDaisyGardens + '.',
-  "I think I'll go catch some tunes.",
-  'Hey %, look at that over there.',
-  'I love the sound of music.',
-  "I bet you didn't know Melodyland is also called TuneTown!  Hee Hee!",
-  'I love to play the Matching Game. Do you?',
-  'I like to make people giggle.',
-  'Boy, trotting around in heels all day is hard on your feet!',
-  'Nice shirt, %.',
-  'Is that a jellybean on the ground?'], ["Gosh, I'm late for my date with %s!" % Mickey, "Looks like it's time for %s's dinner." % Pluto, "It's time for a nap. I'm going to Dreamland."])
-WinterMinnieCChatter = (["Hi, I'm Merry Minnie!",
-  'Welcome to the land of carols!',
-  'Happy Winter Holiday!',
-  'Happy Winter Holiday, %!'], ["You'll get more than a Shave and a Haircut For a Song if you carol to Barbara Seville!",
-  'Belt out a tune, Toon!',
-  "You'll get more than a Shave and a Haircut For a Song if you carol to Barbara Seville!",
-  'Show us how to croon, Toon!',
-  "You'll get more than a Shave and a Haircut For a Song if you carol to Barbara Seville!",
-  'Can you carry a melody here in Melodyland?',
-  "You'll get more than a Shave and a Haircut For a Song if you carol to Barbara Seville!",
-  'Those lamps look warm in their scarves!',
-  "You'll get more than a Shave and a Haircut For a Song if you carol to Barbara Seville!",
-  "The sing's the thing!",
-  "You'll get more than a Shave and a Haircut For a Song if you carol to Barbara Seville!",
-  "I'll always like you, for better or verse!",
-  "You'll get more than a Shave and a Haircut For a Song if you carol to Barbara Seville!",
-  'Everything looks better with a wreath!'], ['Have a fun Winter Holiday!', 'Happy Trails!', 'Mickey is taking me caroling!'])
-WinterMinnieDChatter = (["Hi, I'm Merry Minnie!",
-  'Welcome to the land of carols!',
-  'Happy Winter Holiday!',
-  'Happy Winter Holiday, %!'], ['Belt out a tune, Toon!',
-  'Show us how to croon, Toon!',
-  'Can you carry a melody here in Melodyland?',
-  'Those lamps look warm in their scarves!',
-  "The sing's the thing!",
-  "You can't go wrong with a song!",
-  "I'll always like you, for better or verse!",
-  'Everything looks better with a wreath!'], ['Have a fun Winter Holiday!', 'Happy Trails!', 'Mickey is taking me caroling!'])
-ValentinesMinnieChatter = (["Hello, I'm Minnie!", "Happy ValenToon's Day!", "Happy ValenToon's Day, %"], ['I hope Mickey got me chocolates or flowers!',
-  'Those hearts are good for Laff boosts!',
-  'I want to go to a ValenToon Party!',
-  'I hope Mickey takes me to the Kooky Cafe!',
-  'Mickey is such a good ValenToon!',
-  'What did you get your ValenToon?',
-  "Mickey has never missed a ValenToon's Day!"], ['It was sweet having you visit!'])
-WitchMinnieChatter = (['Welcome to Magicland... I mean Melodyland!',
-  "Hi, my name is Magic Minnie! What's yours?",
-  "Hello, I think you're enchanting!",
-  'Happy Halloween!',
-  'Happy Halloween, %!'], ['I hear Tabitha has treats for Really Kool Katz who can play tricks!',
-  "It's a magical day, don't you think?",
-  'I hear Tabitha has treats for Really Kool Katz who can play tricks!',
-  'Now where did I put my spell book',
-  'I hear Tabitha has treats for Really Kool Katz who can play tricks!',
-  'Abra-Cadabra!',
-  'I hear Tabitha has treats for Really Kool Katz who can play tricks!',
-  'Toontown looks positively spooky today!',
-  'I hear Tabitha has treats for Really Kool Katz who can play tricks!',
-  'Are you seeing stars too?',
-  'I hear Tabitha has treats for Really Kool Katz who can play tricks!',
-  'Purple is really my color!',
-  'I hear Tabitha has treats for Really Kool Katz who can play tricks!',
-  'I hope your Halloween is bewitching!',
-  'I hear Tabitha has treats for Really Kool Katz who can play tricks!',
-  'Beware of musical spiders!',
-  'I hear Tabitha has treats for Really Kool Katz who can play tricks!',
-  'I hope you are enjoying our Halloween fun!'], ["I'm going to disappear now!", 'Time for me to vanish!', 'Mickey is taking me Trick-or-Treating!'])
-FieldOfficeMinnieChatter = ['Everyone is talking about the new Mover & Shaker Field Offices!']
-DaisyChatter = (['Welcome to my garden!', "Hello, I'm " + Daisy + ". What's your name?", "It's so nice to see you %!"], ['My prize winning flower is at the center of the garden maze.',
-  'I just love strolling through the maze.',
-  "I haven't seen " + Goofy + ' all day.',
-  'I wonder where ' + Goofy + ' is.',
-  'Have you seen ' + Donald + "? I can't find him anywhere.",
-  'If you see my friend ' + Minnie + ', please say "Hello" to her for me.',
-  'The better gardening tools you have the better plants you can grow.',
-  'There are far too many ' + Cogs + ' near ' + lDonaldsDock + '.',
-  'Watering your garden every day keeps your plants happy.',
-  'To grow a Pink Daisy plant a yellow and red jellybean together.',
-  'Yellow daisies are easy to grow, just plant a yellow jellybean.',
-  'If you see sand under a plant it needs water or it will wilt!'], ["I'm going to Melody Land to see %s!" % Minnie,
-  "I'm late for my picnic with %s!" % Donald,
-  "I think I'll go swimming at " + lDonaldsDock + '.',
-  "Oh, I'm a little sleepy. I think I'll go to Dreamland."])
-ValentinesDaisyChatter = (["Hi, I'm Daisy!", "Happy ValenToon's Day!", "Happy ValenToon's Day, %"], ["I hope Donald doesn't get me another Amore Eel!",
-  'Donald is taking me out to the Deep-see Diner!',
-  'I certainly have enough roses!',
-  'Those hearts are good for Laff boosts!',
-  "I'd love to go to a ValenToon's Day party!",
-  'This is the garden where love grows!',
-  "Donald better not sleep through ValenToon's Day again!",
-  'Maybe Donald and I can double-date with Mickey and Minnie!'], ["Tell Donald I'll be waiting for him!", "Have a nice ValenToon's Day!"])
-WinterDaisyCChatter = (['Welcome to the only garden that grows in the winter!', 'Happy Winter Holiday!', 'Happy Winter Holiday, %!'], ['Shoshanna at Pine Needle Crafts is a real sap for songs, so why not craft her a carol?',
-  'My garden needs more mistletoe!',
-  'Shoshanna at Pine Needle Crafts is a real sap for songs, so why not craft her a carol?',
-  'I need to plant holly for next year!',
-  'Shoshanna at Pine Needle Crafts is a real sap for songs, so why not craft her a carol?',
-  "I'm going to ask Goofy to build me a gingerbread house!",
-  'Shoshanna at Pine Needle Crafts is a real sap for songs, so why not craft her a carol?',
-  'Those lights on the lamps are lovely!',
-  'Shoshanna at Pine Needle Crafts is a real sap for songs, so why not craft her a carol?',
-  'That is some jolly holly!',
-  'Shoshanna at Pine Needle Crafts is a real sap for songs, so why not craft her a carol?',
-  'My snowman keeps melting!',
-  'Shoshanna at Pine Needle Crafts is a real sap for songs, so why not craft her a carol?',
-  'That duck is decked out!',
-  'Shoshanna at Pine Needle Crafts is a real sap for songs, so why not craft her a carol?',
-  'I grew all these lights myself!'], ['Have a jolly Winter Holiday!',
-  'Happy planting!',
-  'Tell Donald to stop by with presents!',
-  'Donald is taking me caroling!'])
-WinterDaisyDChatter = (['Welcome to the only garden that grows in the winter!', 'Happy Winter Holiday!', 'Happy Winter Holiday, %!'], ['My garden needs more mistletoe!',
-  'I need to plant holly for next year!',
-  "I'm going to ask Goofy to build me a gingerbread house!",
-  'Those lights on the lamps are lovely!',
-  'That is some jolly holly!',
-  'My snowman keeps melting!',
-  'That duck is decked out!',
-  'I grew all these lights myself!'], ['Have a jolly Winter Holiday!',
-  'Happy planting!',
-  'Tell Donald to stop by with presents!',
-  'Donald is taking me caroling!'])
-HalloweenDaisyChatter = (['Welcome to Daisy Ghosts... I mean Gardens!', 'Happy Halloween!', 'Happy Halloween, %!'], ['Visit my friend Leif Pyle if you have a trick and Rake Inn the treats!',
-  'Wanna dance?',
-  'Visit my friend Leif Pyle if you have a trick and Rake Inn the treats!',
-  "I'm a duck with a poodle skirt!",
-  'Visit my friend Leif Pyle if you have a trick and Rake Inn the treats!',
-  'The pirate tree needs water.',
-  'Visit my friend Leif Pyle if you have a trick and Rake Inn the treats!',
-  'Trick-or-Tree!',
-  'Visit my friend Leif Pyle if you have a trick and Rake Inn the treats!',
-  'Do you notice anything strange about the trees?',
-  'Visit my friend Leif Pyle if you have a trick and Rake Inn the treats!',
-  'I should grow some pumpkins!',
-  'Visit my friend Leif Pyle if you have a trick and Rake Inn the treats!',
-  'WHO notices something different about the lamps?',
-  'Visit my friend Leif Pyle if you have a trick and Rake Inn the treats!',
-  'Halloween really grows on me!',
-  'Visit my friend Leif Pyle if you have a trick and Rake Inn the treats!',
-  'Twig-or-Treat!',
-  'Visit my friend Leif Pyle if you have a trick and Rake Inn the treats!',
-  "Owl bet you didn't notice the spooky lamps!",
-  'Visit my friend Leif Pyle if you have a trick and Rake Inn the treats!',
-  'I hope you are enjoying our Halloween fun!'], ['Donald is taking me Trick-or-Treating!', "I'm going to check out the fun Halloween decorations."])
-FieldOfficeDaisyChatter = ['Those Mover & Shaker Field Offices are popping up like weeds!']
-ChipChatter = (['Welcome to %s!' % lOutdoorZone,
-  "Hello, I'm " + Chip + ". What's your name?",
-  "No, I'm " + Chip + '.',
-  "It's so nice to see you %!",
-  'We are Chip and Dale!'], ['I like golf.', 'We have the best acorns in Toontown.', 'The golf holes with volcanoes are the most challenging for me.'], ["We're going to the " + lTheBrrrgh + ' and play with %s.' % Pluto,
-  "We'll visit %s and fix him." % Donald,
-  "I think I'll go swimming at " + lDonaldsDock + '.',
-  "Oh, I'm a little sleepy. I think I'll go to Dreamland."])
-ValentinesChipChatter = (["I'm Chip!", "Happy ValenToon's Day!", "Happy ValenToon's Day, %!"], ["What did you get me for ValenToon's Day, Dale?",
-  'Those hearts are good for Laff boosts!',
-  'Will you be my ValenToon, Dale?',
-  "What did you get the Cogs for ValenToon's Day?",
-  "I love ValenToon's Day!"], ['Come back any time!'])
-WinterChipChatter = (['Happy Winter Holiday!', 'Dressed as chipmunks!', 'Happy Winter Holiday, %!'], ['Happy Winter Holiday, Dale!',
-  'All this water could freeze any minute!',
-  'We should switch the golf balls with snowballs!',
-  'If only chipmunks knew how to sing!',
-  'Did you remember to store nuts for the winter?',
-  'Did you get the Cogs a present?'], ['Go nuts this Winter Holiday!', 'Have a joyful winter Holiday!'])
-HalloweenChipChatter = (['Play some MiniGhoul... I mean Golf!', 'Happy Halloween!', 'Happy Halloween, %!'], ["We're nuts about Halloween!",
-  "You're under arrest",
-  "You can't outrun the long arm of the law",
-  "I'm a Bobby!",
-  'I hope you are enjoying our Halloween fun!',
-  'Play golf and get a Howl-In-One.',
-  'Candy corns are sweeter than acorns.',
-  'I hope you are enjoying our Halloween fun!'], ['%, watch out for Bloodsucker Cogs!'])
-DaleChatter = (["It's so nice to see you %!",
-  "Hello, I'm " + Dale + ". What's your name?",
-  "Hi I'm " + Chip + '.',
-  'Welcome to %s!' % lOutdoorZone,
-  'We are Chip and Dale!'], ['I like picnics.', 'Acorns are tasty, try some.', 'Those windmills can be hard too.'], ['Hihihi ' + Pluto + ' is fun to play with.',
-  "Yeah, let's fix %s." % Donald,
-  'A swim sounds refreshing.',
-  "I'm getting tired and could use a nap."])
-ValentinesDaleChatter = (["I'm Dale!", "Happy ValenToon's Day!", "Happy ValenToon's Day, %!"], ['Same thing as last year. Nothing!',
-  'I miss the nuts!',
-  'Will you be my ValenToon, Chip?',
-  'A pie in the face',
-  "Yeah, it's all right."], ['Come back any time!'])
-WinterDaleChatter = (['Merry chipmunks!',
-  "Hi, we're two merry elves!",
-  'Happy Winter Holiday!',
-  'Happy Winter Holiday, %!'], ['Happy Winter Holiday, Chip!',
-  'Better not be on the geyser when it happens!',
-  'And the golf clubs with icicles!',
-  'Whoever heard of singing chipmunks?',
-  'I told YOU to do that!',
-  'Yes, a cream pie!'], ['And bring some back for us!', 'Have a joyful Winter Holiday!'])
-HalloweenDaleChatter = (['Happy Halloween, %!', 'Play some MiniGhoul... I mean Golf!', 'Happy Halloween!'], ["We're nuts about Halloween!",
-  'Great, I could use a rest!',
-  'But your arms are short!',
-  'I thought you were a Chip!',
-  'Play golf and get a Howl-In-One',
-  'Candy corns are sweeter than acorns.',
-  'I hope you are enjoying our Halloween fun!'], ['%, watch out for Bloodsucker Cogs!'])
-GoofyChatter = (['Welcome to ' + lDaisyGardens + '.', 'Hi, my name is ' + Goofy + ". What's yours?", "Gawrsh, it's nice to see you %!"], ['Boy it sure is easy to get lost in the garden maze!',
-  'Be sure and try the maze here.',
-  "I haven't seen " + Daisy + ' all day.',
-  'I wonder where ' + Daisy + ' is.',
-  'Hey, have you seen ' + Donald + '?',
-  'If you see my friend ' + Mickey + ', say hi to him for me.',
-  "D'oh! I forgot to fix " + Mickey + "'s breakfast!",
-  'Gawrsh there sure are a lot of ' + Cogs + ' near ' + lDonaldsDock + '.',
-  'It looks like ' + Daisy + ' has planted some new flowers in her garden.',
-  'At the Brrrgh branch of my Gag Shop, Hypno-Goggles are on sale for only 1 jellybean!',
-  "Goofy's Gag Shops offer the best jokes, tricks, and funnybone-ticklers in all of Toontown!",
-  "At Goofy's Gag Shops, every pie in the face is guaranteed to make a laugh or you get your jellybeans back!"], ["I'm going to Melody Land to see %s!" % Mickey,
-  "Gosh, I'm late for my game with %s!" % Donald,
-  "I think I'll go swimming at " + lDonaldsDock + '.',
-  "It's time for a nap. I'm going to Dreamland."])
-WinterGoofyChatter = (["I'm Goofy about the holidays!",
-  'Welcome to Snowball Speedway!',
-  'Happy Winter Holiday!',
-  'Happy Winter Holiday, %!'], ['Who needs reindeer when you have a fast kart?',
-  'Gawrsh! Is it Winter Holiday already?',
-  'I need my earmuffs!',
-  "I haven't done any shopping yet!",
-  "Don't drive your kart on ice!",
-  'Seems like it was Winter Holiday only a year ago!',
-  'Treat your kart to a present and spruce it up!',
-  'These karts are better than any old sleigh!'], ['Have a cheery Winter Holiday!', 'Drive safe, now!', 'Watch out for flying reindeer!'])
-ValentinesGoofyChatter = (["I'm Goofy about ValenToon's Day!", "Happy ValenToon's Day!", "Happy ValenToon's Day, %!"], ["Gawrsh! Is it ValenToon's Day already?",
-  'I LOVE kart racing!',
-  'Be sweet to each other out there!',
-  'Show your sweetie a new kart!',
-  'Toons love their karts!',
-  'Make some new friends on the track!'], ['Drive safe, now!', 'Show some love out there!'])
-GoofySpeedwayChatter = (['Welcome to ' + lGoofySpeedway + '.', 'Hi, my name is ' + Goofy + ". What's yours?", "Gawrsh, it's nice to see you %!"], ['Boy, I saw a terrific race earlier.',
-  'Watch out for banana peels on the race track!',
-  'Have you upgraded your kart lately?',
-  'We just got in some new rims at the kart shop.',
-  'Hey, have you seen ' + Donald + '?',
-  'If you see my friend ' + Mickey + ', say hi to him for me.',
-  "D'oh! I forgot to fix " + Mickey + "'s breakfast!",
-  'Gawrsh there sure are a lot of ' + Cogs + ' near ' + lDonaldsDock + '.',
-  'At the Brrrgh branch of my Gag Shop, Hypno-Goggles are on sale for only 1 jellybean!',
-  "Goofy's Gag Shops offer the best jokes, tricks, and funnybone-ticklers in all of Toontown!",
-  "At Goofy's Gag Shops, every pie in the face is guaranteed to make a laugh or you get your jellybeans back!"], ["I'm going to Melody Land to see %s!" % Mickey,
-  "Gosh, I'm late for my game with %s!" % Donald,
-  "I think I'll go swimming at " + lDonaldsDock + '.',
-  "It's time for a nap. I'm going to Dreamland."])
-SuperGoofyChatter = (['Welcome to my Super Speedway!',
-  "Hi, I'm Super Goof! What's your name?",
-  'Happy Halloween!',
-  'Happy Halloween, %!'], ['I am feeling kind of batty today!',
-  'Anybody see my cape around? Oh, there it is!',
-  "Gawrsh! I don't know my own strength!",
-  'Did somebody call for a superhero?',
-  "Beware Cogs, I'll save Halloween!",
-  "There's nothing scarier than me in a kart!",
-  "I bet you don't know who I am with this mask on!",
-  "It's fun to dress up for Halloween!",
-  'I hope you are enjoying our Halloween fun!'], ['Gotta fly!',
-  'Hi-Ho and away I go!',
-  "Should I fly or drive to Donald's Dock?",
-  'Gawrsh, have a Happy Halloween!'])
-DonaldChatter = (['Welcome to Dreamland.', "Hi, my name is %s. What's yours?" % Donald], ['Sometimes this place gives me the creeps.',
-  'Be sure and try the maze in ' + lDaisyGardens + '.',
-  "Oh boy, I'm having a good day.",
-  'Hey, have you seen ' + Mickey + '?',
-  'If you see my buddy ' + Goofy + ', say hi to him for me.',
-  "I think I'll go fishing this afternoon.",
-  'Wow, there are lots of ' + Cogs + ' at ' + lDonaldsDock + '.',
-  "Hey, didn't I take you on a boat ride at " + lDonaldsDock + '?',
-  "I haven't seen " + Daisy + ' all day.',
-  'I hear ' + Daisy + ' has planted some new flowers in her garden.',
-  'Quack.'], ["I'm going to Melody Land to see %s!" % Minnie,
-  "Gosh, I'm late for my date with %s!" % Daisy,
-  "I think I'll go swimming at my dock.",
-  "I think I'll take my boat for a spin at my dock."])
-WinterDreamlandCChatter = (["Hi, I'm Dozing Donald!",
-  'Welcome to Holiday Dreamland!',
+WinterDreamlandCChatter = (["Hi, I'm Dozing Dudley!",
+  'Welcome to Holiday Slumber Springs!',
   'Happy Winter Holiday!',
   'Happy Winter Holiday, %!'], ['Willow says that learning a little Sleep Voice Training is a real present, sing her a tune and find out why!',
   'I wish I was nestled all snug in my bed!',
@@ -3668,8 +3301,8 @@ WinterDreamlandCChatter = (["Hi, I'm Dozing Donald!",
   "I love a long winter's nap!",
   'Willow says that learning a little Sleep Voice Training is a real present, sing her a tune and find out why!',
   'The trees on the streets are covered in night lights!'], ['To all, a good night!', 'Sweet dreams!', 'When I wake up I am going caroling!'])
-WinterDreamlandDChatter = (["Hi, I'm Dozing Donald!",
-  'Welcome to Holiday Dreamland!',
+WinterDreamlandDChatter = (["Hi, I'm Dozing Dudley!",
+  'Welcome to Holiday Slumber Springs!',
   'Happy Winter Holiday!',
   'Happy Winter Holiday, %!'], ['I wish I was nestled all snug in my bed!',
   "I'm dreaming of a white Toontown!",
@@ -3678,20 +3311,20 @@ WinterDreamlandDChatter = (["Hi, I'm Dozing Donald!",
   "I hope I don't sleep through the holidays!",
   "I love a long winter's nap!",
   'The trees on the streets are covered in night lights!'], ['To all, a good night!', 'Sweet dreams!', 'When I wake up I am going caroling!'])
-HalloweenDreamlandChatter = (['Happy Halloween!', 'Happy Halloween, %!', "Hi, I'm FrankenDonald!"], ['If you can play a trick on my friend Max, then you can Relax To The Max with a treat!',
+HalloweenDreamlandChatter = (['Happy Halloween!', 'Happy Halloween, %!', "Hi, I'm FrankenDudley!"], ['If you can play a trick on my friend Max, then you can Relax To The Max with a treat!',
   'Am I awake or dreaming?',
   'If you can play a trick on my friend Max, then you can Relax To The Max with a treat!',
   "I'm so scared, I can't fall asleep!",
   'If you can play a trick on my friend Max, then you can Relax To The Max with a treat!',
-  'So this is what Dreamland looks like!',
+  'So this is what Slumber Springs looks like!',
   'If you can play a trick on my friend Max, then you can Relax To The Max with a treat!',
   "Boy, I'm sleepy!",
   'If you can play a trick on my friend Max, then you can Relax To The Max with a treat!',
   "I hope I don't sleep through Halloween this year!",
   'If you can play a trick on my friend Max, then you can Relax To The Max with a treat!',
   'I hope you are enjoying our Halloween fun!'], ['Sleep with the lights on tonight!', 'When I wake up, I am going Trick-or-Treating!'])
-ValentinesDreamlandChatter = (["Hello, I'm (yawn) Donald!", "Happy ValenToon's Day!", "Happy ValenToon's Day, %!"], ["I hope I don't sleep through ValenToon's Day!",
-  "I'm dreaming of Daisy!",
+ValentinesDreamlandChatter = (["Hello, I'm (yawn) Dudley!", "Happy ValenToon's Day!", "Happy ValenToon's Day, %!"], ["I hope I don't sleep through ValenToon's Day!",
+  "I'm dreaming of Dottie!",
   "I had a nightmare that I missed ValenToon's Day!",
   'Those hearts are good for Laff boosts!',
   "Throw a ValenToon's Day party!",
@@ -3699,224 +3332,6 @@ ValentinesDreamlandChatter = (["Hello, I'm (yawn) Donald!", "Happy ValenToon's D
   "I couldn't dream of a nicer holiday than ValenToon's Day!",
   'I love sleeping!'], ['Nite-nite!', "Wake me when it's ValenToon's Day!"])
 FieldOfficeDreamlandChatter = ['I dreamed about something called a Field Office...']
-HalloweenDonaldChatter = (['Welcome to my Halloween harbor!',
-  'Come aboard, if you have treats!',
-  'Happy Halloween!',
-  'Happy Halloween, %!'], ['If playing tricks is making you feel Rudderly Ridiculous, then go see Rudy for a treat!',
-  "I'm dressed as a sailor!",
-  'If playing tricks is making you feel Rudderly Ridiculous, then go see Rudy for a treat!',
-  'Pumpkins make great lanterns!',
-  'If playing tricks is making you feel Rudderly Ridiculous, then go see Rudy for a treat!',
-  "I've never seen palm trees with hairy legs before!",
-  'If playing tricks is making you feel Rudderly Ridiculous, then go see Rudy for a treat!',
-  "Maybe I'll be a pirate next Halloween!",
-  'If playing tricks is making you feel Rudderly Ridiculous, then go see Rudy for a treat!',
-  'I think the best treats are starfish!',
-  'If playing tricks is making you feel Rudderly Ridiculous, then go see Rudy for a treat!',
-  "I'll take you Trick-or-Treating around the harbor!",
-  'If playing tricks is making you feel Rudderly Ridiculous, then go see Rudy for a treat!',
-  'I hope those spiders stay in the trees!',
-  'If playing tricks is making you feel Rudderly Ridiculous, then go see Rudy for a treat!',
-  'What do you call a ghost in the water? A BOO-y!',
-  'If playing tricks is making you feel Rudderly Ridiculous, then go see Rudy for a treat!',
-  'I hope you are enjoying our Halloween fun!'], ['Set sail for scares!', 'Happy haunting!', "I'm going to check out the spooky Halloween decorations."])
-ValentinesDonaldChatter = (["Ahoy, I'm Donald!", "Happy ValenToon's Day!", "Happy ValenToon's Day, %!"], ["Was I supposed to take Daisy somewhere for ValenToon's Day?",
-  "Just once more around the dock, then I'll get Daisy something.",
-  "What would Daisy like for ValenToon's Day?",
-  'Those hearts in the water are good for Laff boosts!',
-  "Throw a ValenToon's Day party!",
-  'Show the Cogs you love them with a pie in the face!',
-  "I'll have to catch an Amore Eel for Daisy!"], ['Aloha!', 'Give the Cogs my best!'])
-WinterDonaldCChatter = (["Welcome to Donald's Boat and Sleigh Dock!",
-  'All aboard for the Winter Holiday cruise!',
-  'Happy Winter Holiday!',
-  'Happy Winter Holiday, %!'], ['I hear that Dante has Gifts With A Porpoise, share a song and he may have a gift for you too!',
-  'How do you like my duck-orations?',
-  'I hear that Dante has Gifts With A Porpoise, share a song and he may have a gift for you too!',
-  'What is snow doing on the lamp posts?',
-  'I hear that Dante has Gifts With A Porpoise, share a song and he may have a gift for you too!',
-  'This water better not ice over!',
-  'I hear that Dante has Gifts With A Porpoise, share a song and he may have a gift for you too!',
-  'How did they get the lights up in those trees?',
-  'I hear that Dante has Gifts With A Porpoise, share a song and he may have a gift for you too!',
-  'This boat is better than a sleigh! or is it?',
-  'I hear that Dante has Gifts With A Porpoise, share a song and he may have a gift for you too!',
-  "I don't need reindeer to pull this boat!",
-  'I hear that Dante has Gifts With A Porpoise, share a song and he may have a gift for you too!',
-  "I'm glad I'm not a turkey this time of year!",
-  'I hear that Dante has Gifts With A Porpoise, share a song and he may have a gift for you too!',
-  'My present to you? Free boat rides!',
-  'I hear that Dante has Gifts With A Porpoise, share a song and he may have a gift for you too!',
-  "I hope I don't get a lump of coal again!",
-  'I hear that Dante has Gifts With A Porpoise, share a song and he may have a gift for you too!'], ['All ashore for holiday fun!', 'Remember to tip your boat driver on the way out!', 'Enjoy your holiday!'])
-WinterDonaldDChatter = (["Welcome to Donald's Boat and Sleigh Dock!",
-  'All aboard for the Winter Holiday cruise!',
-  'Happy Winter Holiday!',
-  'Happy Winter Holiday, %!'], ['How do you like my duck-orations?',
-  'What is snow doing on the lamp posts?',
-  'This water better not ice over!',
-  'How did they get the lights up in those trees?',
-  'This boat is better than a sleigh! or is it?',
-  "I don't need reindeer to pull this boat!",
-  "I'm glad I'm not a turkey this time of year!",
-  'My present to you? Free boat rides!',
-  "I hope I don't get a lump of coal again!"], ['All ashore for holiday fun!', 'Remember to tip your boat driver on the way out!', 'Enjoy your holiday!'])
-WesternPlutoChatter = (["Boo! Don't be scared, it's just me ... Pluto!", 'Happy Halloween, pardner!', 'Happy Halloween, %!'], ["Frosty Fred has treats for tricks, they make him feel like there's Snowplace Like Home!",
-  'I do tricks for treats!',
-  "Frosty Fred has treats for tricks, they make him feel like there's Snowplace Like Home!",
-  "Mickey's taking me Trick-or-Treating later!",
-  "Frosty Fred has treats for tricks, they make him feel like there's Snowplace Like Home!",
-  'It feels more like Winter Holiday than Halloween!',
-  "Frosty Fred has treats for tricks, they make him feel like there's Snowplace Like Home!",
-  "Bark! That's 'Trick-or-Treat' in dog!",
-  "Frosty Fred has treats for tricks, they make him feel like there's Snowplace Like Home!",
-  'I hope you are enjoying our Halloween fun!',
-  "Frosty Fred has treats for tricks, they make him feel like there's Snowplace Like Home!",
-  'I like to chase Black Cat Toons!',
-  "Frosty Fred has treats for tricks, they make him feel like there's Snowplace Like Home!",
-  "There's a snake in my boot!"], ["I'm going to go dig up a treat!", "I'm going to see if Mickey has some treats!", "I'm going to scare Donald!"])
-WinterPlutoCChatter = (["Hi, I'm Pluto!",
-  "Welcome to the Brrgh, where it's winter all year!",
-  'Happy Winter Holiday!',
-  'Happy Winter Holiday, %'], ["Eddie could use a good tune, because Snowman's Land is a lonely place for a Yeti!",
-  'I chewed on an icicle and got frost-bite!',
-  "Eddie could use a good tune, because Snowman's Land is a lonely place for a Yeti!",
-  'This is like living in a snow globe!',
-  "Eddie could use a good tune, because Snowman's Land is a lonely place for a Yeti!",
-  'I wish I was beside a warm fire!',
-  "Eddie could use a good tune, because Snowman's Land is a lonely place for a Yeti!",
-  'Arf! Arf! I need a scarf!',
-  "Eddie could use a good tune, because Snowman's Land is a lonely place for a Yeti!",
-  "At least my nose isn't red and glowing!"], ['Have a fun Winter Holiday!', 'Come back any time you want snow!', 'Mickey is taking me caroling!'])
-WinterPlutoDChatter = (["Hi, I'm Pluto!",
-  "Welcome to the Brrgh, where it's winter all year!",
-  'Happy Winter Holiday!',
-  'Happy Winter Holiday, %'], ['I chewed on an icicle and got frost-bite!',
-  'This is like living in a snow globe!',
-  'I wish I was beside a warm fire!',
-  'Arf! Arf! I need a scarf!',
-  "At least my nose isn't red and glowing!"], ['Have a fun Winter Holiday!', 'Come back any time you want snow!', 'Mickey is taking me caroling!'])
-AFMickeyChatter = (["Happy April Toons' Week!", "Happy April Toons' Week, %!"], ["Welcome to the Gardens! I'm " + Daisy + '!',
-  "I'm " + Daisy + ', and I love to garden!',
-  "April Toons' Week is the silliest week of the year!",
-  "What, you've never seen a duck with mouse ears?",
-  "Hi, I'm " + Daisy + '! Quack!',
-  "It's tough quacking like a duck!",
-  "I'm not feeling like myself today!",
-  'Have you heard your Doodle talk yet?',
-  'Gravity has taken a holiday at the Estates!'], ["Have a wacky April Toons' Week!", 'Tell Mickey I said hi!'])
-AFMinnieChatter = (["Happy April Toons' Week!", "Happy April Toons' Week, %!"], ['Welcome to ' + lTheBrrrgh + "! I'm " + Pluto + '!',
-  "Hi, I'm " + Pluto + "! What's your name?",
-  "What, you've never seen a dog with mouse ears?",
-  "I'm not feeling like myself today!",
-  "Does anyone have a doggie biscuit? I'm hungry!",
-  'Bark! My name is ' + Pluto + '!',
-  "Isn't this silly?",
-  "Don't make me chase you around!",
-  "April Toons' Week is the silliest week of the year!",
-  'Have you heard your Doodle talk yet?',
-  'Gravity has taken a holiday at the Estates!'], ["Have a wacky April Toons' Week!", 'I have to go chase cars now!  Bye!'])
-AFDaisyChatter = (["Happy April Toons' Week!", "Happy April Toons' Week, %!"], ['Welcome to ' + lToontownCentral + "! I'm " + Mickey + ' Mouse!',
-  "Hi, I'm " + Mickey + '! The happiest mouse in Toontown!',
-  'If you see ' + Daisy + ', tell her ' + Mickey + ' said hi!',
-  "What, you've never seen a mouse with feathers?",
-  "Isn't this silly?",
-  "I'm not feeling like myself today!",
-  "April Toons' Week is the silliest week of the year!",
-  'Have you heard your Doodle talk yet?',
-  'Gravity has taken a holiday at the Estates!'], ['Bye! Tell them ' + Mickey + ' sent you!', 'If you go to ' + lDaisyGardens + ', say hi to her for me!'])
-AFGoofySpeedwayChatter = (["Happy April Toons' Week!", "Happy April Toons' Week, %!"], ["Welcome to Dreamland! I'm " + Donald + '!',
-  "Hello, I'm " + Donald + '! Is it nap time yet?',
-  'A duck needs his beauty rest, you know!',
-  "What, you've never seen a duck with dog ears?",
-  'Gawrsh! I mean -- Quack!',
-  'This would make a great race track ... um, I mean place to nap!',
-  "I'm not feeling like myself today!",
-  "April Toons' Week is the silliest week of the year!",
-  'Have you heard your Doodle talk yet?',
-  'Gravity has taken a holiday at the Estates!'], ['If you see ' + Goofy + ', tell him ' + Donald + ' says hi!', 'Bye, and good night!'])
-AFDonaldChatter = (["Happy April Toons' Week!", "Happy April Toons' Week, %!"], ["Welcome to the Speedway! I'm " + Goofy + '!',
-  "I'm " + Goofy + ", and I'm dreaming I'm " + Donald + '!',
-  "I've heard of sleep walking, but sleep kart driving?",
-  'Gawrsh!  It sure is silly being ' + Goofy + '!',
-  'How can I watch the races with my eyes closed?',
-  'I better grab a nap before my next race!',
-  "April Toons' Week is the silliest week of the year!",
-  "I'm not feeling like myself today!",
-  'Have you heard your Doodle talk yet?',
-  'Gravity has taken a holiday at the Estates!'], ["Have a wacky April Toons' Week!", 'I need to work on my karts!  Bye!'])
-AFDonaldDockChatter = (["Happy April Toons' Week!", "Happy April Toons' Week, %!"], ["Everybody gets April Toons' Week off but me!",
-  "I'm the only one who has to work this week!",
-  'I only get time off when I sleep!',
-  'All my friends are pretending to be somebody else!',
-  'Round and round in this boat, all day long!',
-  'I heard Daisy is pretending to be Mickey!',
-  "The silliest week of the year, and I'm missing it!",
-  'Have you heard your Doodle talk yet?',
-  'Gravity has taken a holiday at the Estates!'], ["Have a wacky April Toons' Week!", 'Play a joke on the Cogs for me!'])
-AFPlutoChatter = (["Happy April Toons' Week!", "Happy April Toons' Week, %!"], ["Welcome to Melodyland!  I'm " + Minnie + '!',
-  'Hi, my name is ' + Minnie + ' Mouse!',
-  "I'm as happy as a mouse can be!",
-  "What, you've never seen a mouse with dog ears?",
-  'I love when ' + Mickey + ' and I go for walks!',
-  'What, you never heard a mouse talk before?',
-  "April Toons' Week is the silliest week of the year!",
-  'Have you heard your Doodle talk yet?',
-  'Gravity has taken a holiday at the Estates!'], ["Have a wacky April Toons' Week!", 'If you see ' + Pluto + ', tell him ' + Minnie + ' says hi!'])
-AFChipChatter = (["Happy April Toons' Week!", "Happy April Toons' Week, %!"], ["Hi, I'm " + Dale + '!',
-  'How are you today, ' + Chip + '?',
-  'I always thought you were ' + Dale + ', ' + Chip + '.',
-  "You're sure you're " + Chip + ' and not ' + Dale + ', ' + Chip + '?',
-  "April Toons' Week is the silliest week of the year!"], ['Bye from ' + Chip + ' and ' + Dale + '!'])
-AFDaleChatter = (["Happy April Toons' Week!", "Happy April Toons' Week, %!"], ["Hi, I'm " + Chip + '!',
-  'Very well ' + Dale + ', thanks!',
-  "Nope, I'm " + Chip + ', ' + Dale + '.',
-  'Yes, ' + Dale + ", I'm " + Chip + ', not ' + Dale + '.',
-  'It sure is, ' + Chip + '! I mean, ' + Dale + '.'], ['Or ' + Dale + ' and ' + Chip + '!'])
-CLGoofySpeedwayChatter = (['Welcome to ' + lGoofySpeedway + '.',
-  'Hi, my name is ' + Goofy + ". What's yours?",
-  "Gawrsh, it's nice to see you %!",
-  "Hi there!  Pardon my dusty clothes I've been busy fixin' that broken Leaderboard."], ['We better get this Leaderboard working soon, Grand Prix Weekend is coming up!',
-  "Does anybody want to buy a slightly used kart? It's only been through the Leaderboard once!",
-  'Grand Prix Weekend is coming, better get to practicing.',
-  'Grand Prix Weekend will be here on Friday, May 22 through Monday, May 25!',
-  "I'm gonna need a ladder to get that kart down.",
-  'That Toon really wanted to get on the Leaderboard!',
-  'Boy, I saw a terrific race earlier.',
-  'Watch out for banana peels on the race track!',
-  'Have you upgraded your kart lately?',
-  'We just got in some new rims at the kart shop.',
-  'Hey, have you seen ' + Donald + '?',
-  'If you see my friend ' + Mickey + ', say hi to him for me.',
-  "D'oh! I forgot to fix " + Mickey + "'s breakfast!",
-  'Gawrsh there sure are a lot of ' + Cogs + ' near ' + lDonaldsDock + '.',
-  'At the Brrrgh branch of my Gag Shop, Hypno-Goggles are on sale for only 1 jellybean!',
-  "Goofy's Gag Shops offer the best jokes, tricks, and funnybone-ticklers in all of Toontown!",
-  "At Goofy's Gag Shops, every pie in the face is guaranteed to make a laugh or you get your jellybeans back!"], ['I better go get my kart a new paint job for the upcoming Grand Prix Weekend.',
-  "Gosh, I better get workin' on this broken Leaderboard!",
-  "Hope I'll see y'all on Grand Prix Weekend!  Goodbye!",
-  "It's time for a nap. I'm going to Dreamland to dream about winnin' the Grand Prix."])
-GPGoofySpeedwayChatter = (['Welcome to ' + lGoofySpeedway + '.',
-  'Welcome to Grand Prix Weekend!',
-  'Hi, my name is ' + Goofy + ". What's yours?",
-  "Gawrsh, it's nice to see you %!"], ['Are you excited about the Grand Prix Weekend?',
-  'Grand Prix Weekend really drives up those scores!',
-  'Get more tickets by racing practice laps.',
-  "Gawrsh, you're a fast racer!",
-  'Boy, I saw a terrific race earlier.',
-  'Watch out for banana peels on the race track!',
-  'Have you upgraded your kart lately?',
-  'We just got in some new rims at the kart shop.',
-  'Hey, have you seen ' + Donald + '? He said he was gonna come watch the Grand Prix!',
-  'If you see my friend ' + Mickey + ", tell him he's missing some great racing!",
-  "D'oh! I forgot to fix " + Mickey + "'s breakfast!",
-  'Gawrsh there sure are a lot of ' + Cogs + ' near ' + lDonaldsDock + '.',
-  'At the Brrrgh branch of my Gag Shop, Hypno-Goggles are on sale for only 1 jellybean!',
-  "Goofy's Gag Shops offer the best jokes, tricks, and funnybone-ticklers in all of Toontown!",
-  "At Goofy's Gag Shops, every pie in the face is guaranteed to make a laugh or you get your jellybeans back!"], ['Good luck in the Grand Prix!',
-  "I'm going to catch the next race in the Grand Prix!",
-  'Gawrsh I think the next race is about to start!',
-  'Gosh, I better go check on the new Leaderboard and make sure it is working right!'])
 SillyPhase1Chatter = ["If you haven't seen the Silly Meter, head to Toon Hall!",
  'Toontown is getting sillier by the day!',
  "Cause silly surges in battle to boost Toontown's silly levels!",
@@ -3941,14 +3356,6 @@ SillyPhase4Chatter = ['Fire hydrants make your Squirt Gags squirtier!',
  'Objects on the street can help you in battle!',
  "I just know we'll get the Silly Meter back up soon!",
  'Enjoy the sillier Toontown!']
-for chatter in [MickeyChatter,
- DonaldChatter,
- MinnieChatter,
- GoofyChatter]:
-    chatter[0].extend(SharedChatterGreetings)
-    chatter[1].extend(SharedChatterComments)
-    chatter[2].extend(SharedChatterGoodbyes)
-
 BoringTopic = 'Boring'
 EmceeDialoguePhase1Topic = 'EmceeDialoguePhase1'
 EmceeDialoguePhase2Topic = 'EmceeDialoguePhase2'
@@ -4040,7 +3447,7 @@ FriendInviterPlayer = 'Player'
 FriendInviterThatPlayer = 'That player'
 FriendInviterBegin = 'What type of friend would you like to make?'
 FriendInviterToonFriendInfo = 'A friend only in Toontown'
-FriendInviterPlayerFriendInfo = 'A friend across the Disney.com network'
+FriendInviterPlayerFriendInfo = 'A friend across the network'
 FriendInviterToonTooMany = 'You have too many toon friends to add another one now. You will have to remove some toon friends if you want to make friends with %s. You could also try making player friends them.'
 FriendInviterPlayerTooMany = 'You have too many player friends to add another one now. You will have to remove some player friends if you want to make friends with %s. You could also try making toon friends with them.'
 FriendInviterToonAlready = '%s is already your toon friend.'
@@ -4105,7 +3512,7 @@ LauncherPhaseNames = {0: 'Initialization',
  12: Bossbot + ' HQ',
  13: 'Parties'}
 LauncherProgress = '%(name)s (%(current)s of %(total)s)'
-LauncherStartingMessage = "Starting Disney's Toontown Online... "
+LauncherStartingMessage = "Starting Toontown... "
 LauncherDownloadFile = 'Downloading update for ' + LauncherProgress + '...'
 LauncherDownloadFileBytes = 'Downloading update for ' + LauncherProgress + ': %(bytes)s'
 LauncherDownloadFilePercent = 'Downloading update for ' + LauncherProgress + ': %(percent)s%%'
@@ -4213,7 +3620,7 @@ EventsPageInvitedTabTime = '%s %s Toontown Time'
 EventsPageNewsTabName = 'News'
 EventsPageNewsTabTitle = 'News'
 EventsPageNewsDownloading = 'Retrieving News...'
-EventsPageNewsUnavailable = 'Chip and Dale played with the printing press. News not available.'
+EventsPageNewsUnavailable = 'Nib and Acorn played with the printing press. News not available.'
 EventsPageNewsPaperTitle = 'TOONTOWN TIMES'
 EventsPageNewsLeftSubtitle = 'Still only 1 jellybean'
 EventsPageNewsRightSubtitle = 'Established toon-thousand nine'
@@ -4320,35 +3727,35 @@ MusicMgTugOWar = 'Tug-of-War'
 MusicMgVine = 'The Jungle Swing'
 MusicMgIcegame = 'Slippery Situation'
 MusicMgToontag = 'Minigame Medley'
-MusicMMatchBg2 = 'Jazzy Minnie'
+MusicMMatchBg2 = 'Jazzy Millie'
 MusicMgTarget = "Soarin' Over Toontown"
 MusicFfSafezone = 'The Funny Farm'
 MusicDdSz = 'Waddling Way'
-MusicMmNbrhood = "Minnie's Melodyland"
+MusicMmNbrhood = "Melody Meadow"
 MusicGzPlaygolf = "Let's Play Golf!"
-MusicGsSz = 'Goofy Speedway'
-MusicOzSz = "Chip n' Dale's Acres"
+MusicGsSz = 'Speedway Park'
+MusicOzSz = "Acorn Acres"
 MusicGsRaceCc = 'Downtown Driving'
 MusicGsRaceSs = 'Ready, Set, Go!'
 MusicGsRaceRr = 'Route 66'
 MusicGzSz = 'The Putt-Putt Polka'
 MusicMmSz = 'Dancing in the Streets'
 MusicMmSzActivity = 'Here Comes Treble'
-MusicDdNbrhood = "Donald's Dock"
-MusicGsKartshop = 'Mr. Goofywrench'
+MusicDdNbrhood = "Dock Harbor"
+MusicGsKartshop = 'Mr. Gigglewrench'
 MusicDdSzActivity = 'Sea Shanty'
 MusicEncntrGeneralBgIndoor = 'Building Excitement'
 MusicTtElevator = 'Going Up?'
 MusicEncntrToonWinningIndoor = 'Toons Unite!'
 MusicEncntrGeneralSuitWinningIndoor = 'Cog-tastrophe!'
 MusicTbNbrhood = 'The Brrrgh'
-MusicDlNbrhood = "Donald's Dreamland"
+MusicDlNbrhood = "Slumber Springs"
 MusicDlSzActivity = 'Counting Sheep'
 MusicDgSz = 'Waltz of the Flowers'
 MusicDlSz = 'Sleepwalking'
 MusicTbSzActivity = 'Snow Problem'
 MusicTbSz = 'Shiver and Shimmy'
-MusicDgNbrhood = "Daisy's Garden"
+MusicDgNbrhood = "Garden Grove"
 MusicEncntrHallOfFame = 'The Hall of Fame'
 MusicEncntrSuitHqNbrhood = 'Dollars and Cents'
 MusicChqFactBg = 'Cog Factory'
@@ -4761,7 +4168,9 @@ ShardPageHelpIntro = 'Each District is a copy of the Toontown world.'
 ShardPageHelpWhere = '  You are currently in the "%s" District.'
 ShardPageHelpWelcomeValley = '  You are currently in the "Welcome Valley" District, within "%s".'
 ShardPageHelpMove = '  To move to a new District, click on its name.'
-ShardPagePopulationTotal = 'Total Toontown Population:\n%d'
+ShardPagePopulationTotal = 'Total Toontown Population: %d'
+ShardPagePopulation = 'Population: %d'
+ShardPageInvasion = '%s are invading Toontown!'
 ShardPageScrollTitle = 'Name            Population'
 ShardPageLow = 'Quiet'
 ShardPageMed = 'Ideal'
@@ -4907,9 +4316,9 @@ InventoryPass = 'PASS'
 InventoryFire = 'FIRE'
 InventoryClickToAttack = 'Click a\ngag to\nattack'
 InventoryDamageBonus = '(+%d)'
-NPCForceAcknowledgeMessage = "You must ride the trolley before leaving.\n\n\n\n\n\n\n\n\nYou can find the trolley next to Goofy's Gag Shop."
+NPCForceAcknowledgeMessage = "You must ride the trolley before leaving.\n\n\n\n\n\n\n\n\nYou can find the trolley next to Gag Shop."
 NPCForceAcknowledgeMessage2 = 'You must return to Toon Headquarters before leaving.\n\n\n\n\n\n\n\n\n\nToon Headquarters is located near the center of the playground.'
-NPCForceAcknowledgeMessage3 = "Remember to ride the trolley.\n\n\n\n\n\n\n\nYou can find the trolley next to Goofy's Gag Shop."
+NPCForceAcknowledgeMessage3 = "Remember to ride the trolley.\n\n\n\n\n\n\n\nYou can find the trolley next to Gag Shop."
 NPCForceAcknowledgeMessage4 = 'Congratulations!  You found and rode the trolley!\n\n\n\n\n\n\n\n\n\nNow report back to Toon Headquarters.'
 NPCForceAcknowledgeMessage5 = "Don't forget your ToonTask!\n\n\n\n\n\n\n\n\n\n\nYou can find Cogs to defeat on the other side of tunnels like this."
 NPCForceAcknowledgeMessage6 = 'Great job defeating those Cogs!\n\n\n\n\n\n\n\n\nHead back to Toon Headquarters as soon as possible.'
@@ -5116,7 +4525,7 @@ TownBattleSOSPetSearchTitle = 'Searching for doodle\n%s...'
 TownBattleSOSPetInfoTitle = '%s is %s'
 TownBattleSOSPetInfoOK = lOK
 TrolleyHFAMessage = 'You may not board the trolley until your Laff meter is smiling.'
-TrolleyTFAMessage = 'You may not board the trolley until ' + Mickey + ' says so.'
+TrolleyTFAMessage = 'You may not board the trolley until ' + Moe + ' says so.'
 TrolleyHopOff = 'Hop off'
 FishingExit = 'Exit'
 FishingCast = 'Cast'
@@ -5150,7 +4559,7 @@ FishPokerPair = 'Pair'
 TutorialGreeting1 = 'Hi %s!'
 TutorialGreeting2 = 'Hi %s!\nCome over here!'
 TutorialGreeting3 = 'Hi %s!\nCome over here!\nUse the arrow keys!'
-TutorialMickeyWelcome = 'Welcome to Toontown!'
+TutorialMoeWelcome = 'Welcome to Toontown!'
 TutorialFlippyIntro = 'Let me introduce you to my friend %s...' % Flippy
 TutorialFlippyHi = 'Hi, %s!'
 TutorialQT1 = 'You can talk by using this.'
@@ -5172,7 +4581,7 @@ TutorialOK = lOK
 TutorialYes = lYes
 TutorialNo = lNo
 TutorialFriendsPrompt = 'Would you like to make friends with %s?' % Flippy
-TutorialFriendsPanelMickeyChat = "%s has agreed to be your friend. Click 'Ok' to finish up." % Flippy
+TutorialFriendsPanelMoeChat = "%s has agreed to be your friend. Click 'Ok' to finish up." % Flippy
 TutorialFriendsPanelYes = '%s said yes!' % Flippy
 TutorialFriendsPanelNo = "That's not very friendly!"
 TutorialFriendsPanelCongrats = 'Congratulations! You made your first friend.'
@@ -5197,7 +4606,7 @@ TutorialTrolley2 = 'Hop on board!'
 TutorialBye1 = 'Play some games!'
 TutorialBye2 = 'Play some games!\nBuy some gags!'
 TutorialBye3 = 'Go see %s when you are done!' % Flippy
-TutorialForceAcknowledgeMessage = 'You are going the wrong way! Go find %s!' % Mickey
+TutorialForceAcknowledgeMessage = 'You are going the wrong way! Go find %s!' % Moe
 PetTutorialTitle1 = 'The Doodle Panel'
 PetTutorialTitle2 = 'Doodle SpeedChat'
 PetTutorialTitle3 = 'Doodle Cattlelog'
@@ -5258,8 +4667,8 @@ TugOfWarGameReady = 'Ready...'
 TugOfWarGameEnd = 'Good game!'
 TugOfWarGameTie = 'You tied!'
 TugOfWarPowerMeter = 'Power meter'
-PatternGameTitle = 'Match %s' % Minnie
-PatternGameInstructions = Minnie + ' will show you a dance sequence. ' + 'Try to repeat ' + Minnie + "'s dance just the way you see it using the arrow keys!"
+PatternGameTitle = 'Match %s' % Millie
+PatternGameInstructions = Millie + ' will show you a dance sequence. ' + 'Try to repeat ' + Millie + "'s dance just the way you see it using the arrow keys!"
 PatternGameWatch = 'Watch these dance steps...'
 PatternGameGo = 'GO!'
 PatternGameRight = 'Good, %s!'
@@ -5354,7 +4763,7 @@ CogThiefBarrelSaved = '%(num)d Barrel\nSaved!'
 CogThiefNoBarrelsSaved = 'No Barrels\nSaved'
 CogThiefPerfect = 'PERFECT!'
 MinigameRulesPanelPlay = 'PLAY'
-GagShopName = "Goofy's Gag Shop"
+GagShopName = "Gag Shop"
 GagShopPlayAgain = 'PLAY\nAGAIN'
 GagShopBackToPlayground = 'EXIT BACK TO\nPLAYGROUND'
 GagShopYouHave = 'You have %s jellybeans to spend'
@@ -5370,8 +4779,8 @@ GagShopPlayerDisconnected = '%s has disconnected'
 GagShopPlayerExited = '%s has exited'
 GagShopPlayerPlayAgain = 'Play Again'
 GagShopPlayerBuying = 'Buying'
-GenderShopQuestionMickey = 'To make a boy toon, click on me!'
-GenderShopQuestionMinnie = 'To make a girl toon, click on me!'
+GenderShopQuestionMoe = 'To make a boy toon, click on me!'
+GenderShopQuestionMillie = 'To make a girl toon, click on me!'
 GenderShopFollow = 'Follow me!'
 GenderShopSeeYou = 'See you later!'
 GenderShopBoyButtonText = 'Boy'
@@ -5452,7 +4861,7 @@ NameShopChooseAnother = 'Choose Another Name'
 NameShopToonCouncil = 'The Toon Council\nwill review your\nname.  ' + 'Review may\ntake a few days.\nWhile you wait\nyour name will be\n '
 PleaseTypeName = 'Please type your name:'
 AllNewNames = 'All new names must be\napproved by the Toon Council.'
-NameMessages = 'Be creative and remember:\nno Disney-related names, please.'
+NameMessages = 'Be creative and remember:\nno copyrighted-character names, please.'
 NameShopNameRejected = 'The name you\nsubmitted has\nbeen rejected.'
 NameShopNameAccepted = 'Congratulations!\nThe name you\nsubmitted has\nbeen accepted!'
 NoPunctuation = "You can't use punctuation marks in your name!"
@@ -5554,13 +4963,13 @@ SuitInvasionUpdate2 = lToonHQ + ': We must defeat those %s!!!'
 SuitInvasionBulletin1 = lToonHQ + ': There is a Cog Invasion in progress!!!'
 SuitInvasionBulletin2 = lToonHQ + ': %s have taken over Toontown!!!'
 LeaderboardTitle = 'Toon Platoon'
-QuestScriptTutorialMickey_1 = 'Toontown has a new citizen! Do you have some extra gags?'
-QuestScriptTutorialMickey_2 = 'Sure, %s!'
-QuestScriptTutorialMickey_3 = 'Tutorial Tom will tell you all about the Cogs.\x07Gotta go!'
-QuestScriptTutorialMickey_4 = 'Come here! Use the arrow keys to move.'
-QuestScriptTutorialMinnie_1 = 'Toontown has a new citizen! Do you have some extra gags?'
-QuestScriptTutorialMinnie_2 = 'Sure, %s!'
-QuestScriptTutorialMinnie_3 = 'Tutorial Tom will tell you all about the Cogs.\x07Gotta go!'
+QuestScriptTutorialMoe_1 = 'Toontown has a new citizen! Do you have some extra gags?'
+QuestScriptTutorialMoe_2 = 'Sure, %s!'
+QuestScriptTutorialMoe_3 = 'Tutorial Tom will tell you all about the Cogs.\x07Gotta go!'
+QuestScriptTutorialMoe_4 = 'Come here! Use the arrow keys to move.'
+QuestScriptTutorialMillie_1 = 'Toontown has a new citizen! Do you have some extra gags?'
+QuestScriptTutorialMillie_2 = 'Sure, %s!'
+QuestScriptTutorialMillie_3 = 'Tutorial Tom will tell you all about the Cogs.\x07Gotta go!'
 QuestScript101_1 = 'These are Cogs. They are robots that are trying to take over Toontown.'
 QuestScript101_2 = 'There are many different kinds of Cogs and...'
 QuestScript101_3 = '...they turn happy Toon buildings...'
@@ -5607,7 +5016,7 @@ QuestScript120_2 = 'Banker Bob is over in the Toontown Bank.'
 QuestScript121_1 = "Yum, thank you for the Candy Bar.\x07Say, if you can help me, I'll give you a reward.\x07Those Cogs stole the keys to my safe. Defeat Cogs to find a stolen key.\x07When you find a key, bring it back to me."
 QuestScript130_1 = 'Good job finding the trolley!\x07By the way, I received a package for Professor Pete today.\x07It must be his new chalk he ordered.\x07Can you please take it to him?\x07He is over in the school house.'
 QuestScript131_1 = 'Oh, thanks for the chalk.\x07What?!?\x07Those Cogs stole my blackboard. Defeat Cogs to find my stolen blackboard.\x07When you find it, bring it back to me.'
-QuestScript140_1 = 'Good job finding the trolley!\x07By the way, I have this friend, Librarian Larry, who is quite a book worm.\x07I picked this book up for him last time I was over in ' + lDonaldsDock + '.\x07Could you take it over to him, he is usually in the Library.'
+QuestScript140_1 = 'Good job finding the trolley!\x07By the way, I have this friend, Librarian Larry, who is quite a book worm.\x07I picked this book up for him last time I was over in ' + lDockHarbor + '.\x07Could you take it over to him, he is usually in the Library.'
 QuestScript141_1 = 'Oh, yes, this book almost completes my collection.\x07Let me see...\x07Uh oh...\x07Now where did I put my glasses?\x07I had them just before those Cogs took over my building.\x07Defeat Cogs to find my stolen glasses.\x07When you find them, bring them back to me for a reward.'
 QuestScript145_1 = 'I see you had no problem with the trolley!\x07Listen, the Cogs have stolen our blackboard eraser.\x07Go into the streets and fight Cogs until you recover the eraser.\x07To reach the streets go through one of the tunnels like this:'
 QuestScript145_2 = "When you find our eraser, bring it back here.\x07Don't forget, if you need gags, ride the trolley.\x07Also, if you need to recover Laff points, collect ice cream cones in the Playground."
@@ -5770,7 +5179,7 @@ HatStylesDescriptions = {'hbb1': 'Green Baseball Cap',
  'hdt1': 'Detective Hat',
  'hft1': 'Fancy Feathers Hat',
  'hfd1': 'Fedora',
- 'hmk1': "Mickey's Band Hat",
+ 'hmk1': "Moe's Band Hat",
  'hft2': 'Feather Headband',
  'hhd2': 'Pompadour Hairdo',
  'hpc1': 'Princess Hat',
@@ -6362,13 +5771,13 @@ FurnitureNames = {100: 'Armchair',
  1399: 'Telephone',
  1400: 'Cezanne Toon',
  1410: 'Flowers',
- 1420: 'Modern Mickey',
+ 1420: 'Modern Moe',
  1430: 'Rembrandt Toon',
  1440: 'Toonscape',
  1441: "Whistler's Horse",
  1442: 'Toon Star',
  1443: 'Not a Pie',
- 1450: 'Mickey and Minnie',
+ 1450: 'Moe and Millie',
  1500: 'Radio',
  1510: 'Radio',
  1520: 'Radio',
@@ -6507,13 +5916,13 @@ AwardManagerFurnitureNames = {100: 'Armchair A - Series 1',
  1399: 'Telephone',
  1400: 'Cezanne Toon',
  1410: 'Flowers',
- 1420: 'Modern Mickey',
+ 1420: 'Modern Moe',
  1430: 'Rembrandt Toon',
  1440: 'Toonscape',
  1441: "Whistler's Horse",
  1442: 'Toon Star',
  1443: 'Not a Pie',
- 1450: 'Mickey and Minnie',
+ 1450: 'Moe and Millie',
  1500: 'Radio A series 2',
  1510: 'Radio B series 1',
  1520: 'Radio C series 2',
@@ -7145,7 +6554,7 @@ NPCToonNames = {20000: 'Tutorial Tom',
  1323: 'Stinky Ned',
  1324: 'Pearl Diver',
  1325: 'Ned Setter',
- 1326: 'Felicia Chips',
+ 1326: 'Felicia Nibs',
  1327: 'Cindy Splat',
  1328: 'Fred Flounder',
  1329: 'Shelly Seaweed',
@@ -7245,7 +6654,7 @@ NPCToonNames = {20000: 'Tutorial Tom',
  3305: 'Mack Ramay',
  3306: 'Paula Behr',
  3307: 'Fisherman Fredrica',
- 3308: 'Donald Frump',
+ 3308: 'Dudley Frump',
  3309: 'Bootsy',
  3310: 'Professor Flake',
  3311: 'Connie Ferris',
@@ -7987,7 +7396,7 @@ zone2TitleDict = {2513: ('Toon Hall', ''),
  9629: ('Silver Lining Jewelers', ''),
  9630: ('Rock to Sleep Quarry', ''),
  9631: ('Down Time Watch Repair', ''),
- 9633: ('The Dreamland Screening Room', ''),
+ 9633: ('The Slumber Springs Screening Room', ''),
  9634: ('Mind Over Mattress', ''),
  9636: ('Insomniac Insurance', ''),
  9639: ('House of Hibernation', ''),
@@ -8082,7 +7491,7 @@ zone2TitleDict = {2513: ('Toon Hall', ''),
  3705: ('Icicles Built for Two', ''),
  3706: ("Shiverin' Shakes Malt Shop", ''),
  3707: ('Snowplace Like Home', ''),
- 3708: ("Pluto's Place", ''),
+ 3708: ("Pippin's Place", ''),
  3710: ('Dropping Degrees Diner', ''),
  3711: ('', ''),
  3712: ('Go With the Floe', ''),
@@ -8262,7 +7671,7 @@ BlockerLoadingTexts = ['Scrubbing pie tins',
  'Unbottling ink for Toon News',
  'Clipping TNT fuses',
  "Setting up 'Under Construction' sign in Acorn Acres",
- 'Waking Donald Duck',
+ 'Waking Dudley Duck',
  'Teaching new moves to dancing fire hydrants',
  'Binding Shticker Books',
  'Analyzing quacks',
@@ -8274,7 +7683,7 @@ BlockerLoadingTexts = ['Scrubbing pie tins',
  'Balancing scale for weighing 1 Ton weights',
  'Practicing Victory Dances',
  'Preparing wackiness',
- "Giving Mickey Mouse the 'five minutes' sign",
+ "Giving Moe Mouse the 'five minutes' sign",
  'Testing white gloves',
  'Bending underwater rings',
  'Spooling red tape',
@@ -8339,10 +7748,10 @@ TipDict = {TIP_NONE: ('',),
                'Pet Shops get new Doodles to sell every day.',
                'Visit the Pet Shops every day to see what new Doodles they have.',
                'Different neighborhoods have different Doodles offered for adoption.',
-               "Show off your stylin' ride and turbo-boost your Laff limit at Goofy Speedway.",
-               'Enter Goofy Speedway through the tire-shaped tunnel in Toontown Central Playground.',
-               'Earn Laff points at Goofy Speedway.',
-               'Goofy Speedway has six different race tracks. '),
+               "Show off your stylin' ride and turbo-boost your Laff limit at Speedway Park.",
+               'Enter Speedway Park through the tire-shaped tunnel in Toontown Central Playground.',
+               'Earn Laff points at Speedway Park.',
+               'Speedway Park has six different race tracks. '),
  TIP_STREET: ('There are four types of Cogs: Lawbots, Cashbots, Sellbots, and Bossbots.',
               'Each Gag Track has different amounts of accuracy and damage.',
               'Sound gags will affect all Cogs but will wake up any lured Cogs.',
@@ -8381,12 +7790,12 @@ TipDict = {TIP_NONE: ('',),
               'If you wait too long to attack a lured Cog, it will wake up. Higher level lures last longer.',
               'There are fishing ponds on every street in Toontown. Some streets have unique fish.'),
  TIP_MINIGAME: ('After you fill up your jellybean jar, any jellybeans you get from Trolley Games automatically spill over into your bank.',
-                'You can use the arrow keys instead of the mouse in the "Match Minnie" Trolley Game.',
+                'You can use the arrow keys instead of the mouse in the "Match Millie" Trolley Game.',
                 'In the Cannon Game you can use the arrow keys to move your cannon and press the "Control" key to fire.',
                 'In the Ring Game, bonus points are awarded when the entire group successfully swims through its rings.',
-                'A perfect game of Match Minnie will double your points.',
+                'A perfect game of Match Millie will double your points.',
                 'In the Tug-of-War you are awarded more jellybeans if you play against a tougher Cog.',
-                'Trolley Game difficulty varies by neighborhood; ' + lToontownCentral + ' has the easiest and ' + lDonaldsDreamland + ' has the hardest.',
+                'Trolley Game difficulty varies by neighborhood; ' + lToontownCentral + ' has the easiest and ' + lSlumberSprings + ' has the hardest.',
                 'Certain Trolley Games can only be played in a group.'),
  TIP_COGHQ: ('You must complete your Sellbot Disguise before visiting the V.P.',
              'You must complete your Cashbot Disguise before visiting the C.F.O.',
@@ -8413,7 +7822,7 @@ TipDict = {TIP_NONE: ('',),
              'Make sure you have full gags and a full Laff Meter before going to Cog Headquarters.',
              'As you get promoted, your Cog disguise updates.',
              'You must defeat the ' + Foreman + ' to recover a Sellbot Cog Disguise part.',
-             "Earn Cashbot disguise suit parts as rewards for completing ToonTasks in Donald's Dreamland.",
+             "Earn Cashbot disguise suit parts as rewards for completing ToonTasks in Slumber Springs.",
              'Cashbots manufacture and distribute their currency, Cogbucks, in three Mints - Coin, Dollar and Bullion.',
              'Wait until the C.F.O. is dizzy to throw a safe, or he will use it as a helmet! Hit the helmet with another safe to knock it off.',
              'Earn Lawbot disguise suit parts as rewards for completing ToonTasks for Professor Flake.',
@@ -8455,17 +7864,17 @@ TipDict = {TIP_NONE: ('',),
               'Some fish, like the Holey Mackerel, are more commonly found in Toon Estates.',
               'You can invite your friends to your Estate using SpeedChat.',
               'Did you know the color of your house matches the color of your Pick-A-Toon panel?'),
- TIP_KARTING: ("Buy a Roadster, TUV, or Cruiser kart in Goofy's Auto Shop.",
-               "Customize your kart with decals, rims and more in Goofy's Auto Shop.",
-               'Earn tickets by kart racing at Goofy Speedway.',
-               "Tickets are the only currency accepted at Goofy's Auto Shop.",
+ TIP_KARTING: ("Buy a Roadster, TUV, or Cruiser kart in Gus's Auto Shop.",
+               "Customize your kart with decals, rims and more in Gus's Auto Shop.",
+               'Earn tickets by kart racing at Speedway Park.',
+               "Tickets are the only currency accepted at Gus's Auto Shop.",
                'Tickets are required as deposits to race.',
                'A special page in the Shticker Book allows you to customize your kart.',
                'A special page in the Shticker Book allows you to view records on each track.',
                'A special page in the Shticker Book allows you to display trophies.',
-               'Screwball Stadium is the easiest track at Goofy Speedway.',
-               'Airborne Acres has the most hills and jumps of any track at Goofy Speedway.',
-               'Blizzard Boulevard is the most challenging track at Goofy Speedway.'),
+               'Screwball Stadium is the easiest track at Speedway Park.',
+               'Airborne Acres has the most hills and jumps of any track at Speedway Park.',
+               'Blizzard Boulevard is the most challenging track at Speedway Park.'),
  TIP_GOLF: ('Press the Tab key to see a top view of the golf course.', 'Press the Up Arrow key to point yourself towards the golf hole.', 'Swinging the club is just like throwing a pie.')}
 FishGenusNames = {0: 'Balloon Fish',
  2: 'Cat Fish',
@@ -8727,7 +8136,7 @@ KartDNA_AccNames = {1000: 'Air Cleaner',
  4008: 'Striped Dual Fins',
  4009: 'Bubble Duals Fins',
  4010: 'Striped Mudflaps',
- 4011: 'Mickey Mudflaps',
+ 4011: 'Moe Mudflaps',
  4012: 'Scalloped Mudflaps',
  5000: 'Turbo',
  5001: 'Moon',
@@ -8735,9 +8144,9 @@ KartDNA_AccNames = {1000: 'Air Cleaner',
  5003: 'Three Spoke',
  5004: 'Paint Lid',
  5005: 'Heart',
- 5006: 'Mickey',
+ 5006: 'Moe',
  5007: 'Five Bolt',
- 5008: 'Daisy',
+ 5008: 'Dottie',
  5009: 'Basketball',
  5010: 'Hypno',
  5011: 'Tribal',
@@ -8895,9 +8304,9 @@ KartRace_RaceTimeoutNoRefund = 'You timed out of that race.  Your tickets have n
 KartRace_RacerTooSlow = 'You took too long to finish the race.  Your tickets have not been refunded.  Keep trying!'
 KartRace_PhotoFinish = 'Photo Finish!'
 KartRace_CircuitPoints = 'Circuit Points'
-CircuitRaceStart = 'The Toontown Grand Prix at Goofy Speedway is about to begin!  To win, collect the most points in three consecutive races!'
+CircuitRaceStart = 'The Toontown Grand Prix at Speedway Park is about to begin!  To win, collect the most points in three consecutive races!'
 CircuitRaceOngoing = 'Welcome! The Toontown Grand Prix is currently in progress.'
-CircuitRaceEnd = "That's all for today's Toontown Grand Prix at Goofy Speedway.  See you next week!"
+CircuitRaceEnd = "That's all for today's Toontown Grand Prix at Speedway Park.  See you next week!"
 TrickOrTreatMsg = 'You have already\nfound this treat!'
 WinterCarolingMsg = 'You have already been caroling here!'
 LawbotBossTempIntro0 = "Hmmm what's on the docket today?"
@@ -8977,10 +8386,10 @@ PinballScoreHolder = '%s\n'
 GagTreeFeather = 'Feather Gag Tree'
 GagTreeJugglingBalls = 'Juggling Balls Gag Tree'
 StatuaryFountain = 'Fountain'
-StatuaryDonald = 'Donald Statue'
-StatuaryMinnie = 'Minnie Statue'
-StatuaryMickey1 = 'Mickey Statue'
-StatuaryMickey2 = 'Mickey Fountain'
+StatuaryDudley = 'Hydrant Statue'
+StatuaryMillie = 'Trash Can Statue'
+StatuaryMoe1 = 'Mailbox Statue'
+StatuaryMoe2 = 'Town Fountain'
 StatuaryToon = 'Toon Statue'
 StatuaryToonWave = 'Toon Wave Statue'
 StatuaryToonVictory = 'Toon Victory Statue'
@@ -8998,7 +8407,7 @@ FlowerColorStrings = ['Red',
  'Yellow',
  'White',
  'Green']
-FlowerSpeciesNames = {49: 'Daisy',
+FlowerSpeciesNames = {49: 'Dottie',
  50: 'Tulip',
  51: 'Carnation',
  52: 'Lily',
@@ -9006,13 +8415,13 @@ FlowerSpeciesNames = {49: 'Daisy',
  54: 'Pansy',
  55: 'Petunia',
  56: 'Rose'}
-FlowerFunnyNames = {49: ('School Daisy',
-      'Lazy Daisy',
-      'Midsummer Daisy',
-      'Freshasa Daisy',
-      'Whoopsie Daisy',
-      'Upsy Daisy',
-      'Crazy Daisy',
+FlowerFunnyNames = {49: ('School Dottie',
+      'Lazy Dottie',
+      'Midsummer Dottie',
+      'Freshasa Dottie',
+      'Whoopsie Dottie',
+      'Upsy Dottie',
+      'Crazy Dottie',
       'Hazy Dazy'),
  50: ('Onelip', 'Twolip', 'Threelip'),
  51: ('What-in Carnation',
@@ -9206,7 +8615,7 @@ TravelGamePlaying = 'Up next, the %(game)s trolley game.'
 TravelGameGotBonus = '%(name)s got a bonus of %(numBeans)s jellybeans!'
 TravelGameNoOneGotBonus = 'No one reached their secret goal.  Everyone gets 1 jellybean.'
 TravelGameConvertingVotesToBeans = 'Converting some votes to jellybeans...'
-TravelGameGoingBackToShop = "Only 1 player left. Going to Goofy's Gag Shop."
+TravelGameGoingBackToShop = "Only 1 player left. Going to Gag Shop."
 PairingGameTitle = 'Toon Memory Game'
 PairingGameInstructions = 'Press Delete to open a card. Match 2 cards to score a point.  Make a match with the bonus glow and earn an extra point.  Earn more points by keeping the flips low.'
 PairingGameInstructionsMulti = 'Press Delete to open a card. Press Control to signal another player to open a card. Match 2 cards to score a point.  Make a match with the bonus glow and earn an extra point.  Earn more points by keeping the flips low.'
@@ -9373,7 +8782,7 @@ MoreXpHolidayEnd = 'Exclusive Test Toon double gag experience time has ended. Th
 JellybeanDayHolidayStart = "It's Jellybean Day! Get Double Jellybean rewards at Parties!"
 JellybeanDayHolidayEnd = "That's all for Jellybean Day. See you next year."
 PartyRewardDoubledJellybean = 'Double Jellybeans!'
-GrandPrixWeekendHolidayStart = "It's Grand Prix Weekend at Goofy Speedway! Free and paid players collect the most points in three consecutive races."
+GrandPrixWeekendHolidayStart = "It's Grand Prix Weekend at Speedway Park! Free and paid players collect the most points in three consecutive races."
 GrandPrixWeekendHolidayEnd = "That's all for Grand Prix Weekend. See you next year."
 KartRace_DoubleTickets = 'Double Tickets'
 SellbotNerfHolidayStart = 'Operation: Storm Sellbot is happening now! Battle the VP today!'
@@ -9399,7 +8808,7 @@ WinterDecorationsEnd = 'Winter Holiday is over - Happy New Year!'
 WackyWinterDecorationsStart = 'Brrr! Silly Meter goes from silly to chilly!'
 WinterCarolingStart = 'Caroling has come to Toontown. Sing for your Snowman Head - see the Blog for details!'
 ExpandedClosetsStart = 'Attention Toons: For a limited time, Members can purchase the new 50 item Closet from the Cattlelog for the low price of 50 jellybeans!'
-KartingTicketsHolidayStart = 'Get double tickets from Practice races at Goofy Speedway today!'
+KartingTicketsHolidayStart = 'Get double tickets from Practice races at Speedway Park today!'
 IdesOfMarchStart = 'Toons go GREEN!'
 LogoutForced = 'You have done something wrong\n and are being logged out automatically,\n additionally your account may be frozen.\n Try going on a walk outside, it is fun.'
 CountryClubToonEnterElevator = '%s \nhas jumped in the golf kart.'
@@ -9632,8 +9041,8 @@ HolidayNamesInCalendar = {1: ('Summer Fireworks', 'Celebrate Summer with a firew
  8: ('Toon Species Election', 'Vote on the new Toon species! Will it be Goat? Will it be Pig?'),
  9: ('Black Cat Day', 'Happy Halloween! Create a Toontastic Black Cat Toon - Today Only!'),
  13: ('Trick or Treat', 'Happy Halloween! Trick or treat throughout Toontown to get a nifty Halloween pumpkin head reward!'),
- 14: ('Grand Prix', 'Grand Prix Monday at Goofy Speedway! To win, collect the most points in three consecutive races!'),
- 16: ('Grand Prix Weekend', 'Free and Paid players compete in circuit races at Goofy Speedway!'),
+ 14: ('Grand Prix', 'Grand Prix Monday at Speedway Park! To win, collect the most points in three consecutive races!'),
+ 16: ('Grand Prix Weekend', 'Free and Paid players compete in circuit races at Speedway Park!'),
  17: ('Trolley Tracks', 'Trolley Tracks Thursday! Board any Trolley with two or more Toons to play.'),
  19: ('Silly Saturdays', 'Saturdays are silly with Fish Bingo and Grand Prix throughout the day!'),
  24: ('Ides of March', 'Beware the Ides of March! Stop the Backstabber Cogs from invading Toontown!'),
@@ -9691,7 +9100,7 @@ HolidayNamesInCalendar = {1: ('Summer Fireworks', 'Celebrate Summer with a firew
  98: ('Double Bean Days - Fishing', ''),
  99: ('Jellybean Week', 'Celebrate Jellybean Week with double Jellybean rewards!'),
  101: ("Top Toons New Year's Day Marathon", "Chances to win every hour! See the What's New Blog for details!"),
- 105: ('Toons go GREEN!', 'Toons make a green scene at Green Bean Jeans on Oak Street in Daisy Gardens!')}
+ 105: ('Toons go GREEN!', 'Toons make a green scene at Green Bean Jeans on Oak Street in Garden Grove!')}
 UnknownHoliday = 'Unknown Holiday %d'
 HolidayFormat = '%b %d '
 TimeZone = 'US/Pacific'

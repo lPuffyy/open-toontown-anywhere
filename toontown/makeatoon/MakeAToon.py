@@ -1,4 +1,5 @@
 from panda3d.core import *
+from panda3d.otp import CFSpeech
 from toontown.distributed.ToontownMsgTypes import *
 from toontown.char import Char
 from otp.avatar import Avatar

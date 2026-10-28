@@ -1,4 +1,5 @@
 from .BattleBase import *
+from direct.directnotify import DirectNotifyGlobal
 from .DistributedBattleAI import *
 from toontown.toonbase.ToontownBattleGlobals import *
 import random

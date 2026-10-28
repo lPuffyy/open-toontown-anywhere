@@ -1,4 +1,5 @@
 from .DistributedMinigameAI import *
+from toontown.toonbase import ToontownGlobals
 from toontown.ai.ToonBarrier import *
 from direct.fsm import ClassicFSM, State
 from direct.directnotify import DirectNotifyGlobal

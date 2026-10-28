@@ -1,4 +1,6 @@
 ##################################################
+from toontown.hood import ZoneUtil
+from otp.otpbase import OTPGlobals
 # The Toontown Offline Magic Word Manager
 ##################################################
 # Author: Benjamin Frisby

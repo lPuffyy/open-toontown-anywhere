@@ -11,6 +11,7 @@ from otp.avatar import Avatar, DistributedAvatar
 from otp.speedchat import SCDecoders
 from otp.chat import TalkAssistant
 from . import Toon
+from . import ToonDNA
 from direct.task.Task import Task
 from direct.distributed import DistributedSmoothNode
 from direct.distributed import DistributedObject
@@ -159,6 +160,7 @@ class DistributedToon(DistributedPlayer.DistributedPlayer, Toon.Toon, Distribute
         self.maxNPCFriends = 16
         self.petId = 0
         self.bPetTutorialDone = False
+        self.bGardenTutorialDone = False
         self.bFishBingoTutorialDone = False
         self.bFishBingoMarkTutorialDone = False
         self.accessories = []
@@ -399,6 +401,30 @@ class DistributedToon(DistributedPlayer.DistributedPlayer, Toon.Toon, Distribute
     def getDialogueArray(self, *args):
         return Toon.Toon.getDialogueArray(self, *args)
 
+    def setFriendDetails(self, details):
+        """Who our friends are: filled in by the server because the game has no 'get friends list' request. The friends list
+        window reads names and looks from base.cr.friendsMap."""
+        cr = base.cr
+        for friendId, name, dnaBlob, petId, online in details:
+            dna = ToonDNA.ToonDNA()
+            dna.makeFromNetString(dnaBlob)
+            handle = FriendHandle.FriendHandle(friendId, name, dna, petId)
+            cr.friendsMap[friendId] = handle
+            if online or friendId in cr.friendsOnline:
+                cr.friendsOnline[friendId] = handle
+        cr.friendsMapPending = 0
+        messenger.send('friendsMapComplete')
+
+    def setFriendOnline(self, friendId, online):
+        cr = base.cr
+        if online:
+            handle = cr.friendsMap.get(friendId) or cr.identifyFriend(friendId)       # (the details may still be on their way)
+            cr.friendsOnline[friendId] = handle
+            messenger.send('friendOnline', [friendId, 0, 0])
+        elif friendId in cr.friendsOnline:
+            del cr.friendsOnline[friendId]
+            messenger.send('friendOffline', [friendId])
+
     def setDefaultShard(self, shard):
         self.defaultShard = shard
 
@@ -466,6 +492,9 @@ class DistributedToon(DistributedPlayer.DistributedPlayer, Toon.Toon, Distribute
             return Task.cont
 
     def setTalk(self, fromAV, fromAC, avatarName, chat, mods, flags):
+        if self.isLocal() and getattr(self, '_talkSentLocal', 0) > 0:
+            self._talkSentLocal -= 1       # our own message coming back: already shown when it was sent
+            return
         if base.cr.avatarFriendsManager.checkIgnored(fromAV):
             self.d_setWhisperIgnored(fromAV)
             return
@@ -1188,7 +1217,7 @@ class DistributedToon(DistributedPlayer.DistributedPlayer, Toon.Toon, Distribute
         return
 
     def playSplashEffect(self, x, y, z):
-        if localAvatar.zoneId not in [ToontownGlobals.DonaldsDock, ToontownGlobals.OutdoorZone] and (not hasattr(localAvatar, 'inEstate') or localAvatar.inEstate != 1):
+        if localAvatar.zoneId not in [ToontownGlobals.DockHarbor, ToontownGlobals.OutdoorZone] and (not hasattr(localAvatar, 'inEstate') or localAvatar.inEstate != 1):
             if random.random() < 0.1:
                 self.sendLogSuspiciousEvent('AvatarHackWarning! playing hacked splash effect')
             return
@@ -1731,6 +1760,16 @@ class DistributedToon(DistributedPlayer.DistributedPlayer, Toon.Toon, Distribute
 
         def hasPet(self):
             return self.petId != 0
+
+        def b_setGardenTutorialDone(self, bDone):
+            self.d_setGardenTutorialDone(bDone)
+            self.setGardenTutorialDone(bDone)
+
+        def d_setGardenTutorialDone(self, bDone):
+            self.sendUpdate('setGardenTutorialDone', [bDone])
+
+        def setGardenTutorialDone(self, bDone):
+            self.bGardenTutorialDone = bDone
 
         def b_setPetTutorialDone(self, bDone):
             self.d_setPetTutorialDone(bDone)

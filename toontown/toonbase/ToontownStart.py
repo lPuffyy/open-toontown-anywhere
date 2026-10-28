@@ -98,8 +98,7 @@ del music
 base.initNametagGlobals()
 base.cr = cr
 loader.endBulkLoad('init')
-from otp.distributed.OtpDoGlobals import OTP_DO_ID_FRIEND_MANAGER
-cr.generateGlobalObject(OTP_DO_ID_FRIEND_MANAGER, 'FriendManager')
+# (the friend manager is a district object the server sends us, like the time manager: there is no global object 4501 to talk to)
 if not launcher.isDummy():
     base.startShow(cr, launcher.getGameServer())
 else:

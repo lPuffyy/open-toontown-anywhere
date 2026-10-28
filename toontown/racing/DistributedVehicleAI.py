@@ -1,4 +1,5 @@
 from otp.ai.AIBase import *
+from direct.directnotify import DirectNotifyGlobal
 from toontown.toonbase.ToontownGlobals import *
 from toontown.racing.KartDNA import *
 from direct.distributed.ClockDelta import *

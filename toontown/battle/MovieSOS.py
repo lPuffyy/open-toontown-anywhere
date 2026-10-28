@@ -1,4 +1,5 @@
 from direct.interval.IntervalGlobal import *
+from panda3d.otp import CFSpeech, CFTimeout
 from . import MovieCamera
 from direct.directnotify import DirectNotifyGlobal
 from toontown.toonbase import TTLocalizer

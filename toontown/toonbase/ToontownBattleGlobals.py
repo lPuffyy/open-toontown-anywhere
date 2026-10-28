@@ -843,3 +843,27 @@ def getUberFlagSafe(flagMask, index):
         return -1
     else:
         return getUberFlag(flagMask, index)
+
+
+def wideFov(fov):
+    """The battle cameras were framed for a 4:3 screen, where `fov` is the horizontal angle. On a wider screen the same horizontal angle
+    shows far less up and down (Cog heads fall off the top), so widen the horizontal angle to keep the original vertical view."""
+    import math
+    try:
+        aspect = base.getAspectRatio()
+    except Exception:
+        return fov
+    if aspect <= 4.0 / 3.0 + 0.01:
+        return fov
+    h = 2.0 * math.degrees(math.atan(math.tan(math.radians(fov) / 2.0) * aspect / (4.0 / 3.0) * 1.22))
+    # (the extra 1.22 leaves headroom: tall Cogs still lost their heads behind the top of a phone screen)
+    return min(h, 130.0)
+
+
+def setBattleFov(fov):
+    """Set the camera's field of view for a battle shot. The ordinary default view is left as it is."""
+    from otp.otpbase import OTPGlobals
+    if abs(fov - OTPGlobals.DefaultCameraFov) < 0.01:
+        base.camLens.setFov(fov)
+    else:
+        base.camLens.setFov(wideFov(fov))

@@ -13,6 +13,12 @@ from direct.showbase import PythonUtil
 from toontown.toontowngui import TTDialog
 from toontown.toonbase import TTLocalizer
 from otp.otpbase import OTPLocalizer
+SKIP_HIDDEN = 1
+SKIP_BACKFACE = 2
+SKIP_CAMERA = 4
+SKIP_UNPICKABLE = 8
+SKIP_WIDGET = 16
+SKIP_ALL = SKIP_HIDDEN | SKIP_BACKFACE | SKIP_CAMERA | SKIP_UNPICKABLE | SKIP_WIDGET
 camPos50 = (Point3(0.0, -10.0, 50.0),
  Point3(0.0, -9.66, 49.06),
  Point3(0.0, 1.5, 12.38),
@@ -386,7 +392,7 @@ class ObjectManager(NodePath, DirectObject):
         base.setCellsAvailable(base.leftCells + [base.bottomCells[0]], 0)
         if self.guiInterval:
             self.guiInterval.finish()
-        self.guiInterval = self.furnitureGui.posHprScaleInterval(1.0, Point3(-1.16, 1, -0.03), Vec3(0), Vec3(0.06), startPos=Point3(-1.19, 1, 0.33), startHpr=Vec3(0), startScale=Vec3(0.04), blendType='easeInOut', name='lerpFurnitureButton')
+        self.guiInterval = self.furnitureGui.posHprScaleInterval(1.0, Point3(0.155, -0.6, -1.045), Vec3(0), Vec3(0.06), startPos=Point3(0.115, 0.0, -0.66), startHpr=Vec3(0), startScale=Vec3(0.04), blendType='easeInOut', name='lerpFurnitureButton')
         self.guiInterval.start()
         taskMgr.add(self.recenterButtonFrameTask, 'recenterButtonFrameTask', 10)
         messenger.send('wakeup')
@@ -401,6 +407,8 @@ class ObjectManager(NodePath, DirectObject):
             house.showExteriorWindows()
         self.furnitureManager.d_avatarExit()
         self.furnitureManager = None
+        if base.localAvatar.ghostMode == 1:
+            base.localAvatar.setGhostMode(0)          # editing hid the toon; give it back (a staff ghost, mode 2, is left alone)
         base.localAvatar.setCameraPositionByIndex(0)
         self.exitDeleteMode()
         self.houseExtents.detachNode()
@@ -915,7 +923,7 @@ class ObjectManager(NodePath, DirectObject):
 
     def createMainControls(self, guiModels):
         attic = guiModels.find('**/attic')
-        self.furnitureGui = DirectFrame(relief=None, pos=(-1.19, 1, 0.33), scale=0.04, image=attic)
+        self.furnitureGui = DirectFrame(relief=None, parent=base.a2dTopLeft, pos=(0.115, 0.0, -0.66), scale=0.04, image=attic)
         bMoveStopUp = guiModels.find('**/bu_atticX/bu_attic_up')
         bMoveStopDown = guiModels.find('**/bu_atticX/bu_attic_down')
         bMoveStopRollover = guiModels.find('**/bu_atticX/bu_attic_rollover')

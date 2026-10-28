@@ -1,4 +1,5 @@
 from panda3d.core import *
+from direct.directnotify import DirectNotifyGlobal
 from panda3d.otp import *
 from direct.distributed.ClockDelta import *
 from direct.interval.IntervalGlobal import *

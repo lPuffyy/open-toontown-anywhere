@@ -44,7 +44,7 @@ class FriendHandle:
 
     def d_teleportQuery(self, requesterId):
         teleportNotify.debug('sending d_teleportQuery(%s)' % (requesterId,))
-        base.localAvatar.sendUpdate('teleportQuery', [requesterId], sendToId=self.doId)
+        base.localAvatar.d_teleportQuery(requesterId, sendToId=self.doId)
 
     def d_teleportResponse(self, avId, available, shardId, hoodId, zoneId):
         teleportNotify.debug('sending teleportResponse%s' % ((avId,
@@ -52,15 +52,11 @@ class FriendHandle:
           shardId,
           hoodId,
           zoneId),))
-        base.localAvatar.sendUpdate('teleportResponse', [avId,
-         available,
-         shardId,
-         hoodId,
-         zoneId], sendToId=self.doId)
+        base.localAvatar.d_teleportResponse(avId, available, shardId, hoodId, zoneId, sendToId=self.doId)
 
     def d_teleportGiveup(self, requesterId):
         teleportNotify.debug('sending d_teleportGiveup(%s)' % (requesterId,))
-        base.localAvatar.sendUpdate('teleportGiveup', [requesterId], sendToId=self.doId)
+        base.localAvatar.d_teleportGiveup(requesterId, sendToId=self.doId)
 
     def isUnderstandable(self):
         if self.commonChatFlags & base.localAvatar.commonChatFlags & ToontownGlobals.CommonChat:

@@ -1,4 +1,5 @@
 from toontown.toonbase.ToontownBattleGlobals import *
+from panda3d.otp import CFSpeech, CFTimeout
 from .BattleBase import *
 from direct.interval.IntervalGlobal import *
 from direct.showbase import DirectObject

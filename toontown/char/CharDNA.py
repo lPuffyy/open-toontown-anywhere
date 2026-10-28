@@ -6,24 +6,7 @@ from direct.distributed.PyDatagram import PyDatagram
 from direct.distributed.PyDatagramIterator import PyDatagramIterator
 from otp.avatar import AvatarDNA
 notify = directNotify.newCategory('CharDNA')
-charTypes = ['mk',
- 'vmk',
- 'mn',
- 'wmn',
- 'g',
- 'sg',
- 'd',
- 'fd',
- 'dw',
- 'p',
- 'wp',
- 'cl',
- 'dd',
- 'shdd',
- 'ch',
- 'da',
- 'pch',
- 'jda']
+charTypes = ['cl']
 
 class CharDNA(AvatarDNA.AvatarDNA):
 
@@ -87,41 +70,7 @@ class CharDNA(AvatarDNA.AvatarDNA):
         return type
 
     def getCharName(self):
-        if self.name == 'mk':
-            return 'mickey'
-        elif self.name == 'vmk':
-            return 'vampire_mickey'
-        elif self.name == 'mn':
-            return 'minnie'
-        elif self.name == 'wmn':
-            return 'witch_minnie'
-        elif self.name == 'g':
-            return 'goofy'
-        elif self.name == 'sg':
-            return 'super_goofy'
-        elif self.name == 'd':
-            return 'donald'
-        elif self.name == 'dw':
-            return 'donald-wheel'
-        elif self.name == 'fd':
-            return 'franken_donald'
-        elif self.name == 'dd':
-            return 'daisy'
-        elif self.name == 'shdd':
-            return 'sockHop_daisy'
-        elif self.name == 'p':
-            return 'pluto'
-        elif self.name == 'wp':
-            return 'western_pluto'
-        elif self.name == 'cl':
+        if self.name == 'cl':
             return 'clarabelle'
-        elif self.name == 'ch':
-            return 'chip'
-        elif self.name == 'da':
-            return 'dale'
-        elif self.name == 'pch':
-            return 'police_chip'
-        elif self.name == 'jda':
-            return 'jailbird_dale'
         else:
             notify.error('unknown char type: ', self.name)

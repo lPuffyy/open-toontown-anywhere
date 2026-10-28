@@ -226,11 +226,11 @@ class DistributedCatchGame(DistributedMinigame):
         self.notify.debug('defineConstants')
         self.DropPlacerType = RegionDropPlacer
         fruits = {ToontownGlobals.ToontownCentral: 'apple',
-         ToontownGlobals.DonaldsDock: 'orange',
-         ToontownGlobals.DaisyGardens: 'pear',
-         ToontownGlobals.MinniesMelodyland: 'coconut',
+         ToontownGlobals.DockHarbor: 'orange',
+         ToontownGlobals.GardenGrove: 'pear',
+         ToontownGlobals.MelodyMeadow: 'coconut',
          ToontownGlobals.TheBrrrgh: 'watermelon',
-         ToontownGlobals.DonaldsDreamland: 'pineapple'}
+         ToontownGlobals.SlumberSprings: 'pineapple'}
         self.fruitName = fruits[self.getSafezoneId()]
         self.ShowObjSpheres = 0
         self.ShowToonSpheres = 0

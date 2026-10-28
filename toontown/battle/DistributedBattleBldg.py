@@ -1,3 +1,4 @@
+from toontown.toonbase import ToontownBattleGlobals
 from panda3d.core import *
 from panda3d.otp import *
 from direct.interval.IntervalGlobal import *
@@ -111,7 +112,7 @@ class DistributedBattleBldg(DistributedBattleBase.DistributedBattleBase):
         camTrack = Sequence()
 
         def setCamFov(fov):
-            base.camLens.setFov(fov)
+            ToontownBattleGlobals.setBattleFov(fov)
 
         camTrack.append(Func(camera.wrtReparentTo, suitLeader))
         camTrack.append(Func(setCamFov, self.camFOFov))
@@ -157,7 +158,7 @@ class DistributedBattleBldg(DistributedBattleBase.DistributedBattleBase):
         self.clearInterval(self.faceOffName)
         self._removeMembersKeep()
         camera.wrtReparentTo(self)
-        base.camLens.setFov(self.camFov)
+        ToontownBattleGlobals.setBattleFov(self.camFov)
         return None
 
     def __playReward(self, ts, callback):

@@ -1,4 +1,5 @@
 import sys
+from panda3d.otp import WhisperPopup
 import time
 import random
 import gc

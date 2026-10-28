@@ -1,4 +1,6 @@
 from direct.gui.DirectGui import *
+from direct.directnotify import DirectNotifyGlobal
+from panda3d.otp import NametagGlobals
 from panda3d.core import *
 from panda3d.direct import SmoothMover
 from direct.interval.IntervalGlobal import *

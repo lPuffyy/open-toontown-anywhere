@@ -1,4 +1,6 @@
 from .CatalogSurfaceItem import *
+from toontown.toonbase import TTLocalizer
+from toontown.catalog import CatalogItem
 FTTextureName = 0
 FTColor = 1
 FTBasePrice = 2
@@ -149,7 +151,7 @@ def getAllFloorings(*indexList):
 
 
 def getFlooringRange(fromIndex, toIndex, *otherRanges):
-    list = []
+    list_ = []
     froms = [fromIndex]
     tos = [toIndex]
     i = 0
@@ -164,9 +166,9 @@ def getFlooringRange(fromIndex, toIndex, *otherRanges):
                 colors = FlooringTypes[patternIndex][FTColor]
                 if colors:
                     for n in range(len(colors)):
-                        list.append(CatalogFlooringItem(patternIndex, n))
+                        list_.append(CatalogFlooringItem(patternIndex, n))
 
                 else:
-                    list.append(CatalogFlooringItem(patternIndex, 0))
+                    list_.append(CatalogFlooringItem(patternIndex, 0))
 
-    return list
+    return list_

@@ -215,6 +215,12 @@ class Place(StateData, FriendsListManager):
 
     def enterWalk(self, teleportIn = 0):
         self.enterFLM()
+        try:
+            la = base.localAvatar
+            if not (la.isPageDown or la.isPageUp):
+                base.camLens.setFov(la.fov)     # a minigame, shop scene or battle may have left its own view behind
+        except Exception:
+            pass
         self.walkStateData.enter()
         if teleportIn == 0:
             self.walkStateData.fsm.request('walking')
@@ -588,6 +594,23 @@ class Place(StateData, FriendsListManager):
     def enterTunnelIn(self, requestStatus):
         self.notify.debug('enterTunnelIn(requestStatus=' + str(requestStatus) + ')')
         tunnelOrigin = base.render.find(requestStatus['tunnelName'])
+        if tunnelOrigin.isEmpty():
+            # the street may report a zone other than the one named in the playground's tunnel, so fall back to any tunnel of that hood
+            prefix = requestStatus['tunnelName'].rsplit('_', 1)[0]
+            found = base.render.findAllMatches(prefix + '_*')
+            if found.getNumPaths() == 0:
+                found = base.render.findAllMatches('**/toph_*')
+            if found.getNumPaths() > 0:
+                pick = found.getPath(0)
+                try:
+                    want = int(requestStatus['tunnelName'].rsplit('_', 1)[1]) // 100
+                    for i in range(found.getNumPaths()):
+                        if int(found.getPath(i).getName().rsplit('_', 1)[1]) // 100 == want:
+                            pick = found.getPath(i)
+                except ValueError:
+                    pass
+                self.notify.warning('tunnel %s not found, using %s' % (requestStatus['tunnelName'], pick.getName()))
+                tunnelOrigin = pick
         self.accept('tunnelInMovieDone', self.__tunnelInMovieDone)
         base.localAvatar.reconsiderCheesyEffect()
         base.localAvatar.tunnelIn(tunnelOrigin)

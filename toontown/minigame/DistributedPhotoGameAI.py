@@ -1,4 +1,5 @@
 from .DistributedMinigameAI import *
+from direct.directnotify import DirectNotifyGlobal
 from direct.distributed.ClockDelta import *
 from direct.fsm import ClassicFSM, State
 from direct.fsm import State

@@ -1,4 +1,5 @@
 from otp.ai.AIBaseGlobal import *
+from toontown.toonbase import ToontownGlobals
 from direct.task.Task import Task
 from panda3d.core import *
 from .DistributedNPCToonBaseAI import *

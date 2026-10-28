@@ -38,12 +38,8 @@ class MMPlayground(Playground.Playground):
         return None
 
     def enterOnPiano(self):
-        base.localAvatar.b_setParent(ToontownGlobals.SPMinniesPiano)
+        base.localAvatar.b_setParent(ToontownGlobals.SPMeadowPiano)
 
     def exitOnPiano(self):
         base.localAvatar.b_setParent(ToontownGlobals.SPRender)
 
-    def showPaths(self):
-        from toontown.classicchars import CCharPaths
-        from toontown.toonbase import TTLocalizer
-        self.showPathPoints(CCharPaths.getPaths(TTLocalizer.Minnie))

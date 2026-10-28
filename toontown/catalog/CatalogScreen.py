@@ -1,4 +1,5 @@
 from panda3d.core import *
+from panda3d.otp import ChatBalloon, NametagGlobals, NametagGroup
 from direct.gui.DirectGui import *
 from panda3d.core import *
 from direct.gui.DirectScrolledList import *
@@ -62,6 +63,10 @@ class CatalogScreen(DirectFrame):
         self.hide()
         self.clarabelleChatNP = None
         self.clarabelleChatBalloon = None
+        self.clarabelleGreetingSfx = None
+        self.clarabelleGoodbyeSfx = None
+        self.clarabelleErrorSfx = None
+        self.clarabelleChatterSfx = None
         self.gifting = -1
         self.createdGiftGui = None
         self.viewing = None
@@ -75,11 +80,12 @@ class CatalogScreen(DirectFrame):
         self.accept(localAvatar.uniqueName('emblemsChange'), self.__emblemChange)
         deliveryText = 'setDeliverySchedule-%s' % base.localAvatar.doId
         self.accept(deliveryText, self.remoteUpdate)
+        base.setBackgroundColor(Vec4(0.529, 0.29, 0.286, 1))
         render.hide()
         DirectFrame.show(self)
 
         def clarabelleGreeting(task):
-            self.setClarabelleChat(TTLocalizer.CatalogGreeting)
+            self.setClarabelleChat(TTLocalizer.CatalogGreeting, type='greeting')
 
         def clarabelleHelpText1(task):
             self.setClarabelleChat(TTLocalizer.CatalogHelpText1)
@@ -103,6 +109,7 @@ class CatalogScreen(DirectFrame):
         self.ignore(localAvatar.uniqueName('emblemsChange'))
         deliveryText = 'setDeliverySchedule-%s' % base.localAvatar.doId
         self.ignore(deliveryText)
+        base.setBackgroundColor(ToontownGlobals.DefaultBackgroundColor)
         render.show()
         DirectFrame.hide(self)
 
@@ -683,7 +690,7 @@ class CatalogScreen(DirectFrame):
         self.clarabelleFrame = DirectLabel(self, relief=None, image=guiItems.find('**/clarabelle_frame'))
         hangupGui = guiItems.find('**/hangup')
         hangupRolloverGui = guiItems.find('**/hangup_rollover')
-        self.hangup = DirectButton(self, relief=None, pos=(1.78, 0, -1.3), image=[hangupGui,
+        self.hangup = DirectButton(base.a2dBottomRight, relief=None, pos=(-0.158, 0, 0.14), scale=(0.7, 0.7, 0.7), image=[hangupGui,
          hangupRolloverGui,
          hangupRolloverGui,
          hangupGui], text=['', TTLocalizer.CatalogHangUp, TTLocalizer.CatalogHangUp], text_fg=Vec4(1), text_scale=0.07, text_pos=(0.0, 0.14), command=self.hangUp)
@@ -718,7 +725,7 @@ class CatalogScreen(DirectFrame):
         self.cCamNode.setLens(self.cLens)
         self.cCamNode.setScene(self.cRender)
         self.cCam = self.cCamera.attachNewNode(self.cCamNode)
-        self.cDr = base.win.makeDisplayRegion(0.58, 0.82, 0.53, 0.85)
+        self.cDr = base.win.makeDisplayRegion(0.56, 0.81, 0.52, 0.85)
         self.cDr.setSort(1)
         self.cDr.setClearDepthActive(1)
         self.cDr.setClearColorActive(1)
@@ -733,10 +740,17 @@ class CatalogScreen(DirectFrame):
         self.clarabelle.find('**/glassR').setBin('fixed', 2)
         switchboard = loader.loadModel('phase_5.5/models/estate/switchboard')
         switchboard.reparentTo(self.clarabelle)
-        switchboard.setPos(0, -2, 0)
+        switchboard.setPos(1, -1.6, 0)
+        switchboard.setH(30)
+        room = loader.loadModel('phase_3/models/makeatoon/tt_m_ara_mat_room.bam')
+        room.reparentTo(self.clarabelle)
+        for part in ('genderProps', 'bodyWalls', 'bodyProps', 'colorWalls', 'colorProps', 'clothWalls', 'nameWalls', 'nameProps', 'spotlight'):
+            room.find('**/' + part).removeNode()
+        room.setPos(5.5, 1.25, 0)
+        room.setH(330)
         self.clarabelle.reparentTo(self.cRender)
-        self.clarabelle.setPosHprScale(-0.56, 6.43, -3.81, 121.61, 0.0, 0.0, 1.0, 1.0, 1.0)
-        self.clarabelleFrame.setPosHprScale(-0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
+        self.clarabelle.setPosHprScale(-0.52, 6.13, -3.81, 85, 0.0, 0.0, 1.0, 1.0, 1.0)
+        self.clarabelleFrame.setPosHprScale(-0.01, 0.0, -0.01, 0.0, 0.0, 0.0, 1.02, 1.0, 1.02)
 
     def reload(self):
         for panel in self.panelList + self.backPanelList + self.loyaltyPanelList + self.emblemPanelList:
@@ -804,6 +818,7 @@ class CatalogScreen(DirectFrame):
         if self.giftAvatar:
             base.cr.cancelAvatarDetailsRequest(self.giftAvatar)
         self.hide()
+        self.hangup.hide()
         self.destroy()
         del self.base
         del self.squares
@@ -858,7 +873,7 @@ class CatalogScreen(DirectFrame):
     def hangUp(self):
         if hasattr(self, 'giftAvatar') and self.giftAvatar:
             self.giftAvatar.disable()
-        self.setClarabelleChat(random.choice(TTLocalizer.CatalogGoodbyeList))
+        self.setClarabelleChat(random.choice(TTLocalizer.CatalogGoodbyeList), type='goodbye')
         self.setPageIndex(-1)
         self.showPageItems()
         self.nextPageButton.hide()
@@ -929,13 +944,38 @@ class CatalogScreen(DirectFrame):
         self.responseDialog = None
         return
 
-    def setClarabelleChat(self, str, timeout = 6):
+    def setClarabelleChat(self, str, timeout = 6, type = None):
         self.clearClarabelleChat()
+        # Clarabelle talks, with some variation
+        def load(*names):
+            return [base.loader.loadSfx('phase_5.5/audio/dial/clarabelle_%s.ogg' % n) for n in names]
+        if type == 'greeting':
+            if not self.clarabelleGreetingSfx:
+                self.clarabelleGreetingSfx = load('ah_1', 'ah_2')
+            base.playSfx(random.choice(self.clarabelleGreetingSfx))
+        elif type == 'goodbye':
+            if not self.clarabelleGoodbyeSfx:
+                self.clarabelleGoodbyeSfx = load('wa_2', 'wa_3', 'wa_4')
+            base.playSfx(random.choice(self.clarabelleGoodbyeSfx))
+        elif type == 'error':
+            if not self.clarabelleErrorSfx:
+                self.clarabelleErrorSfx = load('ah_2')
+            base.playSfx(random.choice(self.clarabelleErrorSfx))
+        else:
+            if not self.clarabelleChatterSfx:
+                self.clarabelleChatterSfx = load('ah_2', 'gen_2')
+            base.playSfx(random.choice(self.clarabelleChatterSfx))
         if not self.clarabelleChatBalloon:
             self.clarabelleChatBalloon = loader.loadModel('phase_3/models/props/chatbox.bam')
         self.clarabelleChat = ChatBalloon(self.clarabelleChatBalloon.node())
         chatNode = self.clarabelleChat.generate(str, ToontownGlobals.getInterfaceFont(), 10, Vec4(0, 0, 0, 1), Vec4(1, 1, 1, 1), 0, 0, 0, NodePath(), 0, 0, NodePath())
-        self.clarabelleChatNP = self.attachNewNode(chatNode, 1000)
+        if isinstance(chatNode, tuple):
+            chatNode = chatNode[0]
+        if isinstance(chatNode, NodePath):
+            self.clarabelleChatNP = chatNode
+            self.clarabelleChatNP.reparentTo(self, 1000)
+        else:
+            self.clarabelleChatNP = self.attachNewNode(chatNode, 1000)
         self.clarabelleChatNP.setScale(0.08)
         self.clarabelleChatNP.setPos(0.7, 0, 0.6)
         if timeout:
@@ -1051,10 +1091,20 @@ class CatalogScreen(DirectFrame):
             self.giftAvatar.doId = self.frienddoId
             self.giftAvatar.forceAllowDelayDelete()
             self.giftAvatar.generate()
-            base.cr.getAvatarDetails(self.giftAvatar, self.__handleAvatarDetails, 'DistributedToon')
+            # The server (Astron) has no "get avatar details" message, so the friend's look cannot be fetched: show gifts on a plain stand-in
+            # toon (the gift itself is checked and delivered by the server, which does not need the friend's look).
+            try:
+                from toontown.toon import ToonDNA
+                dna = ToonDNA.ToonDNA()
+                dna.newToonFromProperties('dss', 'ss', 'm', 'm', 2, 0, 2, 2, 1, 8, 1, 8, 1, 14)
+                self.giftAvatar.setDNA(dna)
+                self.giftAvatar.setName(self.receiverName)
+            except Exception:
+                pass
             self.gotAvatar = 0
             self.allowGetDetails = 0
             self.scrollList['state'] = DGG.DISABLED
+            self.__handleAvatarDetails(1, self.giftAvatar, 'DistributedToon')
         return
 
     def __handleAvatarDetails(self, gotData, avatar, dclass):

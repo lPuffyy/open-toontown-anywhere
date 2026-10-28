@@ -63,7 +63,7 @@ class DistributedPartyGate(DistributedObject.DistributedObject):
         if partyGate.isEmpty():
             self.notify.warning('Could not find partyGate_grp in loader.geom')
             return
-        gateFont = ToontownGlobals.getMinnieFont()
+        gateFont = ToontownGlobals.getMillieFont()
         leftSign = partyGate.find('**/signTextL_locatorBack')
         signScale = 0.35
         wordWrap = 8

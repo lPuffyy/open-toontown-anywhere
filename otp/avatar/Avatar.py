@@ -34,6 +34,7 @@ class Avatar(Actor, ShadowCaster):
             self.Avatar_initialized = 1
 
         Actor.__init__(self, None, None, other, flattenable=0, setFinal=1)
+        self.setBlend(frameBlend=True)      # blend between an animation's frames (the 'interpolate-frames' setting alone does not turn this on for actors)
         ShadowCaster.__init__(self)
         self.__font = OTPGlobals.getInterfaceFont()
         self.soundChatBubble = None
@@ -77,6 +78,15 @@ class Avatar(Actor, ShadowCaster):
         self.__currentDialogue = None
         self.whitelistChatFlags = 0
         return
+
+    def loadModel(self, *args, **kw):
+        # every body part brings its own animation bundle: turn frame blending on for it as it arrives
+        ret = Actor.loadModel(self, *args, **kw)
+        try:
+            self.setBlend(frameBlend=True)
+        except Exception:
+            pass
+        return ret
 
     def delete(self):
         try:

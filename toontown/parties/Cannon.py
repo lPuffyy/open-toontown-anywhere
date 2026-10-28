@@ -1,4 +1,5 @@
 import math
+from panda3d.otp import Nametag, NametagFloat3d
 from panda3d.core import *
 from direct.interval.MetaInterval import Sequence, Parallel
 from direct.interval.FunctionInterval import Func

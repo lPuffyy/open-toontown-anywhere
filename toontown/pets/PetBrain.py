@@ -187,6 +187,14 @@ class PetBrain(DirectObject.DirectObject, CPetBrain):
         del self.lookers[avId]
         self.observe(PetObserve.PetActionObserve(PetObserve.Actions.ATTENDED_STOP, avId))
 
+    def _isCloseTo(self, avatar):
+        """A pet only 'sees' an avatar through the looking spheres, which need a collision traverser for the zone; where there
+        isn't one (a playground), anyone close by counts as looking at it."""
+        try:
+            return self.pet.getDistance(avatar) <= PetConstants.NonPetSphereRadius * 3
+        except Exception:
+            return False
+
     def lookedAtBy(self, avId):
         return avId in self.lookers
 
@@ -425,7 +433,7 @@ class PetBrain(DirectObject.DirectObject, CPetBrain):
         def _handleDoTrick(trickId, avId, self = self):
             avatar = simbase.air.doId2do.get(avId)
             if avatar:
-                if self.lookedAtBy(avatar.doId):
+                if self.lookedAtBy(avatar.doId) or self._isCloseTo(avatar):
                     if not self.goalMgr.hasTrickGoal():
                         if not self.pet._willDoTrick(trickId):
                             self.pet.trickFailLogger.addEvent(trickId)

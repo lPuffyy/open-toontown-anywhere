@@ -8,7 +8,7 @@ class MMHood(ToonHood.ToonHood):
 
     def __init__(self, parentFSM, doneEvent, dnaStore, hoodId):
         ToonHood.ToonHood.__init__(self, parentFSM, doneEvent, dnaStore, hoodId)
-        self.id = MinniesMelodyland
+        self.id = MelodyMeadow
         self.townLoaderClass = MMTownLoader.MMTownLoader
         self.safeZoneLoaderClass = MMSafeZoneLoader.MMSafeZoneLoader
         self.storageDNAFile = 'phase_6/dna/storage_MM.dna'

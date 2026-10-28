@@ -1,4 +1,5 @@
 from panda3d.otp import *
+from toontown.toonbase import TTLocalizer
 from .PurchaseBase import *
 from direct.task.Task import Task
 from toontown.toon import ToonHead
@@ -149,6 +150,7 @@ class Purchase(PurchaseBase):
 
     def unload(self):
         PurchaseBase.unload(self)
+        base.camLens.setFov(ToontownGlobals.DefaultCameraFov)      # this scene uses its own, narrower view: give the normal one back
         self.cleanupUnexpectedExitHooks()
         self.bg.removeNode()
         del self.bg

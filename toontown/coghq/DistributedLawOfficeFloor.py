@@ -1,4 +1,5 @@
 from panda3d.core import *
+from panda3d.otp import CFThought
 from toontown.toonbase.ToontownGlobals import *
 from direct.distributed.ClockDelta import *
 from direct.interval.IntervalGlobal import *

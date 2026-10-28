@@ -1,4 +1,5 @@
 from direct.distributed.ClockDelta import *
+from direct.directnotify import DirectNotifyGlobal
 from direct.interval.IntervalGlobal import *
 from toontown.building.ElevatorConstants import *
 from toontown.building.ElevatorUtils import *

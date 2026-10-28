@@ -39,7 +39,3 @@ class DGPlayground(Playground.Playground):
         self.nextBirdTime = task.time + randNum * 20.0
         return Task.cont
 
-    def showPaths(self):
-        from toontown.classicchars import CCharPaths
-        from toontown.toonbase import TTLocalizer
-        self.showPathPoints(CCharPaths.getPaths(TTLocalizer.Goofy))

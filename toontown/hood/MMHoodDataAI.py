@@ -3,14 +3,13 @@ from . import HoodDataAI
 from toontown.toonbase import ToontownGlobals
 from toontown.safezone import DistributedTrolleyAI
 from toontown.safezone import MMTreasurePlannerAI
-from toontown.classicchars import DistributedMinnieAI
 from toontown.safezone import DistributedMMPianoAI
 
 class MMHoodDataAI(HoodDataAI.HoodDataAI):
     notify = DirectNotifyGlobal.directNotify.newCategory('MMHoodDataAI')
 
     def __init__(self, air, zoneId=None):
-        hoodId = ToontownGlobals.MinniesMelodyland
+        hoodId = ToontownGlobals.MelodyMeadow
         if zoneId == None:
             zoneId = hoodId
         HoodDataAI.HoodDataAI.__init__(self, air, zoneId, hoodId)
@@ -24,7 +23,4 @@ class MMHoodDataAI(HoodDataAI.HoodDataAI):
         self.addDistObj(trolley)
         self.treasurePlanner = MMTreasurePlannerAI.MMTreasurePlannerAI(self.zoneId)
         self.treasurePlanner.start()
-        self.classicChar = DistributedMinnieAI.DistributedMinnieAI(self.air)
-        self.classicChar.generateWithRequired(self.zoneId)
-        self.classicChar.start()
-        self.addDistObj(self.classicChar)
+        # classic Disney character removed (not spawned in this build)

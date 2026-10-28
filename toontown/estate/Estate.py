@@ -1,4 +1,5 @@
 from panda3d.core import *
+from toontown.toonbase import ToontownGlobals
 from direct.interval.IntervalGlobal import *
 from toontown.toonbase.ToonBaseGlobal import *
 from toontown.toonbase.ToontownGlobals import *
@@ -46,7 +47,8 @@ class Estate(Place.Place):
           'trialerFA',
           'doorOut',
           'push',
-          'pet']),
+          'pet',
+          'petTutorial']),
          State.State('stopped', self.enterStopped, self.exitStopped, ['walk', 'teleportOut']),
          State.State('sit', self.enterSit, self.exitSit, ['walk']),
          State.State('push', self.enterPush, self.exitPush, ['walk']),
@@ -92,6 +94,8 @@ class Estate(Place.Place):
         self.parentFSMState.addChild(self.fsm)
 
     def unload(self):
+        taskMgr.remove('estate-pet-tutorial')
+        taskMgr.remove('estate-garden-tutorial')
         self.ignoreAll()
         self.notify.info('remove estate-check-toon-underwater to TaskMgr in unload()')
         taskMgr.remove('estate-check-toon-underwater')
@@ -134,6 +138,7 @@ class Estate(Place.Place):
             holidayIds = base.cr.newsManager.getHolidayIdList()
             if ToontownGlobals.APRIL_FOOLS_COSTUMES in holidayIds or ToontownGlobals.SILLYMETER_EXT_HOLIDAY in holidayIds:
                 self.startAprilFoolsControls()
+        self._petTutorialShown = False
         self.accept('doorDoneEvent', self.handleDoorDoneEvent)
         self.accept('DistributedDoor_doorTrigger', self.handleDoorTrigger)
         self.fsm.request(requestStatus['how'], [requestStatus])
@@ -147,6 +152,8 @@ class Estate(Place.Place):
             base.localAvatar.controlManager.currentControls.setGravity(32.174 * 2.0)
 
     def exit(self):
+        taskMgr.remove('estate-pet-tutorial')
+        taskMgr.remove('estate-garden-tutorial')
         base.localAvatar.stopChat()
         if hasattr(base.cr, 'newsManager') and base.cr.newsManager:
             holidayIds = base.cr.newsManager.getHolidayIdList()
@@ -195,7 +202,60 @@ class Estate(Place.Place):
     def exitInit(self):
         pass
 
+    def enterWalk(self, teleportIn = 0):
+        Place.Place.enterWalk(self, teleportIn)
+        # the tutorial is meant to open on a teleport in, but how a toon arrives varies: show it the first time they are
+        # walking around the estate with a doodle, whichever way they came
+        if base.wantPets and base.localAvatar.hasPet() and not base.localAvatar.bPetTutorialDone and not self._tutorialSeen('pet') and not getattr(self, '_petTutorialShown', False):
+            self._petTutorialShown = True
+            taskMgr.doMethodLater(1.0, self.__showPetTutorial, 'estate-pet-tutorial')
+        elif self.avId == base.localAvatar.doId and not getattr(self, '_gardenTutorialShown', False) and not self._tutorialSeen('garden'):
+            self._gardenTutorialShown = True
+            taskMgr.doMethodLater(1.0, self.__showGardenTutorial, 'estate-garden-tutorial')
+
+    _tutorialsSeenHere = set()
+
+    def _tutorialSeen(self, name, mark = False):
+        """Whether this toon has had a tutorial on this device (the browser's local storage on the web, memory otherwise)."""
+        la = base.localAvatar
+        server = {'garden': 'bGardenTutorialDone', 'pet': 'bPetTutorialDone'}.get(name)
+        if mark and name == 'garden':
+            la.b_setGardenTutorialDone(1)               # saved with the toon (the server sends it back at the next login)
+        if not mark and server and getattr(la, server, False):
+            return True
+        key = 'ottut_%s_%s' % (name, base.localAvatar.doId)
+        try:
+            import platform
+            store = platform.window.localStorage
+            if mark:
+                store.setItem(key, '1')
+                return True
+            return str(store.getItem(key)) not in ('None', 'null', 'undefined')
+        except Exception:
+            if mark:
+                Estate._tutorialsSeenHere.add(key)
+            return key in Estate._tutorialsSeenHere
+
+    def __showGardenTutorial(self, task):
+        if hasattr(self, 'fsm') and self.fsm.getCurrentState().getName() == 'walk':
+            from toontown.estate import GardenTutorial
+            self.fsm.request('stopped')
+            self.gardenTutorial = GardenTutorial.GardenTutorial(callback=self.__gardenTutorialDone)
+        return task.done
+
+    def __gardenTutorialDone(self):
+        self._tutorialSeen('garden', mark=True)
+        if getattr(self, 'gardenTutorial', None) is not None:
+            self.gardenTutorial.destroy()
+            self.gardenTutorial = None
+
+    def __showPetTutorial(self, task):
+        if hasattr(self, 'fsm') and self.fsm.getCurrentState().getName() == 'walk' and not base.localAvatar.bPetTutorialDone and not self._tutorialSeen('pet'):
+            self.fsm.request('petTutorial')
+        return task.done
+
     def enterPetTutorial(self, bDummy = True):
+        self._petTutorialShown = True
         self.notify.info('remove estate-check-toon-underwater to TaskMgr in enterPetTutorial()')
         taskMgr.remove('estate-check-toon-underwater')
         self.petTutorialDoneEvent = 'PetTutorialDone'
@@ -211,6 +271,7 @@ class Estate(Place.Place):
         return
 
     def petTutorialDone(self):
+        self._tutorialSeen('pet', mark=True)      # (the server never sends this flag back to the game, so remember it here)
         self.ignore(self.petTutorialDoneEvent)
         self.petTutorial.destroy()
         self.petTutorial = None
@@ -254,7 +315,7 @@ class Estate(Place.Place):
         self.notify.info('remove estate-check-toon-underwater to TaskMgr in enterTeleportIn()')
         taskMgr.remove('estate-check-toon-underwater')
         if base.wantPets:
-            if base.localAvatar.hasPet() and not base.localAvatar.bPetTutorialDone:
+            if base.localAvatar.hasPet() and not base.localAvatar.bPetTutorialDone and not self._tutorialSeen('pet'):
                 self.nextState = 'petTutorial'
 
     def teleportInDone(self):

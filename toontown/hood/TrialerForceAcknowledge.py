@@ -27,7 +27,7 @@ class TrialerForceAcknowledge:
         if base.cr.isPaid():
             letThrough()
             return
-        if ZoneUtil.getCanonicalHoodId(destHood) in (ToontownGlobals.ToontownCentral, ToontownGlobals.MyEstate, ToontownGlobals.GoofySpeedway):
+        if ZoneUtil.getCanonicalHoodId(destHood) in (ToontownGlobals.ToontownCentral, ToontownGlobals.MyEstate, ToontownGlobals.SpeedwayPark):
             letThrough()
             return
         else:

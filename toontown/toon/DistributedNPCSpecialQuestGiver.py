@@ -1,4 +1,7 @@
 from panda3d.core import *
+from toontown.toonbase import ToontownGlobals
+from toontown.quest import Quests
+from panda3d.otp import CFSpeech, CFTimeout
 from .DistributedNPCToonBase import *
 from toontown.quest import QuestParser
 from toontown.quest import QuestChoiceGui
@@ -66,7 +69,7 @@ class DistributedNPCSpecialQuestGiver(DistributedNPCToonBase):
             myHoodId = place.id
         if myHoodId in (ToontownGlobals.ToontownCentral,
          ToontownGlobals.MyEstate,
-         ToontownGlobals.GoofySpeedway,
+         ToontownGlobals.SpeedwayPark,
          ToontownGlobals.Tutorial):
             return True
         return False

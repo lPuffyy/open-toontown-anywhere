@@ -180,6 +180,11 @@ class SuitPage(ShtikerPage.ShtikerPage):
         frame.wrtReparentTo(self.frameNode)
         screws = frameModel.find('**/screws')
         screws.wrtReparentTo(self.iconNode)
+        # the frame was drawn for a wider page than the book's: squeeze it in so it hugs the cards
+        for part in (frame, screws):
+            sc = part.getScale()
+            part.setScale(sc[0] * 0.638, sc[1], sc[2])
+            part.setX(part.getX() - 0.026)
         icons = frameModel.find('**/icons')
         del frameModel
         self.title = DirectLabel(parent=self.iconNode, relief=None, text=TTLocalizer.SuitPageTitle, text_scale=0.1, text_pos=(0.04, 0), textMayChange=0)

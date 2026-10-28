@@ -543,7 +543,7 @@ class DistributedParty(DistributedObject.DistributedObject):
         self.partyClockModel.stash()
 
     def getTimer(self, parent):
-        timeFont = ToontownGlobals.getMinnieFont()
+        timeFont = ToontownGlobals.getMillieFont()
         timer = {}
         timer['minute'] = DirectLabel(parent=parent, pos=TTLocalizer.DPtimerMinutePos, relief=None, text='59', text_align=TextNode.ACenter, text_font=timeFont, text_fg=(0.7, 0.3, 0.3, 1.0), scale=TTLocalizer.DPtimerMinute)
         timer['colon'] = DirectLabel(parent=parent, pos=TTLocalizer.DPtimerColonPos, relief=None, text=':', text_align=TextNode.ACenter, text_font=timeFont, text_fg=(0.7, 0.3, 0.3, 1.0), scale=TTLocalizer.DPtimerColon)

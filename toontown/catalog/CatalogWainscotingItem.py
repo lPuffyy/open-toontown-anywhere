@@ -1,4 +1,5 @@
 from .CatalogSurfaceItem import *
+from toontown.toonbase import TTLocalizer
 WSTTextureName = 0
 WSTColor = 1
 WSTBasePrice = 2
@@ -120,7 +121,7 @@ def getAllWainscotings(*indexList):
 
 
 def getWainscotingRange(fromIndex, toIndex, *otherRanges):
-    list = []
+    list_ = []
     froms = [fromIndex]
     tos = [toIndex]
     i = 0
@@ -135,9 +136,9 @@ def getWainscotingRange(fromIndex, toIndex, *otherRanges):
                 colors = WainscotingTypes[patternIndex][WSTColor]
                 if colors:
                     for n in range(len(colors)):
-                        list.append(CatalogWainscotingItem(patternIndex, n))
+                        list_.append(CatalogWainscotingItem(patternIndex, n))
 
                 else:
-                    list.append(CatalogWainscotingItem(patternIndex, 0))
+                    list_.append(CatalogWainscotingItem(patternIndex, 0))
 
-    return list
+    return list_

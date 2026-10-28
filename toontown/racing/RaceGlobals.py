@@ -377,7 +377,7 @@ def getDefaultRecordTime(trackId):
 
 
 def getDefaultRecord(trackId):
-    return getDefaultRecordTime(trackId), 0, 1, 'Goofy'
+    return getDefaultRecordTime(trackId), 0, 1, 'Gus'
 
 
 Daily = 0

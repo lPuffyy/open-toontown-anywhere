@@ -26,7 +26,7 @@ class DistributedMMPiano(DistributedObject.DistributedObject):
 
     def generate(self):
         self.piano = base.cr.playGame.hood.loader.piano
-        base.cr.parentMgr.registerParent(ToontownGlobals.SPMinniesPiano, self.piano)
+        base.cr.parentMgr.registerParent(ToontownGlobals.SPMeadowPiano, self.piano)
         self.accept('enterlarge_round_keyboard_collisions', self.__handleOnFloor)
         self.accept('exitlarge_round_keyboard_collisions', self.__handleOffFloor)
         self.accept('entero7', self.__handleChangeDirectionButton)
@@ -56,7 +56,7 @@ class DistributedMMPiano(DistributedObject.DistributedObject):
 
     def disable(self):
         del self.piano
-        base.cr.parentMgr.unregisterParent(ToontownGlobals.SPMinniesPiano)
+        base.cr.parentMgr.unregisterParent(ToontownGlobals.SPMeadowPiano)
         self.ignore('enterlarge_round_keyboard_collisions')
         self.ignore('exitlarge_round_keyboard_collisions')
         self.ignore('entero7')

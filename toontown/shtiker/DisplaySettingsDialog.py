@@ -1,4 +1,5 @@
 from direct.gui.DirectGui import *
+from panda3d.otp import NametagGlobals
 from panda3d.core import *
 from direct.task.Task import Task
 from direct.fsm import StateData

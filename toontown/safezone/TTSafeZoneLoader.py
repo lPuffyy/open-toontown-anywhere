@@ -19,7 +19,8 @@ class TTSafeZoneLoader(SafeZoneLoader.SafeZoneLoader):
         self.birdSound = list(map(base.loader.loadSfx, ['phase_4/audio/sfx/SZ_TC_bird1.ogg', 'phase_4/audio/sfx/SZ_TC_bird2.ogg', 'phase_4/audio/sfx/SZ_TC_bird3.ogg']))
 
     def unload(self):
-        del self.birdSound
+        if hasattr(self, 'birdSound'):
+            del self.birdSound
         SafeZoneLoader.SafeZoneLoader.unload(self)
 
     def enter(self, requestStatus):

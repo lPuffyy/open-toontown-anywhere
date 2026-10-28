@@ -94,8 +94,8 @@ FM_MovedItem = 1
 FM_SwappedItem = 2
 FM_DeletedItem = 3
 FM_RecoveredItem = 4
-SPDonaldsBoat = 3
-SPMinniesPiano = 4
+SPDockBoat = 3
+SPMeadowPiano = 4
 CEVirtual = 14
 MaxHpLimit = 137
 MaxCarryLimit = 80
@@ -112,7 +112,7 @@ from toontown.toontowngui import TTDialog
 setDialogClasses(TTDialog.TTDialog, TTDialog.TTGlobalDialog)
 ToonFont = None
 BuildingNametagFont = None
-MinnieFont = None
+MillieFont = None
 SuitFont = None
 
 def getToonFont():
@@ -129,11 +129,11 @@ def getBuildingNametagFont():
     return BuildingNametagFont
 
 
-def getMinnieFont():
-    global MinnieFont
-    if MinnieFont == None:
-        MinnieFont = loader.loadFont(TTLocalizer.MinnieFont)
-    return MinnieFont
+def getMillieFont():
+    global MillieFont
+    if MillieFont == None:
+        MillieFont = loader.loadFont(TTLocalizer.MillieFont)
+    return MillieFont
 
 
 def getSuitFont():
@@ -143,15 +143,15 @@ def getSuitFont():
     return SuitFont
 
 
-DonaldsDock = 1000
+DockHarbor = 1000
 ToontownCentral = 2000
 TheBrrrgh = 3000
-MinniesMelodyland = 4000
-DaisyGardens = 5000
+MelodyMeadow = 4000
+GardenGrove = 5000
 OutdoorZone = 6000
 FunnyFarm = 7000
-GoofySpeedway = 8000
-DonaldsDreamland = 9000
+SpeedwayPark = 8000
+SlumberSprings = 9000
 BarnacleBoulevard = 1100
 SeaweedStreet = 1200
 LighthouseLane = 1300
@@ -171,12 +171,12 @@ LullabyLane = 9100
 PajamaPlace = 9200
 ToonHall = 2513
 HoodHierarchy = {ToontownCentral: (SillyStreet, LoopyLane, PunchlinePlace),
- DonaldsDock: (BarnacleBoulevard, SeaweedStreet, LighthouseLane),
+ DockHarbor: (BarnacleBoulevard, SeaweedStreet, LighthouseLane),
  TheBrrrgh: (WalrusWay, SleetStreet, PolarPlace),
- MinniesMelodyland: (AltoAvenue, BaritoneBoulevard, TenorTerrace),
- DaisyGardens: (ElmStreet, MapleStreet, OakStreet),
- DonaldsDreamland: (LullabyLane, PajamaPlace),
- GoofySpeedway: ()}
+ MelodyMeadow: (AltoAvenue, BaritoneBoulevard, TenorTerrace),
+ GardenGrove: (ElmStreet, MapleStreet, OakStreet),
+ SlumberSprings: (LullabyLane, PajamaPlace),
+ SpeedwayPark: ()}
 WelcomeValleyToken = 0
 BossbotHQ = 10000
 BossbotLobby = 10100
@@ -214,10 +214,10 @@ cogDept2index = {'c': 0,
  'm': 2,
  's': 3}
 cogIndex2dept = invertDict(cogDept2index)
-HQToSafezone = {SellbotHQ: DaisyGardens,
- CashbotHQ: DonaldsDreamland,
+HQToSafezone = {SellbotHQ: GardenGrove,
+ CashbotHQ: SlumberSprings,
  LawbotHQ: TheBrrrgh,
- BossbotHQ: DonaldsDock}
+ BossbotHQ: DockHarbor}
 CogDeptNames = [TTLocalizer.Bossbot,
  TTLocalizer.Lawbot,
  TTLocalizer.Cashbot,
@@ -298,28 +298,28 @@ factoryId2factoryType = {MockupFactoryId: FT_FullSuit,
  LawbotOfficeInt: FT_FullSuit}
 StreetNames = TTLocalizer.GlobalStreetNames
 StreetBranchZones = list(StreetNames.keys())
-Hoods = (DonaldsDock,
+Hoods = (DockHarbor,
  ToontownCentral,
  TheBrrrgh,
- MinniesMelodyland,
- DaisyGardens,
+ MelodyMeadow,
+ GardenGrove,
  OutdoorZone,
  FunnyFarm,
- GoofySpeedway,
- DonaldsDreamland,
+ SpeedwayPark,
+ SlumberSprings,
  BossbotHQ,
  SellbotHQ,
  CashbotHQ,
  LawbotHQ,
  GolfZone)
-HoodsForTeleportAll = (DonaldsDock,
+HoodsForTeleportAll = (DockHarbor,
  ToontownCentral,
  TheBrrrgh,
- MinniesMelodyland,
- DaisyGardens,
+ MelodyMeadow,
+ GardenGrove,
  OutdoorZone,
- GoofySpeedway,
- DonaldsDreamland,
+ SpeedwayPark,
+ SlumberSprings,
  BossbotHQ,
  SellbotHQ,
  CashbotHQ,
@@ -444,13 +444,13 @@ KeyboardTimeout = 300
 phaseMap = {Tutorial: 4,
  ToontownCentral: 4,
  MyEstate: 5.5,
- DonaldsDock: 6,
- MinniesMelodyland: 6,
- GoofySpeedway: 6,
+ DockHarbor: 6,
+ MelodyMeadow: 6,
+ SpeedwayPark: 6,
  TheBrrrgh: 8,
- DaisyGardens: 8,
+ GardenGrove: 8,
  FunnyFarm: 8,
- DonaldsDreamland: 8,
+ SlumberSprings: 8,
  OutdoorZone: 8,
  BossbotHQ: 12,
  SellbotHQ: 9,
@@ -459,13 +459,13 @@ phaseMap = {Tutorial: 4,
  GolfZone: 8,
  PartyHood: 13}
 streetPhaseMap = {ToontownCentral: 5,
- DonaldsDock: 6,
- MinniesMelodyland: 6,
- GoofySpeedway: 6,
+ DockHarbor: 6,
+ MelodyMeadow: 6,
+ SpeedwayPark: 6,
  TheBrrrgh: 8,
- DaisyGardens: 8,
+ GardenGrove: 8,
  FunnyFarm: 8,
- DonaldsDreamland: 8,
+ SlumberSprings: 8,
  OutdoorZone: 8,
  BossbotHQ: 12,
  SellbotHQ: 9,
@@ -474,28 +474,28 @@ streetPhaseMap = {ToontownCentral: 5,
  PartyHood: 13}
 dnaMap = {Tutorial: 'toontown_central',
  ToontownCentral: 'toontown_central',
- DonaldsDock: 'donalds_dock',
- MinniesMelodyland: 'minnies_melody_land',
- GoofySpeedway: 'goofy_speedway',
+ DockHarbor: 'donalds_dock',
+ MelodyMeadow: 'minnies_melody_land',
+ SpeedwayPark: 'goofy_speedway',
  TheBrrrgh: 'the_burrrgh',
- DaisyGardens: 'daisys_garden',
+ GardenGrove: 'daisys_garden',
  FunnyFarm: 'not done yet',
- DonaldsDreamland: 'donalds_dreamland',
+ SlumberSprings: 'donalds_dreamland',
  OutdoorZone: 'outdoor_zone',
  BossbotHQ: 'cog_hq_bossbot',
  SellbotHQ: 'cog_hq_sellbot',
  CashbotHQ: 'cog_hq_cashbot',
  LawbotHQ: 'cog_hq_lawbot',
  GolfZone: 'golf_zone'}
-hoodNameMap = {DonaldsDock: TTLocalizer.DonaldsDock,
+hoodNameMap = {DockHarbor: TTLocalizer.DockHarbor,
  ToontownCentral: TTLocalizer.ToontownCentral,
  TheBrrrgh: TTLocalizer.TheBrrrgh,
- MinniesMelodyland: TTLocalizer.MinniesMelodyland,
- DaisyGardens: TTLocalizer.DaisyGardens,
+ MelodyMeadow: TTLocalizer.MelodyMeadow,
+ GardenGrove: TTLocalizer.GardenGrove,
  OutdoorZone: TTLocalizer.OutdoorZone,
  FunnyFarm: TTLocalizer.FunnyFarm,
- GoofySpeedway: TTLocalizer.GoofySpeedway,
- DonaldsDreamland: TTLocalizer.DonaldsDreamland,
+ SpeedwayPark: TTLocalizer.SpeedwayPark,
+ SlumberSprings: TTLocalizer.SlumberSprings,
  BossbotHQ: TTLocalizer.BossbotHQ,
  SellbotHQ: TTLocalizer.SellbotHQ,
  CashbotHQ: TTLocalizer.CashbotHQ,
@@ -507,38 +507,38 @@ hoodNameMap = {DonaldsDock: TTLocalizer.DonaldsDock,
 safeZoneCountMap = {MyEstate: 8,
  Tutorial: 6,
  ToontownCentral: 6,
- DonaldsDock: 10,
- MinniesMelodyland: 5,
- GoofySpeedway: 500,
+ DockHarbor: 10,
+ MelodyMeadow: 5,
+ SpeedwayPark: 500,
  TheBrrrgh: 8,
- DaisyGardens: 9,
+ GardenGrove: 9,
  FunnyFarm: 500,
- DonaldsDreamland: 5,
+ SlumberSprings: 5,
  OutdoorZone: 500,
  GolfZone: 500,
  PartyHood: 500}
 townCountMap = {MyEstate: 8,
  Tutorial: 40,
  ToontownCentral: 37,
- DonaldsDock: 40,
- MinniesMelodyland: 40,
- GoofySpeedway: 40,
+ DockHarbor: 40,
+ MelodyMeadow: 40,
+ SpeedwayPark: 40,
  TheBrrrgh: 40,
- DaisyGardens: 40,
+ GardenGrove: 40,
  FunnyFarm: 40,
- DonaldsDreamland: 40,
+ SlumberSprings: 40,
  OutdoorZone: 40,
  PartyHood: 20}
 hoodCountMap = {MyEstate: 2,
  Tutorial: 2,
  ToontownCentral: 2,
- DonaldsDock: 2,
- MinniesMelodyland: 2,
- GoofySpeedway: 2,
+ DockHarbor: 2,
+ MelodyMeadow: 2,
+ SpeedwayPark: 2,
  TheBrrrgh: 2,
- DaisyGardens: 2,
+ GardenGrove: 2,
  FunnyFarm: 2,
- DonaldsDreamland: 2,
+ SlumberSprings: 2,
  OutdoorZone: 2,
  BossbotHQ: 2,
  SellbotHQ: 43,
@@ -558,20 +558,7 @@ TrophyStarColors = (Vec4(0.9, 0.6, 0.2, 1),
  Vec4(0.8, 0.8, 0.8, 1),
  Vec4(1, 1, 0, 1),
  Vec4(1, 1, 0, 1))
-MickeySpeed = 5.0
-VampireMickeySpeed = 1.15
-MinnieSpeed = 3.2
-WitchMinnieSpeed = 1.8
-DonaldSpeed = 3.68
-FrankenDonaldSpeed = 0.9
-DaisySpeed = 2.3
-GoofySpeed = 5.2
-SuperGoofySpeed = 1.6
-PlutoSpeed = 5.5
-WesternPlutoSpeed = 3.2
-ChipSpeed = 3
-DaleSpeed = 3.5
-DaleOrbitDistance = 3
+AcornOrbitDistance = 3
 SuitWalkSpeed = 4.8
 PieCodeBossCog = 1
 PieCodeNotBossCog = 2

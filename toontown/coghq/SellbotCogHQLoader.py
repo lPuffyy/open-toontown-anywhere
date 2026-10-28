@@ -61,7 +61,7 @@ class SellbotCogHQLoader(CogHQLoader.CogHQLoader):
             dgSign = cogSign.copyTo(dgLinkTunnel)
             dgSign.setPosHprScale(0.0, -291.5, 29, 180.0, 0.0, 0.0, cogSignSF, cogSignSF, cogSignSF * aspectSF)
             dgSign.node().setEffect(DecalEffect.make())
-            dgText = DirectGui.OnscreenText(text=TTLocalizer.DaisyGardens[-1], font=ToontownGlobals.getSuitFont(), pos=(0, -0.3), scale=TTLocalizer.SCHQLdgText, mayChange=False, parent=dgSign)
+            dgText = DirectGui.OnscreenText(text=TTLocalizer.GardenGrove[-1], font=ToontownGlobals.getSuitFont(), pos=(0, -0.3), scale=TTLocalizer.SCHQLdgText, mayChange=False, parent=dgSign)
             dgText.setDepthWrite(0)
             factorySign = cogSign.copyTo(factoryLinkTunnel)
             factorySign.setPosHprScale(148.625, -155, 27, -90.0, 0.0, 0.0, cogSignSF, cogSignSF, cogSignSF * aspectSF)

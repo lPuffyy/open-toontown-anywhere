@@ -45,3 +45,5 @@ class ToontownUDRepository(ToontownInternalRepository):
         if __astron__:
             # Create our Astron login manager...
             self.astronLoginManager = self.generateGlobalObject(OTP_DO_ID_ASTRON_LOGIN_MANAGER, 'AstronLoginManager')
+            # ...and the service that knows who is playing, in any district, and carries Go To messages
+            self.toonPresence = self.generateGlobalObject(OTP_DO_ID_TOON_PRESENCE, 'ToonPresence')

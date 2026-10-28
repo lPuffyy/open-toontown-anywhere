@@ -45,7 +45,7 @@ def refresh(event = None):
     if isOpen():
         if isComplete():
             messenger.send(EventName())
-            if event is not none:
+            if event is not None:
                 messenger.send(event)
     else:
 
@@ -88,6 +88,14 @@ class ToontownDistrictStats(DistributedObject.DistributedObject):
     def setNewAvatarCount(self, newAvatarCount):
         if self.toontownDistrictId in self.cr.activeDistrictMap:
             self.cr.activeDistrictMap[self.toontownDistrictId].newAvatarCount = newAvatarCount
+
+    def setInvasion(self, cog, skeleton, remaining):
+        district = self.cr.activeDistrictMap.get(self.toontownDistrictId)
+        if district is not None:
+            district.invasionCog = cog
+            district.invasionSkeleton = skeleton
+            district.invasionRemaining = remaining
+            messenger.send('shardInfoUpdated')
 
     def setStats(self, avatarCount, newAvatarCount):
         self.setAvatarCount(avatarCount)

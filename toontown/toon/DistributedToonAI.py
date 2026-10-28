@@ -1,3 +1,4 @@
+import traceback
 from otp.ai.AIBaseGlobal import *
 from panda3d.core import *
 from otp.otpbase import OTPGlobals
@@ -186,6 +187,7 @@ class DistributedToonAI(DistributedPlayerAI.DistributedPlayerAI, DistributedSmoo
             self.allowRaceTimeout = True
         self.setBattleId(0)
         self.gardenStarted = False
+        self.bGardenTutorialDone = False
         self.flowerCollection = None
         self.shovel = 0
         self.shovelSkill = 0
@@ -219,6 +221,11 @@ class DistributedToonAI(DistributedPlayerAI.DistributedPlayerAI, DistributedSmoo
             messenger.send('avatarEntered', [self])
             if __astron__:
                 self.sendUpdate('setDefaultShard', [self.air.districtId])
+            try:
+                self.sendFriendDetails()
+                self.notifyFriendsOnline(1)
+            except Exception:
+                self.notify.warning('friend details failed for %s: %s' % (self.doId, traceback.format_exc()))
         if hasattr(self, 'gameAccess') and self.gameAccess != 2:
             if self.hat[0] != 0:
                 self.replaceItemInAccessoriesList(ToonDNA.HAT, 0, 0, 0, self.hat[0], self.hat[1], self.hat[2])
@@ -254,10 +261,10 @@ class DistributedToonAI(DistributedPlayerAI.DistributedPlayerAI, DistributedSmoo
                         hoodsVisited.append(canonicalHood)
                         self.b_setHoodsVisited(hoodsVisited)
 
-                    if canonicalZoneId == ToontownGlobals.GoofySpeedway:
+                    if canonicalZoneId == ToontownGlobals.SpeedwayPark:
                         teleportAccess = self.getTeleportAccess()
-                        if ToontownGlobals.GoofySpeedway not in teleportAccess:
-                            teleportAccess.append(ToontownGlobals.GoofySpeedway)
+                        if ToontownGlobals.SpeedwayPark not in teleportAccess:
+                            teleportAccess.append(ToontownGlobals.SpeedwayPark)
                             self.b_setTeleportAccess(teleportAccess)
 
     def sendDeleteEvent(self):
@@ -274,6 +281,7 @@ class DistributedToonAI(DistributedPlayerAI.DistributedPlayerAI, DistributedSmoo
         self.notify.debug('----Deleting DistributedToonAI %d ' % self.doId)
         if self.isPlayerControlled():
             messenger.send('avatarExited', [self])
+            self.notifyFriendsOnline(0)
         if simbase.wantPets:
             if self.isInEstate():
                 print('ToonAI - Exit estate toonId:%s' % self.doId)
@@ -592,6 +600,59 @@ class DistributedToonAI(DistributedPlayerAI.DistributedPlayerAI, DistributedSmoo
 
     def getShtickerBook(self):
         return ''
+
+    def sendFriendDetails(self):
+        """Tell this toon's own client who its friends are (name, look, pet, and whether they are in this district now): the
+        server has no 'get friends list' request, so the friends list window is filled from this."""
+        friendIds = [pair[0] for pair in self.friendsList]
+        if not friendIds:
+            self.sendUpdate('setFriendDetails', [[]])
+            return
+        results = {}
+        pending = set(friendIds)
+
+        def finish():
+            self.sendUpdate('setFriendDetails', [[results[i] for i in friendIds if i in results]])
+
+        def done(friendId):
+            pending.discard(friendId)
+            if not pending:
+                finish()
+
+        for friendId in friendIds:
+            friend = self.air.doId2do.get(friendId)
+            if friend is not None and hasattr(friend, 'dna'):
+                results[friendId] = (friendId, friend.getName(), friend.dna.makeNetString(), friend.getPetId(), 1)
+                done(friendId)
+                continue
+
+            def got(dclass, fields, friendId=friendId):
+                if fields:
+                    results[friendId] = (friendId, fields.get('setName', ('',))[0], fields.get('setDNAString', (b'',))[0],
+                                         fields.get('setPetId', (0,))[0], 0)
+                done(friendId)
+
+            self.air.dbInterface.queryObject(self.air.dbId, friendId, got, dclass=self.air.dclassesByName['DistributedToonAI'],
+                                             fieldNames=('setName', 'setDNAString', 'setPetId'))
+
+    def removeFriend(self, friendId):
+        """This toon's own player ended a friendship (or the friend did and its phone is passing it on)."""
+        if self.air.getAvatarIdFromSender() != self.doId:
+            return
+        newList = [pair for pair in self.friendsList if pair[0] != friendId]
+        if len(newList) != len(self.friendsList):
+            self.friendsList = newList
+            self.d_setFriendsList(newList)
+
+    def notifyFriendsOnline(self, online):
+        """Tell the UberDOG this toon arrived or left: it tells the toon's friends in every district, and keeps Go To working."""
+        try:
+            if online:
+                self.air.toonPresence.sendUpdate('avatarOnline', [self.doId, [pair[0] for pair in self.friendsList], getattr(self.air, 'districtName', '')])
+            else:
+                self.air.toonPresence.sendUpdate('avatarOffline', [self.doId, getattr(self.air, 'districtName', '')])
+        except Exception:
+            self.notify.warning('could not tell the presence service about %s' % self.doId)
 
     def d_setFriendsList(self, friendsList):
         self.sendUpdate('setFriendsList', [friendsList])
@@ -1515,6 +1576,9 @@ class DistributedToonAI(DistributedPlayerAI.DistributedPlayerAI, DistributedSmoo
     def getFishTank(self):
         return self.fishTank.getNetLists()
 
+    def isFishTankFull(self):
+        return len(self.fishTank) >= self.maxFishTank
+
     def makeRandomFishTank(self):
         self.fishTank.generateRandomTank()
         self.d_setFishTank(*self.fishTank.getNetLists())
@@ -2289,7 +2353,8 @@ class DistributedToonAI(DistributedPlayerAI.DistributedPlayerAI, DistributedSmoo
         now = int(time.time() / 60 + 0.5)
         delivered, remaining = self.onOrder.extractDeliveryItems(now)
         deliveredGifts, remainingGifts = self.onGiftOrder.extractDeliveryItems(now)
-        simbase.air.deliveryManager.sendDeliverGifts(self.getDoId(), now)
+        if getattr(simbase.air, 'deliveryManager', None) is not None:
+            simbase.air.deliveryManager.sendDeliverGifts(self.getDoId(), now)
         giftItem = CatalogItemList.CatalogItemList(deliveredGifts, store=CatalogItem.Customization | CatalogItem.DeliveryDate)
         if len(giftItem) > 0:
             self.air.writeServerEvent('Getting Gift', self.doId, 'sender %s receiver %s gift %s' % (giftItem[0].giftTag, self.doId, giftItem[0].getName()))
@@ -2353,7 +2418,11 @@ class DistributedToonAI(DistributedPlayerAI.DistributedPlayerAI, DistributedSmoo
             if self.air:
                 house = self.air.doId2do.get(self.houseId)
                 if house and house.mailbox:
-                    house.mailbox.b_setFullIndicator(len(self.mailboxContents) != 0 or self.numMailItems or self.getNumInvitesToShowInMailbox() or len(self.awardMailboxContents) != 0)
+                    try:
+                        invites = self.getNumInvitesToShowInMailbox()
+                    except Exception:
+                        invites = 0
+                    house.mailbox.b_setFullIndicator(1 if (len(self.mailboxContents) != 0 or self.numMailItems or invites or len(self.awardMailboxContents) != 0) else 0)
 
     def setMailboxContents(self, mailboxContents):
         self.notify.debug('Setting mailboxContents to %s.' % mailboxContents)
@@ -2605,6 +2674,8 @@ class DistributedToonAI(DistributedPlayerAI.DistributedPlayerAI, DistributedSmoo
     def incrementPopulation(self):
         if self.isPlayerControlled():
             DistributedPlayerAI.DistributedPlayerAI.incrementPopulation(self)
+            if self.air.suitInvasionManager.getInvading():
+                taskMgr.doMethodLater(5.0, lambda task: (self.air.suitInvasionManager.sendBulletin(self.doId), task.done)[1], self.uniqueName('invasionBulletin'))
 
     def decrementPopulation(self):
         if self.isPlayerControlled():
@@ -3059,13 +3130,19 @@ class DistributedToonAI(DistributedPlayerAI.DistributedPlayerAI, DistributedSmoo
                     self.air.writeServerEvent('suspicious', self.doId, 'setPetMovie: playing pet movie %s on non-pet object %s' % (flag, petId))
             return
 
+        def setGardenTutorialDone(self, bDone):
+            self.bGardenTutorialDone = True
+            self.sendUpdate('setGardenTutorialDone', [1])      # sent on so the database keeps it
+
         def setPetTutorialDone(self, bDone):
             self.notify.debug('setPetTutorialDone')
             self.bPetTutorialDone = True
+            self.sendUpdate('setPetTutorialDone', [1])      # the client only tells us; sending it on is what saves it to the database
 
         def setFishBingoTutorialDone(self, bDone):
             self.notify.debug('setFishBingoTutorialDone')
             self.bFishBingoTutorialDone = True
+            self.sendUpdate('setFishBingoTutorialDone', [1])
 
         def setFishBingoMarkTutorialDone(self, bDone):
             self.notify.debug('setFishBingoMarkTutorialDone')

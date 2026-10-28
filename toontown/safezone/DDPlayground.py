@@ -129,7 +129,7 @@ class DDPlayground(Playground.Playground):
         return None
 
     def enterOnBoat(self):
-        base.localAvatar.b_setParent(ToontownGlobals.SPDonaldsBoat)
+        base.localAvatar.b_setParent(ToontownGlobals.SPDockBoat)
         base.playSfx(self.loader.waterSound, looping=1)
 
     def exitOnBoat(self):

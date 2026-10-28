@@ -93,6 +93,13 @@ class QuestManagerAI:
                 self.completeQuest(av, npc, questDesc[0])
                 return
 
+        # A toon can be left on a finished tier (all its rewards are in the history but the tier never moved on, for example after a track
+        # choice): with no tasks in hand, check for that now, so the next tier's tasks are offered instead of only the Just For Fun ones.
+        if len(av.quests) == 0:
+            for _ in range(10):
+                if not self.incrementReward(av):
+                    break
+
         needsQuestButNoneLeft = 0
         if (self.needsQuest(av) and npc.getGivesQuests()):
             # bestQuests is a nested list of [questId, rewardId, toNpcId] lists

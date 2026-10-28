@@ -1,4 +1,6 @@
 from .CatalogSurfaceItem import *
+from toontown.toonbase import TTLocalizer
+from toontown.catalog import CatalogItem
 WTTextureName = 0
 WTColor = 1
 WTBorderList = 2
@@ -723,7 +725,7 @@ def getAllWallpapers(*typeList):
 
 
 def getWallpaperRange(fromIndex, toIndex, *otherRanges):
-    list = []
+    list_ = []
     froms = [fromIndex]
     tos = [toIndex]
     i = 0
@@ -745,6 +747,6 @@ def getWallpaperRange(fromIndex, toIndex, *otherRanges):
                     for borderColorIndex in range(numBorderColors):
                         colors = WallpaperTypes[patternIndex][WTColor]
                         for n in range(len(colors)):
-                            list.append(CatalogWallpaperItem(patternIndex, n, borderKey, borderColorIndex))
+                            list_.append(CatalogWallpaperItem(patternIndex, n, borderKey, borderColorIndex))
 
-    return list
+    return list_

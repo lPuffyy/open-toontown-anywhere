@@ -4,6 +4,7 @@ from panda3d.toontown import *
 
 from otp.ai.AIZoneData import AIZoneDataStore
 from otp.ai.TimeManagerAI import TimeManagerAI
+from otp.friends.FriendManagerAI import FriendManagerAI
 from otp.distributed.OtpDoGlobals import *
 from toontown.ai.HolidayManagerAI import HolidayManagerAI
 from toontown.ai.NewsManagerAI import NewsManagerAI
@@ -35,8 +36,11 @@ from toontown.hood.OZHoodDataAI import OZHoodDataAI
 from toontown.hood.TTHoodDataAI import TTHoodDataAI
 from toontown.pets.PetManagerAI import PetManagerAI
 from toontown.quest.QuestManagerAI import QuestManagerAI
+from toontown.fishing.FishManagerAI import FishManagerAI
+from toontown.estate.EstateManagerAI import EstateManagerAI
 from toontown.racing import RaceGlobals
 from toontown.fishing.DistributedFishingPondAI import DistributedFishingPondAI
+from toontown.safezone.DistributedFishingSpotAI import DistributedFishingSpotAI
 from toontown.racing.DistributedLeaderBoardAI import DistributedLeaderBoardAI
 from toontown.racing.DistributedRacePadAI import DistributedRacePadAI
 from toontown.racing.DistributedStartingBlockAI import DistributedStartingBlockAI
@@ -76,6 +80,7 @@ class ToontownAIRepository(ToontownInternalRepository):
         self.suitInvasionManager = None
         self.zoneAllocator = None
         self.zoneId2owner = {}
+        self.estateMgr = None
         self.questManager = None
         self.promotionMgr = None
         self.cogPageManager = None
@@ -86,6 +91,7 @@ class ToontownAIRepository(ToontownInternalRepository):
         self.lawMgr = None
         self.cogSuitMgr = None
         self.timeManager = None
+        self.friendManager = None
         self.newsManager = None
         self.welcomeValleyManager = None
         self.inGameNewsMgr = None
@@ -151,11 +157,16 @@ class ToontownAIRepository(ToontownInternalRepository):
         # Create our suit invasion manager...
         self.suitInvasionManager = SuitInvasionManagerAI(self)
 
+        # Fish bingo runs in Bingo Nights...
+        from toontown.fishing.FishBingoScheduleAI import FishBingoScheduleAI
+        self.fishBingoSchedule = FishBingoScheduleAI(self)
+
         # Create our zone allocator...
         self.zoneAllocator = UniqueIdAllocator(ToontownGlobals.DynamicZonesBegin, ToontownGlobals.DynamicZonesEnd)
 
         # Create our quest manager...
         self.questManager = QuestManagerAI(self)
+        self.fishManager = FishManagerAI(self)
 
         # Create our promotion manager...
         self.promotionMgr = PromotionManagerAI(self)
@@ -181,7 +192,20 @@ class ToontownAIRepository(ToontownInternalRepository):
         # Create our Cog suit manager...
         self.cogSuitMgr = CogSuitManagerAI(self)
 
+    def __refreshPresence(self, task):
+        """Every minute tell the presence service who is in this district, so its list cannot drift from the truth."""
+        try:
+            toons = [do for do in list(self.doId2do.values()) if hasattr(do, 'friendsList') and hasattr(do, 'isPlayerControlled') and do.isPlayerControlled()]
+            for toon in toons:
+                toon.notifyFriendsOnline(1)
+            self.toonPresence.sendUpdate('districtSweep', [self.districtName, [toon.doId for toon in toons]])
+        except Exception:
+            self.notify.warning('could not refresh the presence service')
+        return task.again
+
     def createGlobals(self):
+        self.toonPresence = self.generateGlobalObject(OTP_DO_ID_TOON_PRESENCE, 'ToonPresence')
+        taskMgr.doMethodLater(60.0, self.__refreshPresence, 'refreshPresence')
         """
         Creates "global" (distributed) objects.
         """
@@ -189,16 +213,20 @@ class ToontownAIRepository(ToontownInternalRepository):
         # Generate our district stats...
         self.districtStats = ToontownDistrictStatsAI(self)
         self.districtStats.settoontownDistrictId(self.districtId)
-        self.districtStats.generateWithRequiredAndId(self.allocateChannel(), self.district.getDoId(),
+        self.districtStats.generateWithRequiredAndId(self.allocateChannel(), self.getGameDoId(),
                                                      OTP_ZONE_ID_DISTRICTS_STATS)
 
         # Generate our time manager...
         self.timeManager = TimeManagerAI(self)
         self.timeManager.generateWithRequired(OTP_ZONE_ID_MANAGEMENT)
+        # toon-to-toon friend invitations: one per district, found by the client like the time manager
+        self.friendManager = FriendManagerAI(self)
+        self.friendManager.generateWithRequired(OTP_ZONE_ID_MANAGEMENT)
 
         # Generate our news manager...
         self.newsManager = NewsManagerAI(self)
         self.newsManager.generateWithRequired(OTP_ZONE_ID_MANAGEMENT)
+        self.suitInvasionManager.scheduleRandom()
 
         # Generate our Welcome Valley manager...
         self.welcomeValleyManager = WelcomeValleyManagerAI(self)
@@ -228,6 +256,10 @@ class ToontownAIRepository(ToontownInternalRepository):
         self.tutorialManager = TutorialManagerAI(self)
         self.tutorialManager.generateWithRequired(OTP_ZONE_ID_MANAGEMENT)
 
+        # Generate our estate manager...
+        self.estateMgr = EstateManagerAI(self)
+        self.estateMgr.generateWithRequired(OTP_ZONE_ID_MANAGEMENT)
+
         # Generate our party manager...
         self.partyManager = DistributedPartyManagerAI(self)
         self.partyManager.generateWithRequired(OTP_ZONE_ID_MANAGEMENT)
@@ -250,12 +282,12 @@ class ToontownAIRepository(ToontownInternalRepository):
         # First, generate our zone2NpcDict...
         NPCToons.generateZone2NpcDict()
 
-        # Donald's Dock
-        self.zoneTable[ToontownGlobals.DonaldsDock] = (
-            (ToontownGlobals.DonaldsDock, 1, 0), (ToontownGlobals.BarnacleBoulevard, 1, 1),
+        # Dock Harbor
+        self.zoneTable[ToontownGlobals.DockHarbor] = (
+            (ToontownGlobals.DockHarbor, 1, 0), (ToontownGlobals.BarnacleBoulevard, 1, 1),
             (ToontownGlobals.SeaweedStreet, 1, 1), (ToontownGlobals.LighthouseLane, 1, 1)
         )
-        self.generateHood(DDHoodDataAI, ToontownGlobals.DonaldsDock)
+        self.generateHood(DDHoodDataAI, ToontownGlobals.DockHarbor)
 
         # Toontown Central
         self.zoneTable[ToontownGlobals.ToontownCentral] = (
@@ -271,38 +303,38 @@ class ToontownAIRepository(ToontownInternalRepository):
         )
         self.generateHood(BRHoodDataAI, ToontownGlobals.TheBrrrgh)
 
-        # Minnie's Melodyland
-        self.zoneTable[ToontownGlobals.MinniesMelodyland] = (
-            (ToontownGlobals.MinniesMelodyland, 1, 0), (ToontownGlobals.AltoAvenue, 1, 1),
+        # Melody Meadow
+        self.zoneTable[ToontownGlobals.MelodyMeadow] = (
+            (ToontownGlobals.MelodyMeadow, 1, 0), (ToontownGlobals.AltoAvenue, 1, 1),
             (ToontownGlobals.BaritoneBoulevard, 1, 1), (ToontownGlobals.TenorTerrace, 1, 1)
         )
-        self.generateHood(MMHoodDataAI, ToontownGlobals.MinniesMelodyland)
+        self.generateHood(MMHoodDataAI, ToontownGlobals.MelodyMeadow)
 
-        # Daisy Gardens
-        self.zoneTable[ToontownGlobals.DaisyGardens] = (
-            (ToontownGlobals.DaisyGardens, 1, 0), (ToontownGlobals.ElmStreet, 1, 1),
+        # Garden Grove
+        self.zoneTable[ToontownGlobals.GardenGrove] = (
+            (ToontownGlobals.GardenGrove, 1, 0), (ToontownGlobals.ElmStreet, 1, 1),
             (ToontownGlobals.MapleStreet, 1, 1), (ToontownGlobals.OakStreet, 1, 1)
         )
-        self.generateHood(DGHoodDataAI, ToontownGlobals.DaisyGardens)
+        self.generateHood(DGHoodDataAI, ToontownGlobals.GardenGrove)
 
-        # Chip 'n Dale's Acorn Acres
+        # Nib 'n Acorn's Acorn Acres
         self.zoneTable[ToontownGlobals.OutdoorZone] = (
             (ToontownGlobals.OutdoorZone, 1, 0),
         )
         self.generateHood(OZHoodDataAI, ToontownGlobals.OutdoorZone)
 
-        # Goofy Speedway
-        self.zoneTable[ToontownGlobals.GoofySpeedway] = (
-            (ToontownGlobals.GoofySpeedway, 1, 0),
+        # Speedway Park
+        self.zoneTable[ToontownGlobals.SpeedwayPark] = (
+            (ToontownGlobals.SpeedwayPark, 1, 0),
         )
-        self.generateHood(GSHoodDataAI, ToontownGlobals.GoofySpeedway)
+        self.generateHood(GSHoodDataAI, ToontownGlobals.SpeedwayPark)
 
-        # Donald's Dreamland
-        self.zoneTable[ToontownGlobals.DonaldsDreamland] = (
-            (ToontownGlobals.DonaldsDreamland, 1, 0), (ToontownGlobals.LullabyLane, 1, 1),
+        # Slumber Springs
+        self.zoneTable[ToontownGlobals.SlumberSprings] = (
+            (ToontownGlobals.SlumberSprings, 1, 0), (ToontownGlobals.LullabyLane, 1, 1),
             (ToontownGlobals.PajamaPlace, 1, 1)
         )
-        self.generateHood(DLHoodDataAI, ToontownGlobals.DonaldsDreamland)
+        self.generateHood(DLHoodDataAI, ToontownGlobals.SlumberSprings)
 
         # Bossbot HQ
         self.zoneTable[ToontownGlobals.BossbotHQ] = (
@@ -328,7 +360,7 @@ class ToontownAIRepository(ToontownInternalRepository):
         )
         self.generateHood(LawbotHQDataAI, ToontownGlobals.LawbotHQ)
 
-        # Chip 'n Dale's MiniGolf
+        # Nib 'n Acorn's MiniGolf
         self.zoneTable[ToontownGlobals.GolfZone] = (
             (ToontownGlobals.GolfZone, 1, 0),
         )
@@ -388,6 +420,7 @@ class ToontownAIRepository(ToontownInternalRepository):
             pond = DistributedFishingPondAI(self)
             pond.setArea(area)
             pond.generateWithRequired(zoneId)
+            pond.createTargets()
             fishingPonds.append(pond)
         else:
             if isinstance(dnaData, DNAVisGroup):
@@ -403,7 +436,22 @@ class ToontownAIRepository(ToontownInternalRepository):
         return fishingPonds, fishingPondGroups
 
     def findFishingSpots(self, dnaData, pond):
-        return []  # TODO
+        spots = []
+        groupNp = NodePath('pond')
+        if hasattr(dnaData, 'getPos'):
+            groupNp.setPosHpr(dnaData.getPos(), dnaData.getHpr())
+        for i in range(dnaData.getNumChildren()):
+            child = dnaData.at(i)
+            if isinstance(child, DNAProp) and child.getCode() == 'fishing_spot':
+                np = groupNp.attachNewNode('spot')
+                np.setPosHpr(child.getPos(), child.getHpr())
+                pos, hpr = np.getPos(), np.getHpr()
+                spot = DistributedFishingSpotAI(self, pond, (pos[0], pos[1], pos[2], hpr[0], hpr[1], hpr[2]))
+                spot.generateWithRequired(pond.zoneId)
+                pond.addSpot(spot)
+                spots.append(spot)
+        groupNp.removeNode()
+        return spots
 
     def findPartyHats(self, dnaData, zoneId):
         return []  # TODO

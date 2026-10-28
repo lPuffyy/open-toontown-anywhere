@@ -1,4 +1,5 @@
 from direct.showbase import DirectObject
+from panda3d.otp import CFSpeech, CFTimeout
 from otp.otpbase import OTPGlobals
 import sys
 from direct.gui.DirectGui import *

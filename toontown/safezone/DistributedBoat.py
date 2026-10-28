@@ -30,7 +30,7 @@ class DistributedBoat(DistributedObject.DistributedObject):
     def generate(self):
         DistributedObject.DistributedObject.generate(self)
         self.boat = base.cr.playGame.hood.loader.boat
-        base.cr.parentMgr.registerParent(ToontownGlobals.SPDonaldsBoat, self.boat)
+        base.cr.parentMgr.registerParent(ToontownGlobals.SPDockBoat, self.boat)
         self.setupTracks()
         self.accept('enterdonalds_boat_floor', self.__handleOnFloor)
         self.accept('exitdonalds_boat_floor', self.__handleOffFloor)
@@ -62,7 +62,7 @@ class DistributedBoat(DistributedObject.DistributedObject):
         self.weTrack = ParallelEndTogether(Parallel(weBoatTrack, wPierDownTrack), ePierUpTrack, name='we-track')
 
     def disable(self):
-        base.cr.parentMgr.unregisterParent(ToontownGlobals.SPDonaldsBoat)
+        base.cr.parentMgr.unregisterParent(ToontownGlobals.SPDockBoat)
         self.ignore('enterdonalds_boat_floor')
         self.ignore('exitdonalds_boat_floor')
         self.fsm.request('off')

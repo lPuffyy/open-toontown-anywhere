@@ -55,13 +55,44 @@ class AvatarChooser(StateData.StateData):
         self.quitButton.show()
         if base.cr.loginInterface.supportsRelogin():
             self.logoutButton.show()
-        self.pickAToonBG.reparentTo(base.camera)
+        self._buildBackdrop()
+        self.accept('aspectRatioChanged', self._buildBackdrop)
         choice = base.config.GetInt('auto-avatar-choice', -1)
         for panel in self.panelList:
             panel.show()
             self.accept(panel.doneEvent, self.__handlePanelDone)
             if panel.position == choice and panel.mode == AvatarChoice.AvatarChoice.MODE_CHOOSE:
                 self.__handlePanelDone('chose', panelChoice=choice)
+
+    def _buildBackdrop(self):
+        """A full-screen sky backdrop for any screen shape: one 2:1 picture scaled evenly so it covers the whole screen, a little cropped at the
+        top and bottom on a very wide one. (The original backdrop is a 4:3 picture with the six slot recesses painted into it, which cannot
+        stretch to a wide screen or follow the buttons.)"""
+        try:
+            self._clearBackdrop()
+            aspect = max(base.getAspectRatio(), 1.0)
+            h = max(1.05, (aspect + 0.15) / 2.0)           # half height of the picture in aspect2d units (the screen is -1..1 tall, -aspect..aspect wide)
+            w = 2.0 * h                                     # the picture is 2:1, so its half width is twice its half height
+            cm = CardMaker('pat-backdrop')
+            cm.setFrame(-w, w, -h, h)
+            bg = aspect2d.attachNewNode(cm.generate(), -100)
+            tex = loader.loadTexture('phase_3/maps/pat_sky_backdrop.jpg')
+            tex.setMinfilter(SamplerState.FT_linear)
+            tex.setMagfilter(SamplerState.FT_linear)
+            tex.setWrapU(SamplerState.WM_clamp)
+            tex.setWrapV(SamplerState.WM_clamp)
+            bg.setTexture(tex)
+            bg.setBin('background', 0)
+            bg.setDepthTest(False)
+            bg.setDepthWrite(False)
+            self._bgFill.append(bg)
+        except Exception:
+            self.notify.warning('could not build the pick-a-toon backdrop')
+
+    def _clearBackdrop(self):
+        for n in getattr(self, '_bgFill', []):
+            n.removeNode()
+        self._bgFill = []
 
     def exit(self):
         if self.isLoaded == 0:
@@ -74,6 +105,7 @@ class AvatarChooser(StateData.StateData):
         self.quitButton.hide()
         self.logoutButton.hide()
         self.pickAToonBG.reparentTo(hidden)
+        self._clearBackdrop()
         return None
 
     def load(self, isPaid):

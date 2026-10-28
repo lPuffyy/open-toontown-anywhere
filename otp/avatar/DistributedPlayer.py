@@ -322,6 +322,9 @@ class DistributedPlayer(DistributedAvatar.DistributedAvatar, PlayerBase.PlayerBa
 
     def d_teleportQuery(self, requesterId, sendToId = None):
         teleportNotify.debug('sending teleportQuery%s' % ((requesterId, sendToId),))
+        if sendToId is not None and sendToId != self.doId:
+            base.cr.toonPresence.up_teleportQuery(sendToId)      # the server carries it: this client cannot reach that toon directly
+            return
         self.sendUpdate('teleportQuery', [requesterId], sendToId)
 
     def teleportQuery(self, requesterId):
@@ -376,6 +379,9 @@ class DistributedPlayer(DistributedAvatar.DistributedAvatar, PlayerBase.PlayerBa
           hoodId,
           zoneId,
           sendToId),))
+        if sendToId is not None and sendToId != self.doId:
+            base.cr.toonPresence.up_teleportResponse(sendToId, available, shardId, hoodId, zoneId)
+            return
         self.sendUpdate('teleportResponse', [avId,
          available,
          shardId,
@@ -396,6 +402,9 @@ class DistributedPlayer(DistributedAvatar.DistributedAvatar, PlayerBase.PlayerBa
 
     def d_teleportGiveup(self, requesterId, sendToId = None):
         teleportNotify.debug('sending teleportGiveup(%s) to %s' % (requesterId, sendToId))
+        if sendToId is not None and sendToId != self.doId:
+            base.cr.toonPresence.up_teleportGiveup(sendToId)
+            return
         self.sendUpdate('teleportGiveup', [requesterId], sendToId)
 
     def teleportGiveup(self, requesterId):

@@ -1,4 +1,5 @@
 from direct.directnotify import DirectNotifyGlobal
+from toontown.toonbase import TTLocalizer
 from direct.fsm import ClassicFSM, State
 from direct.task.Task import Task
 from panda3d.core import *

@@ -147,9 +147,7 @@ class DistributedFishingSpot(DistributedObject.DistributedObject):
         self.waterLevel = FishingTargetGlobals.getWaterLevel(self.area)
 
     def allowedToEnter(self):
-        if hasattr(base, 'ttAccess') and base.ttAccess and base.ttAccess.canAccess():
-            return True
-        return False
+        return True
 
     def handleOkTeaser(self):
         self.dialog.destroy()
@@ -588,10 +586,18 @@ class DistributedFishingSpot(DistributedObject.DistributedObject):
         self.castGui = loader.loadModel('phase_4/models/gui/fishingGui')
         self.castGui.setScale(0.67)
         self.castGui.setPos(0, 1, 0)
+        # the plank strip along the bottom was drawn for a 4:3 screen: stretch it across a wider one, behind the rest of the interface (the laff meter sits on it)
+        boards = self.castGui.find('**/boards')
+        if not boards.isEmpty():
+            boards.setSx(max(1.0, base.getAspectRatio() / (4.0 / 3.0)) * 1.02)
+            boards.setBin('background', 5)
+        # and spread the jar, bucket and exit button toward the edges of a wide screen (the laff meter keeps the bottom-left corner)
+        spread = 1.0 + (max(1.0, base.getAspectRatio() / (4.0 / 3.0)) - 1.0) * 0.6
+        self.fishingSpread = spread
         for nodeName in ('bucket', 'jar', 'display_bucket', 'display_jar'):
             self.castGui.find('**/' + nodeName).reparentTo(self.castGui)
 
-        self.exitButton = DirectButton(parent=self.castGui, relief=None, text=('', TTLocalizer.FishingExit, TTLocalizer.FishingExit), text_align=TextNode.ACenter, text_scale=0.1, text_fg=Vec4(1, 1, 1, 1), text_shadow=Vec4(0, 0, 0, 1), text_pos=(0.0, -0.12), pos=(1.75, 0, -1.33), textMayChange=0, image=(self.castGui.find('**/exit_buttonUp'), self.castGui.find('**/exit_buttonDown'), self.castGui.find('**/exit_buttonRollover')), command=self.__userExit)
+        self.exitButton = DirectButton(parent=self.castGui, relief=None, text=('', TTLocalizer.FishingExit, TTLocalizer.FishingExit), text_align=TextNode.ACenter, text_scale=0.1, text_fg=Vec4(1, 1, 1, 1), text_shadow=Vec4(0, 0, 0, 1), text_pos=(0.0, -0.12), pos=(1.75 * spread, 0, -1.33), textMayChange=0, image=(self.castGui.find('**/exit_buttonUp'), self.castGui.find('**/exit_buttonDown'), self.castGui.find('**/exit_buttonRollover')), command=self.__userExit)
         self.castGui.find('**/exitButton').removeNode()
         self.castButton = DirectButton(parent=self.castGui, relief=None, text=TTLocalizer.FishingCast, text_align=TextNode.ACenter, text_scale=(3, 3 * 0.75, 3 * 0.75), text_fg=Vec4(1, 1, 1, 1), text_shadow=Vec4(0, 0, 0, 1), text_pos=(0, -4), image=self.castGui.find('**/castButton'), image0_color=(1, 0, 0, 1), image1_color=(0, 1, 0, 1), image2_color=(1, 1, 0, 1), image3_color=(0.8, 0.5, 0.5, 1), pos=(0, -0.05, -0.666), scale=(0.036, 1, 0.048))
         self.castGui.find('**/castButton').removeNode()
@@ -603,6 +609,16 @@ class DistributedFishingSpot(DistributedObject.DistributedObject):
         self.arrow.hide()
         self.jar = DirectLabel(parent=self.castGui, relief=None, text=str(self.av.getMoney()), text_scale=0.16, text_fg=(0.95, 0.95, 0, 1), text_font=ToontownGlobals.getSignFont(), pos=(-1.12, 0, -1.3))
         self.bucket = DirectLabel(parent=self.castGui, relief=None, text='', text_scale=0.09, text_fg=(0.95, 0.95, 0, 1), text_shadow=(0, 0, 0, 1), pos=(1.14, 0, -1.33))
+        # the jar and the bucket each live in a holder, so the spreading survives the bingo code moving them about inside it
+        self.jarHolder = self.castGui.attachNewNode('jarHolder')
+        self.bucketHolder = self.castGui.attachNewNode('bucketHolder')
+        for name in ('jar', 'display_jar'):
+            self.castGui.find('**/' + name).reparentTo(self.jarHolder)
+        for name in ('bucket', 'display_bucket'):
+            self.castGui.find('**/' + name).reparentTo(self.bucketHolder)
+        self.jar.reparentTo(self.jarHolder)
+        self.bucket.reparentTo(self.bucketHolder)
+        self.__spreadGui(0)
         self.__updateFishTankGui()
         self.itemGui = NodePath('itemGui')
         self.itemFrame = DirectFrame(parent=self.itemGui, relief=None, geom=DGG.getDefaultDialogGeom(), geom_color=ToontownGlobals.GlobalDialogColor, geom_scale=(1, 1, 0.6), text=TTLocalizer.FishingItemFound, text_pos=(0, 0.2), text_scale=0.08, pos=(0, 0, 0.587))
@@ -634,6 +650,12 @@ class DistributedFishingSpot(DistributedObject.DistributedObject):
         self.madeGui = 1
         return
 
+    def __spreadGui(self, bingo):
+        """Push the jar left and the bucket out (or, on bingo nights when both sit at the left, a little left) on a screen wider than 4:3."""
+        k = (getattr(self, 'fishingSpread', 1.0) - 1.0) / 0.375
+        self.jarHolder.setX(-0.52 * k)
+        self.bucketHolder.setX((-0.33 if bingo else 0.4) * k)
+
     def __setBingoCastGui(self):
         if self.pond.hasPondBingoManager():
             self.notify.debug('__setBingoCastGui: Has PondBing Manager %s' % self.pond.getPondBingoManager().getDoId())
@@ -644,6 +666,7 @@ class DistributedFishingSpot(DistributedObject.DistributedObject):
             self.castGui.find('**/display_jar').reparentTo(jar)
             self.jar.reparentTo(jar)
             base.setCellsAvailable(base.rightCells, 0)
+            self.__spreadGui(1)
             bucket.setScale(0.9)
             bucket.setX(-1.9)
             bucket.setZ(-.11)
@@ -652,6 +675,7 @@ class DistributedFishingSpot(DistributedObject.DistributedObject):
             jar.setZ(-.135)
         else:
             self.notify.debug('__setItemFramePos: Has No Pond Bingo Manager')
+            self.__spreadGui(0)
             bucket = self.castGui.find('**/bucket')
             bucket.setScale(1)
             bucket.setPos(0, 0, 0)
@@ -669,6 +693,7 @@ class DistributedFishingSpot(DistributedObject.DistributedObject):
         jarPosInt = jar.posInterval(5.0, Point3(0, 0, 0), startPos=jar.getPos(), blendType='easeInOut')
         jarScaleInt = jar.scaleInterval(5.0, VBase3(1.0, 1.0, 1.0), startScale=jar.getScale(), blendType='easeInOut')
         jarTrack = Parallel(jarPosInt, jarScaleInt)
+        self.__spreadGui(0)
         self.guiTrack = Parallel(bucketTrack, jarTrack)
         self.guiTrack.start()
 
@@ -686,6 +711,7 @@ class DistributedFishingSpot(DistributedObject.DistributedObject):
         jarPosInt = jar.posInterval(3.0, Point3(-.375, 0, -.135), startPos=jar.getPos(), blendType='easeInOut')
         jarScaleInt = jar.scaleInterval(3.0, VBase3(0.9, 0.9, 0.9), startScale=jar.getScale(), blendType='easeInOut')
         jarTrack = Parallel(jarPosInt, jarScaleInt)
+        self.__spreadGui(1)
         self.guiTrack = Parallel(bucketTrack, jarTrack)
         self.guiTrack.start()
 

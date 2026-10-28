@@ -101,3 +101,6 @@ server-data-folder data
 # TEMPORARY
 skip-friend-quest true
 skip-phone-quest true
+
+# fish bingo needs a server-side manager that this snapshot lacks
+want-fish-bingo 1

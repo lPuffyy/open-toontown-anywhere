@@ -37,8 +37,15 @@ class DistributedMailbox(DistributedObject.DistributedObject):
         self.mailboxSphereEvent = self.taskName('mailboxSphere')
         self.mailboxSphereEnterEvent = 'enter' + self.mailboxSphereEvent
         if self.houseId == base.localAvatar.houseId:
-            self.accept(self.mailboxSphereEnterEvent, self.__handleEnterSphere)
+            # arriving at the estate puts the toon next to the mailbox, and the first touch of its sphere is not the toon walking up to it:
+            # start listening a few seconds later so the "mailbox is empty" box does not open on every arrival
+            taskMgr.doMethodLater(4.0, self.__listenForSphere, self.taskName('mailboxListen'))
         self.load()
+
+    def __listenForSphere(self, task):
+        if self.mailboxSphereEnterEvent:
+            self.accept(self.mailboxSphereEnterEvent, self.__handleEnterSphere)
+        return task.done
 
     def load(self):
         DistributedMailbox.notify.debug('load')
@@ -75,6 +82,7 @@ class DistributedMailbox(DistributedObject.DistributedObject):
         DistributedMailbox.notify.debug('disable')
         self.notify.debug('disable')
         self.ignoreAll()
+        taskMgr.remove(self.taskName('mailboxListen'))
         if self.flagIval:
             self.flagIval.finish()
             self.flagIval = None

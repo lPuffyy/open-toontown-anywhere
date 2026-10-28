@@ -9,6 +9,9 @@ class ToontownDistrictStatsAI(DistributedObjectAI):
         self.toontownDistrictId = 0
         self.avatarCount = 0
         self.newAvatarCount = 0
+        self.invasionCog = ''
+        self.invasionSkeleton = 0
+        self.invasionRemaining = 0
 
     def settoontownDistrictId(self, toontownDistrictId):
         self.toontownDistrictId = toontownDistrictId
@@ -48,3 +51,18 @@ class ToontownDistrictStatsAI(DistributedObjectAI):
 
     def getNewAvatarCount(self):
         return self.newAvatarCount
+
+    def setInvasion(self, cog, skeleton, remaining):
+        self.invasionCog = cog
+        self.invasionSkeleton = skeleton
+        self.invasionRemaining = remaining
+
+    def d_setInvasion(self, cog, skeleton, remaining):
+        self.sendUpdate('setInvasion', [cog, skeleton, remaining])
+
+    def b_setInvasion(self, cog, skeleton, remaining):
+        self.setInvasion(cog, skeleton, remaining)
+        self.d_setInvasion(cog, skeleton, remaining)
+
+    def getInvasion(self):
+        return (self.invasionCog, self.invasionSkeleton, self.invasionRemaining)

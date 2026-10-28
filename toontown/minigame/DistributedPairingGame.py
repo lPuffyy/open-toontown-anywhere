@@ -1,4 +1,5 @@
 from panda3d.core import *
+from toontown.toonbase import ToontownGlobals
 from toontown.toonbase.ToonBaseGlobal import *
 from .DistributedMinigame import *
 from direct.fsm import ClassicFSM, State

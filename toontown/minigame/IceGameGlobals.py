@@ -28,32 +28,32 @@ ExpandFeetPerSec = 5
 ScoreCountUpRate = 0.15
 ShowScoresDuration = 4.0
 NumTreasures = {ToontownGlobals.ToontownCentral: 2,
- ToontownGlobals.DonaldsDock: 2,
- ToontownGlobals.DaisyGardens: 2,
- ToontownGlobals.MinniesMelodyland: 2,
+ ToontownGlobals.DockHarbor: 2,
+ ToontownGlobals.GardenGrove: 2,
+ ToontownGlobals.MelodyMeadow: 2,
  ToontownGlobals.TheBrrrgh: 1,
- ToontownGlobals.DonaldsDreamland: 1}
+ ToontownGlobals.SlumberSprings: 1}
 NumPenalties = {ToontownGlobals.ToontownCentral: 0,
- ToontownGlobals.DonaldsDock: 1,
- ToontownGlobals.DaisyGardens: 1,
- ToontownGlobals.MinniesMelodyland: 1,
+ ToontownGlobals.DockHarbor: 1,
+ ToontownGlobals.GardenGrove: 1,
+ ToontownGlobals.MelodyMeadow: 1,
  ToontownGlobals.TheBrrrgh: 2,
- ToontownGlobals.DonaldsDreamland: 2}
+ ToontownGlobals.SlumberSprings: 2}
 Obstacles = {ToontownGlobals.ToontownCentral: (),
- ToontownGlobals.DonaldsDock: ((0, 0),),
- ToontownGlobals.DaisyGardens: ((MinWall[0] / 2, 0), (MaxWall[0] / 2, 0)),
- ToontownGlobals.MinniesMelodyland: ((0, MinWall[1] / 2), (0, MaxWall[1] / 2)),
+ ToontownGlobals.DockHarbor: ((0, 0),),
+ ToontownGlobals.GardenGrove: ((MinWall[0] / 2, 0), (MaxWall[0] / 2, 0)),
+ ToontownGlobals.MelodyMeadow: ((0, MinWall[1] / 2), (0, MaxWall[1] / 2)),
  ToontownGlobals.TheBrrrgh: ((MinWall[0] / 2, 0),
                              (MaxWall[0] / 2, 0),
                              (0, MinWall[1] / 2),
                              (0, MaxWall[1] / 2)),
- ToontownGlobals.DonaldsDreamland: ((MinWall[0] / 2, MinWall[1] / 2),
+ ToontownGlobals.SlumberSprings: ((MinWall[0] / 2, MinWall[1] / 2),
                                     (MinWall[0] / 2, MaxWall[1] / 2),
                                     (MaxWall[0] / 2, MinWall[1] / 2),
                                     (MaxWall[0] / 2, MaxWall[1] / 2))}
 ObstacleShapes = {ToontownGlobals.ToontownCentral: True,
- ToontownGlobals.DonaldsDock: True,
- ToontownGlobals.DaisyGardens: True,
- ToontownGlobals.MinniesMelodyland: True,
+ ToontownGlobals.DockHarbor: True,
+ ToontownGlobals.GardenGrove: True,
+ ToontownGlobals.MelodyMeadow: True,
  ToontownGlobals.TheBrrrgh: False,
- ToontownGlobals.DonaldsDreamland: False}
+ ToontownGlobals.SlumberSprings: False}

@@ -1,4 +1,5 @@
 from direct.gui.DirectGui import *
+from direct.directnotify import DirectNotifyGlobal
 from panda3d.core import *
 from panda3d.direct import *
 from panda3d.physics import *

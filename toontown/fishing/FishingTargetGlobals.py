@@ -1,7 +1,7 @@
 from toontown.toonbase import ToontownGlobals
 OFF = 0
 MOVING = 1
-StepTime = 5.0
+StepTime = 9.0
 MinimumHunger = 1.0
 NUM_TARGETS_INDEX = 0
 POS_START_INDEX = 1
@@ -32,7 +32,7 @@ __targetInfoDict = {ToontownGlobals.ToontownCentral: (2,
                                   -1.4,
                                   13,
                                   -1.4 - 0.486),
- ToontownGlobals.DonaldsDock: (2,
+ ToontownGlobals.DockHarbor: (2,
                                -17,
                                130,
                                1.73,
@@ -56,7 +56,7 @@ __targetInfoDict = {ToontownGlobals.ToontownCentral: (2,
                                   -2,
                                   14,
                                   -2 - 0.482),
- ToontownGlobals.DaisyGardens: (2,
+ ToontownGlobals.GardenGrove: (2,
                                 50,
                                 47,
                                 -1.48,
@@ -80,7 +80,7 @@ __targetInfoDict = {ToontownGlobals.ToontownCentral: (2,
                              -1.5,
                              13,
                              -1.5 - 0.377),
- ToontownGlobals.MinniesMelodyland: (2,
+ ToontownGlobals.MelodyMeadow: (2,
                                      -0.2,
                                      -20.2,
                                      -14.65,
@@ -128,7 +128,7 @@ __targetInfoDict = {ToontownGlobals.ToontownCentral: (2,
                               -2,
                               13,
                               -2 - 0.4),
- ToontownGlobals.DonaldsDreamland: (2,
+ ToontownGlobals.SlumberSprings: (2,
                                     159,
                                     0.2,
                                     -17.1,

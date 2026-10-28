@@ -1,4 +1,5 @@
 from .CatalogSurfaceItem import *
+from toontown.toonbase import TTLocalizer
 MTTextureName = 0
 MTColor = 1
 MTBasePrice = 2
@@ -129,7 +130,7 @@ def getAllMouldings(*indexList):
 
 
 def getMouldingRange(fromIndex, toIndex, *otherRanges):
-    list = []
+    list_ = []
     froms = [fromIndex]
     tos = [toIndex]
     i = 0
@@ -144,9 +145,9 @@ def getMouldingRange(fromIndex, toIndex, *otherRanges):
                 colors = MouldingTypes[patternIndex][MTColor]
                 if colors:
                     for n in range(len(colors)):
-                        list.append(CatalogMouldingItem(patternIndex, n))
+                        list_.append(CatalogMouldingItem(patternIndex, n))
 
                 else:
-                    list.append(CatalogMouldingItem(patternIndex, 0))
+                    list_.append(CatalogMouldingItem(patternIndex, 0))
 
-    return list
+    return list_

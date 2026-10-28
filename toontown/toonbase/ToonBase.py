@@ -272,7 +272,23 @@ class ToonBase(OTPBase.OTPBase):
         NametagGlobals.setToon(self.cam)
         self.marginManager = MarginManager()
         self.margins = self.aspect2d.attachNewNode(self.marginManager, DirectGuiGlobals.MIDGROUND_SORT_INDEX + 1)
+        self._buildMarginCells()
+        self.accept('aspectRatioChanged', self._buildMarginCells)
+
+    def _buildMarginCells(self):
+        """The slots round the screen edge where the building arrows and other off-screen name tags are shown. They are laid out against the
+        screen's edges, so lay them out again whenever the screen's shape is settled or changes (they used to stay where a 4:3 screen put them)."""
         mm = self.marginManager
+        wasAvailable = None
+        try:
+            wasAvailable = [mm.getCellAvailable(i) for i in range(mm.getNumCells())]
+        except Exception:
+            pass
+        try:
+            mm.clearCells()
+        except Exception:
+            if getattr(self, 'leftCells', None):
+                return                       # (no way to redo them: keep the ones we have)
         self.leftCells = [mm.addGridCell(0, 1, base.a2dLeft, base.a2dRight, base.a2dBottom, base.a2dTop), mm.addGridCell(0, 2, base.a2dLeft, base.a2dRight, base.a2dBottom, base.a2dTop), mm.addGridCell(0, 3, base.a2dLeft, base.a2dRight, base.a2dBottom, base.a2dTop)]
         self.bottomCells = [mm.addGridCell(0.5, 0, base.a2dLeft, base.a2dRight, base.a2dBottom, base.a2dTop),
          mm.addGridCell(1.5, 0, base.a2dLeft, base.a2dRight, base.a2dBottom, base.a2dTop),
@@ -280,6 +296,10 @@ class ToonBase(OTPBase.OTPBase):
          mm.addGridCell(3.5, 0, base.a2dLeft, base.a2dRight, base.a2dBottom, base.a2dTop),
          mm.addGridCell(4.5, 0, base.a2dLeft, base.a2dRight, base.a2dBottom, base.a2dTop)]
         self.rightCells = [mm.addGridCell(5, 2, base.a2dLeft, base.a2dRight, base.a2dBottom, base.a2dTop), mm.addGridCell(5, 1, base.a2dLeft, base.a2dRight, base.a2dBottom, base.a2dTop)]
+        if wasAvailable:
+            for i, ok in enumerate(wasAvailable):
+                if not ok:
+                    mm.setCellAvailable(i, False)
 
     def setCellsAvailable(self, cell_list, available):
         for cell in cell_list:

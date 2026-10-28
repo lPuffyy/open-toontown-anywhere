@@ -1,4 +1,5 @@
 from panda3d.core import *
+from toontown.toonbase import ToontownGlobals
 from toontown.toonbase.ToonBaseGlobal import *
 from toontown.toonbase.ToontownGlobals import *
 from direct.gui.DirectGui import *

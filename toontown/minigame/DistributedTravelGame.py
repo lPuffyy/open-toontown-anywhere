@@ -1,4 +1,6 @@
 from panda3d.core import *
+from toontown.toonbase import ToontownGlobals
+from panda3d.otp import NametagGlobals
 from toontown.toonbase.ToonBaseGlobal import *
 from toontown.toonbase.ToontownGlobals import GlobalDialogColor
 from .DistributedMinigame import *

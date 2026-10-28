@@ -1,4 +1,5 @@
 from .DistributedNPCToonBase import *
+from panda3d.otp import CFSpeech, CFTimeout
 from direct.gui.DirectGui import *
 from panda3d.core import *
 from . import NPCToons

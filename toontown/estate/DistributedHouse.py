@@ -1,4 +1,6 @@
 from panda3d.core import *
+from panda3d.otp import Nametag, NametagGroup
+from panda3d.toontown import DNADoor
 from toontown.toonbase.ToonBaseGlobal import *
 from direct.gui.DirectGui import *
 from panda3d.core import *

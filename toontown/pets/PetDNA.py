@@ -58,16 +58,16 @@ PetRarities2 = (('leopard', 0.005),
 PetRarities = {'body': {ToontownGlobals.ToontownCentral: {'threeStripe': 50,
                                             'tummy': 30,
                                             'dots': 20},
-          ToontownGlobals.DonaldsDock: {'threeStripe': 35,
+          ToontownGlobals.DockHarbor: {'threeStripe': 35,
                                         'tummy': 30,
                                         'dots': 20,
                                         'tigerStripe': 15},
-          ToontownGlobals.DaisyGardens: {'threeStripe': 15,
+          ToontownGlobals.GardenGrove: {'threeStripe': 15,
                                          'tummy': 20,
                                          'dots': 20,
                                          'tigerStripe': 20,
                                          'turtle': 15},
-          ToontownGlobals.MinniesMelodyland: {'threeStripe': 10,
+          ToontownGlobals.MelodyMeadow: {'threeStripe': 10,
                                               'tummy': 15,
                                               'dots': 30,
                                               'tigerStripe': 25,
@@ -78,7 +78,7 @@ PetRarities = {'body': {ToontownGlobals.ToontownCentral: {'threeStripe': 50,
                                       'tigerStripe': 25,
                                       'turtle': 25,
                                       'giraffe': 15},
-          ToontownGlobals.DonaldsDreamland: {'threeStripe': 5,
+          ToontownGlobals.SlumberSprings: {'threeStripe': 5,
                                              'tummy': 5,
                                              'dots': 15,
                                              'tigerStripe': 20,
@@ -179,7 +179,7 @@ PetEyeColors = (VBase4(0.29, 0.29, 0.69, 1.0),
  VBase4(0.49, 0.99, 0.49, 1.0))
 PetGenders = [0, 1]
 
-def getRandomPetDNA(zoneId = ToontownGlobals.DonaldsDreamland):
+def getRandomPetDNA(zoneId = ToontownGlobals.SlumberSprings):
     from random import choice
     head = choice(list(range(-1, len(HeadParts))))
     ears = choice(list(range(-1, len(EarParts))))

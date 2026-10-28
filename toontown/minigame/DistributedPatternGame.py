@@ -141,7 +141,7 @@ class DistributedPatternGame(DistributedMinigame):
         dna = CharDNA()
         dna.newChar('mn')
         m.setDNA(dna)
-        m.setName(TTLocalizer.Minnie)
+        m.setName(TTLocalizer.Millie)
         m.reparentTo(base.hidden)
         self.backRowHome = Point3(3, 11, 0)
         self.backRowXSpacing = 1.8
@@ -429,7 +429,7 @@ class DistributedPatternGame(DistributedMinigame):
         numFrames = toon.getNumFrames(anim)
         return Sequence(Func(toon.pingpong, anim, fromFrame=0, toFrame=numFrames - 1), Wait(self.getDanceStepDuration()))
 
-    def __getMinnieDanceStepAnimTrack(self, minnie, direction):
+    def __getMillieDanceStepAnimTrack(self, minnie, direction):
         animName = self.minnieAnimNames[direction]
         return self.__getDanceStepAnimTrack(minnie, animName, self.minnieAnimSpeedMult[animName])
 
@@ -529,7 +529,7 @@ class DistributedPatternGame(DistributedMinigame):
     def getDanceSequenceAnimTrack(self, toon, pattern):
         getDanceStepTrack = self.__getToonDanceStepAnimTrack
         if toon == self.minnie:
-            getDanceStepTrack = self.__getMinnieDanceStepAnimTrack
+            getDanceStepTrack = self.__getMillieDanceStepAnimTrack
 
         tracks = Sequence()
         for direction in pattern:
@@ -559,13 +559,13 @@ class DistributedPatternGame(DistributedMinigame):
         index = self.avIdList.index(avId)
         return self.__getRowPos(self.frontRowHome, self.frontRowXSpacing, index, len(self.avIdList))
 
-    def __setMinnieChat(self, str, giggle):
+    def __setMillieChat(self, str, giggle):
         str = str.replace('%s', self.getAvatar(self.localAvId).getName())
         self.minnie.setChatAbsolute(str, CFSpeech)
         if giggle:
             self.minnie.playDialogue('statementA', 1)
 
-    def __clearMinnieChat(self):
+    def __clearMillieChat(self):
         self.minnie.clearChat()
 
     def enterOff(self):
@@ -609,7 +609,7 @@ class DistributedPatternGame(DistributedMinigame):
         danceTrack = self.getDanceSequenceAnimTrack(self.minnie, self.__serverPattern)
         arrowTrack = self.getDanceArrowAnimTrack('m', self.__serverPattern, 0)
         soundTrack = self.getDanceSequenceButtonSoundTrack(self.__serverPattern)
-        self.showTrack = Sequence(Func(self.__setMinnieChat, text, 1), Wait(0.5), Parallel(danceTrack, soundTrack, arrowTrack), Wait(0.2), Func(self.__clearMinnieChat), Func(self.gameFSM.request, 'getUserInput'))
+        self.showTrack = Sequence(Func(self.__setMillieChat, text, 1), Wait(0.5), Parallel(danceTrack, soundTrack, arrowTrack), Wait(0.2), Func(self.__clearMillieChat), Func(self.gameFSM.request, 'getUserInput'))
         self.showTrack.start()
 
     def exitShowServerPattern(self):
@@ -652,7 +652,7 @@ class DistributedPatternGame(DistributedMinigame):
             self.showStatusBalls(avId)
             self.__otherToonIndex[avId] = 0
 
-        self.setupTrack = Sequence(Func(self.__setMinnieChat, self.strGo, 0), Func(self.setText, self.roundText, TTLocalizer.PatternGameGo), Func(self.roundText.setScale, 0.3), Func(enableKeys), Func(startTimer), Wait(0.8), Func(self.__clearMinnieChat), Func(self.setText, self.roundText, ' '), Func(self.roundText.setScale, 0.12), Func(self.setTextFG, self.roundText, self.normalTextColor))
+        self.setupTrack = Sequence(Func(self.__setMillieChat, self.strGo, 0), Func(self.setText, self.roundText, TTLocalizer.PatternGameGo), Func(self.roundText.setScale, 0.3), Func(enableKeys), Func(startTimer), Wait(0.8), Func(self.__clearMillieChat), Func(self.setText, self.roundText, ' '), Func(self.roundText.setScale, 0.12), Func(self.setTextFG, self.roundText, self.normalTextColor))
         self.setupTrack.start()
 
     def __handleInputTimeout(self):
@@ -740,7 +740,7 @@ class DistributedPatternGame(DistributedMinigame):
 
         del self.setupTrack
         del self.proceedTrack
-        self.__clearMinnieChat()
+        self.__clearMillieChat()
 
     def enterWaitForPlayerPatterns(self):
         self.notify.debug('enterWaitForPlayerPatterns')
@@ -811,7 +811,7 @@ class DistributedPatternGame(DistributedMinigame):
             text = self.strWrong
 
         soundTrack = Sequence(Func(base.playSfx, sound), Wait(1.6))
-        textTrack = Sequence(Wait(0.2), Func(self.__setMinnieChat, text, 0), Wait(1.3), Func(self.__clearMinnieChat))
+        textTrack = Sequence(Wait(0.2), Func(self.__setMillieChat, text, 0), Wait(1.3), Func(self.__clearMillieChat))
         self.playBackPatternsTrack = Sequence(Parallel(soundTrack, textTrack, jumpTrack), Func(self.gameFSM.request, 'checkGameOver'))
         self.playBackPatternsTrack.start()
 
@@ -837,9 +837,9 @@ class DistributedPatternGame(DistributedMinigame):
 
             if self.celebrate:
                 text = TTLocalizer.PatternGameImprov
-                self.__winTrack = Sequence(Func(self.__setMinnieChat, text, 1), Func(base.playSfx, self.perfectSound), Sequence(self.returnCelebrationIntervals(1)), Sequence(self.returnCelebrationIntervals(0)), Func(self.__clearMinnieChat), Func(self.gameOver))
+                self.__winTrack = Sequence(Func(self.__setMillieChat, text, 1), Func(base.playSfx, self.perfectSound), Sequence(self.returnCelebrationIntervals(1)), Sequence(self.returnCelebrationIntervals(0)), Func(self.__clearMillieChat), Func(self.gameOver))
             else:
-                self.__winTrack = Sequence(Func(self.__setMinnieChat, text, 1), Func(base.playSfx, sound), Wait(delay), Func(self.__clearMinnieChat), Func(self.gameOver))
+                self.__winTrack = Sequence(Func(self.__setMillieChat, text, 1), Func(base.playSfx, sound), Wait(delay), Func(self.__clearMillieChat), Func(self.gameOver))
 
             self.__winTrack.start()
 

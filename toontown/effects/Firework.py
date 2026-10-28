@@ -85,7 +85,7 @@ class Firework(NodePath):
                 firework.gravityMult = 1.0
                 self.fireworkEffects.append(firework)
                 self.fireworkIval.append(firework.getFireworkMainIval())
-            elif self.typeId == FireworkType.Mickey:
+            elif self.typeId == FireworkType.Moe:
                 head = FireworkEffect(FireworkBurstType.PeonyShell, FireworkTrailType.Glow, velocity=Vec3(0, 0, 80 * self.scale), scale=self.scale / 1.2, primaryColor=self.primaryColor, secondaryColor=self.secondaryColor, burstDelay=1.5)
                 leftEar = FireworkEffect(FireworkBurstType.PeonyShell, FireworkTrailType.Glow, velocity=Vec3(-25 * self.scale, 0, 115 * self.scale), scale=self.scale / 1.6, primaryColor=self.primaryColor, secondaryColor=self.secondaryColor, burstDelay=1.7)
                 rightEar = FireworkEffect(FireworkBurstType.PeonyShell, FireworkTrailType.Glow, velocity=Vec3(25 * self.scale, 0, 115 * self.scale), scale=self.scale / 1.6, primaryColor=self.primaryColor, secondaryColor=self.secondaryColor, burstDelay=1.7)

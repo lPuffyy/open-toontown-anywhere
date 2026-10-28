@@ -74,4 +74,4 @@ class DistributedFishingTarget(DistributedNode.DistributedNode):
         self.track.start()
 
     def getRadius(self):
-        return self.radius
+        return 2.5
