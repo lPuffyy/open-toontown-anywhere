@@ -94,6 +94,8 @@ class QuestMap(DirectFrame):
         return
 
     def destroy(self):
+        taskMgr.remove('questMapUpdate')
+        taskMgr.remove('questMapInit')
         self.ignore('questPageUpdated')
         self.mapOpenButton.destroy()
         self.mapCloseButton.destroy()
@@ -171,13 +173,19 @@ class QuestMap(DirectFrame):
         return (relativeX, relativeY)
 
     def update(self, task):
-        if self.av:
+        # the map may have been destroyed (a new login, leaving the hood) while this task was still scheduled: stop instead of failing every frame
+        if self.isEmpty() or not hasattr(self, 'marker') or self.marker.isEmpty():
+            return Task.done
+        if self.av and not self.av.isEmpty():
             if self.updateMarker:
                 relX, relY = self.transformAvPos(self.av.getPos())
                 self.marker.setPos(relX, 0, relY)
                 self.marker.setHpr(0, 0, -180 - self.av.getH())
         i = 0
-        for buildingMarker in self.buildingMarkers:
+        for buildingMarker in list(self.buildingMarkers):
+            if buildingMarker.isEmpty():
+                self.buildingMarkers.remove(buildingMarker)
+                continue
             buildingMarker.setScale((math.sin(task.time * 16.0 + i * math.pi / 3.0) + 1) * 0.005 + 0.04)
             i = i + 1
 
