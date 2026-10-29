@@ -202,7 +202,17 @@ class PetBrain(DirectObject.DirectObject, CPetBrain):
         return avId in self.lookees
 
     def getAvIdsLookingAtUs(self):
-        return self.lookers
+        """The avatars attending to this pet: the ones its looking spheres report, plus anyone close by (where there is no collision traverser the
+        spheres report nobody, and a trick would then heal no one)."""
+        attending = dict(self.lookers)
+        try:
+            for doId in self.pet._getNearbyAvatarDict():
+                av = self.pet.air.doId2do.get(doId)
+                if av is not None and self._isCloseTo(av):
+                    attending[doId] = doId
+        except Exception:
+            pass
+        return attending
 
     def getAvIdsWeAreLookingAt(self):
         return self.lookees
@@ -433,6 +443,10 @@ class PetBrain(DirectObject.DirectObject, CPetBrain):
         def _handleDoTrick(trickId, avId, self = self):
             avatar = simbase.air.doId2do.get(avId)
             if avatar:
+                try:
+                    PetBrain.notify.info('trick %s asked of doodle %s by %s: distance %.1f (limit %.1f), looked at %s, busy with a trick %s' % (trickId, self.pet.doId, avId, self.pet.getDistance(avatar), PetConstants.NonPetSphereRadius * 3, self.lookedAtBy(avatar.doId), self.goalMgr.hasTrickGoal()))
+                except Exception:
+                    pass
                 if self.lookedAtBy(avatar.doId) or self._isCloseTo(avatar):
                     if not self.goalMgr.hasTrickGoal():
                         if not self.pet._willDoTrick(trickId):
