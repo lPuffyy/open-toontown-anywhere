@@ -128,6 +128,41 @@ class ToonPresenceUD(DistributedObjectGlobalUD):
             self.notify.warning('could not ask the database for toon %s: %s' % (avId, traceback.format_exc()))
             refuse()
 
+    # ---- a toon's own doodle, for the call-a-doodle button in battle (the client cannot ask the database for a pet itself)
+    def requestPetDetails(self, petId):
+        asker = self.air.getAvatarIdFromSender()
+        if not asker or not petId:
+            return
+        now = time.time()
+        if now - self.detailsAsked.get(('pet', asker), 0.0) < self.DETAILS_COOLDOWN:
+            return
+        self.detailsAsked[('pet', asker)] = now
+
+        def refuse():
+            self.sendUpdateToAvatarId(asker, 'petDetailsResponse', [petId, 1, '', []])
+
+        def answer(dclass, fields):
+            try:
+                if not fields or 'setPetName' not in fields:
+                    return refuse()
+
+                def get(name, default):
+                    value = fields.get(name)
+                    return value[0] if value else default
+                if get('setOwnerId', 0) != asker:
+                    return refuse()               # only the owner may ask
+                look = [get('setHead', -1), get('setEars', -1), get('setNose', -1), get('setTail', -1), get('setBodyTexture', 0),
+                        get('setColor', 0), get('setColorScale', 0), get('setEyeColor', 0), get('setGender', 0)]
+                self.sendUpdateToAvatarId(asker, 'petDetailsResponse', [petId, 0, get('setPetName', 'Doodle'), look])
+            except Exception:
+                self.notify.warning('could not answer a doodle request for %s: %s' % (petId, traceback.format_exc()))
+                refuse()
+        try:
+            self.air.dbInterface.queryObject(self.air.dbId, petId, answer)
+        except Exception:
+            self.notify.warning('could not ask the database for doodle %s: %s' % (petId, traceback.format_exc()))
+            refuse()
+
     def relayTeleportQuery(self, toAvId):
         fromAvId = self.air.getAvatarIdFromSender()
         if self.__friends(fromAvId, toAvId):

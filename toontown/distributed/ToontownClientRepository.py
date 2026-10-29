@@ -95,6 +95,7 @@ class ToontownClientRepository(OTPClientRepository.OTPClientRepository):
         self.objectManager = None
         self.magicWordManager = None
         self.friendsMap = {}
+        self.__petDetailsPending = set()    # doodle ids whose name and look have been asked for
         self.friendsOnline = {}
         self.friendsMapPending = 0
         self.friendsListError = 0
@@ -835,6 +836,8 @@ class ToontownClientRepository(OTPClientRepository.OTPClientRepository):
             teleportNotify.debug('found friend %s in playerFriendsManager' % doId)
             avatar = base.cr.playerFriendsManager.getAvHandleFromId(doId)
         else:
+            if base.wantPets and hasattr(base, 'localAvatar') and doId and doId == base.localAvatar.getPetId():
+                self.addPetToFriendsMap()
             self.notify.warning("Don't know who friend %s is." % doId)
             return
         if not ((isinstance(avatar, DistributedToon.DistributedToon) and avatar.__class__ is DistributedToon.DistributedToon) or isinstance(avatar, DistributedPet.DistributedPet)):
@@ -924,23 +927,26 @@ class ToontownClientRepository(OTPClientRepository.OTPClientRepository):
             if callback:
                 callback()
             return
-        # Astron's client agent has no CLIENT_GET_PET_DETAILS, so the pet's details can't be asked for: the live pet object in the
-        # playground serves the pet panels, and nothing waits on the friends-map entry
+        # Astron's client agent has no CLIENT_GET_PET_DETAILS, so ask the UberDOG's ToonPresence, which reads the doodle from the database.
+        # Nothing waits on the answer: when it arrives the handle goes into the friends map and the open panels are told to refresh.
         if callback:
             callback()
-        return
+        if doId in self.__petDetailsPending:
+            return
+        self.__petDetailsPending.add(doId)
+        self.toonPresence.up_requestPetDetails(doId)
+        taskMgr.doMethodLater(10.0, self.__petDetailsTimedOut, 'petDetails-%d' % doId, extraArgs=[doId])
 
-        def petDetailsCallback(petAvatar):
-            handle = PetHandle.PetHandle(petAvatar)
-            self.friendsMap[doId] = handle
-            petAvatar.disable()
-            petAvatar.delete()
-            if callback:
-                callback()
-            if self._proactiveLeakChecks:
-                petAvatar.detectLeaks()
+    def __petDetailsTimedOut(self, doId):
+        self.__petDetailsPending.discard(doId)
 
-        PetDetail.PetDetail(doId, petDetailsCallback)
+    def handlePetDetailsResponse(self, petId, code, name, look):
+        taskMgr.remove('petDetails-%d' % petId)
+        self.__petDetailsPending.discard(petId)
+        if code or not hasattr(base, 'localAvatar') or petId != base.localAvatar.getPetId():
+            return
+        self.friendsMap[petId] = PetHandle.PetDetailsHandle(petId, name, look, base.localAvatar.doId, self)
+        messenger.send('friendsListChanged')
 
     def handleGetFriendsList(self, di):
         error = di.getUint8()

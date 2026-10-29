@@ -143,6 +143,93 @@ class PetManagerAI:
 
         self.air.dbInterface.queryObject(self.air.dbId, petId, got)
 
+    def spawnBattleProxy(self, avId, petId, zoneId, done):
+        """Make the doodle's stand-in for a battle (it can be called to attack) in the battle's zone, built from the pet's database record.
+        done(proxy) is called with the new DistributedPetProxyAI, or None if it could not be made."""
+        from toontown.pets import DistributedPetProxyAI, PetTraits
+
+        def build(fields):
+            proxy = None
+            try:
+                def f(name, default=0):
+                    v = fields.get(name)
+                    return v[0] if v else default
+                proxy = DistributedPetProxyAI.DistributedPetProxyAI(self.air)
+                proxy.setHead(f('setHead', -1))
+                proxy.setEars(f('setEars', -1))
+                proxy.setNose(f('setNose', -1))
+                proxy.setTail(f('setTail', -1))
+                proxy.setBodyTexture(f('setBodyTexture'))
+                proxy.setColor(f('setColor'))
+                proxy.setColorScale(f('setColorScale'))
+                proxy.setEyeColor(f('setEyeColor'))
+                proxy.setGender(f('setGender'))
+                proxy.setOwnerId(avId)
+                proxy.setPetName(f('setPetName', 'Doodle'))
+                proxy.setTraitSeed(f('setTraitSeed'))
+                proxy.setSafeZone(f('setSafeZone', zoneId))
+                proxy.lastSeenTimestamp = f('setLastSeenTimestamp', int(time.time()))
+                for traitName in PetTraits.getTraitNames():
+                    setter = proxy.getSetterName(traitName)
+                    getattr(proxy, setter)(f(setter, 0.0))
+                for comp in PetMood.PetMood.Components:
+                    proxy.requiredMoodComponents[comp] = f('set' + comp[0].upper() + comp[1:], 0.0)
+                apt = fields.get('setTrickAptitudes')
+                if apt:
+                    proxy.trickAptitudes = list(apt[0])
+                proxy.dbObject = 1
+                proxy.generateWithRequiredAndId(petId, self.air.districtId, zoneId)
+                proxy.broadcastDominantMood()
+            except Exception:
+                self.notify.warning('could not make the battle doodle %s for %s: %s' % (petId, avId, traceback.format_exc()))
+                proxy = None
+            done(proxy)
+
+        def got(dclass, fields):
+            if not fields:
+                return done(None)
+            self.__clearPet(petId, avId, lambda: build(fields))
+
+        try:
+            self.air.dbInterface.queryObject(self.air.dbId, petId, got)
+        except Exception:
+            self.notify.warning('could not read the doodle %s: %s' % (petId, traceback.format_exc()))
+            done(None)
+
+    def __clearPet(self, petId, avId, then):
+        """Run then() once nothing in this district holds the doodle's id: its playground copy (or an earlier battle copy) is asked to go
+        and given a few seconds to finish; one that never finishes is dropped from the tables."""
+        existing = self.air.doId2do.get(petId)
+        if existing is None:
+            return then()
+        if self.pets.get(avId) is existing:
+            self.pets.pop(avId, None)
+            if hasattr(existing, 'getTrickAptitudes') and not existing.isDeleted():
+                self.savePet(existing)
+        try:
+            existing.requestDelete()
+        except Exception:
+            pass
+        tries = [0]
+
+        def wait(task):
+            if petId not in self.air.doId2do:
+                then()
+                return task.done
+            tries[0] += 1
+            if tries[0] < 20:
+                return task.again
+            stale = self.air.doId2do.get(petId)
+            self.notify.warning('dropping a doodle %s that would not delete' % petId)
+            try:
+                self.air.removeDOFromTables(stale)
+                stale.delete()
+            except Exception:
+                self.notify.warning('could not drop the doodle %s: %s' % (petId, traceback.format_exc()))
+            then()
+            return task.done
+        taskMgr.doMethodLater(0.25, wait, 'petClear-%d' % petId)
+
     def getAvailablePets(self, numPets, numClerks=1):
         """Seeds for the pets on offer; the same all day, new ones tomorrow."""
         day = int(time.time() // 86400)

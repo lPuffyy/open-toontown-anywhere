@@ -23,9 +23,15 @@ class ToonPresence(DistributedObjectGlobal):
     def up_requestAvatarDetails(self, avId):
         self.sendUpdate('requestAvatarDetails', [avId])
 
+    def up_requestPetDetails(self, petId):
+        self.sendUpdate('requestPetDetails', [petId])
+
     # ---- from the server
     def avatarDetailsResponse(self, avId, code, experience, inventory, trackAccess, maxHp, hp, shard, lastHood):
         base.cr.handleAvatarDetailsResponse(avId, code, experience, inventory, trackAccess, maxHp, hp, shard, lastHood)
+
+    def petDetailsResponse(self, petId, code, name, look):
+        base.cr.handlePetDetailsResponse(petId, code, name, look)
 
     def friendOnline(self, friendId, online):
         if hasattr(base, 'localAvatar'):

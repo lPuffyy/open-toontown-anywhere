@@ -75,6 +75,7 @@ class DistributedBattleBaseAI(DistributedObjectAI.DistributedObjectAI, BattleBas
         self.numNPCAttacks = 0
         self.npcAttacks = {}
         self.pets = {}
+        self.petsLoading = set()
         self.fsm = ClassicFSM.ClassicFSM('DistributedBattleAI', [
          State.State('FaceOff', self.enterFaceOff, self.exitFaceOff, [
           'WaitForInput', 'Resume']),
@@ -1112,25 +1113,20 @@ class DistributedBattleBaseAI(DistributedObjectAI.DistributedObjectAI, BattleBas
             return
         petId = toon.getPetId()
         zoneId = self.zoneId
-        if petId == av:
-            if toonId not in self.pets:
+        if petId == av and petId and toonId not in self.pets and toonId not in self.petsLoading:
+            self.petsLoading.add(toonId)
+            air = self.air
 
-                def handleGetPetProxy(success, petProxy, petId=petId, zoneId=zoneId, toonId=toonId):
-                    if success:
-                        if petId not in simbase.air.doId2do:
-                            simbase.air.requestDeleteDoId(petId)
-                        else:
-                            petDO = simbase.air.doId2do[petId]
-                            petDO.requestDelete()
-                            simbase.air.deleteDistObject(petDO)
-                        petProxy.dbObject = 1
-                        petProxy.generateWithRequiredAndId(petId, self.air.districtId, zoneId)
-                        petProxy.broadcastDominantMood()
-                        self.pets[toonId] = petProxy
-                    else:
-                        self.notify.warning('error generating petProxy: %s' % petId)
+            def gotPetProxy(petProxy, toonId=toonId):
+                self.petsLoading.discard(toonId)
+                if petProxy is None:
+                    self.notify.warning('error generating petProxy: %s' % petId)
+                elif self.air is None or toonId in self.pets:
+                    petProxy.requestDelete()
+                else:
+                    self.pets[toonId] = petProxy
 
-                self.getPetProxyObject(petId, handleGetPetProxy)
+            air.petMgr.spawnBattleProxy(toonId, petId, zoneId, gotPetProxy)
         return
 
     def suitCanJoin(self):

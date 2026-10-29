@@ -2784,7 +2784,9 @@ dclass ToonPresence : DistributedObject {
   relayTeleportGiveup(uint32) airecv clsend;
   relayRemoveFriend(uint32) airecv clsend;
   requestAvatarDetails(uint32) airecv clsend;
+  requestPetDetails(uint32) airecv clsend;
   avatarDetailsResponse(uint32, uint8, blob, blob, uint16[], int16, int16, uint32, uint32);
+  petDetailsResponse(uint32, uint8, string, int16[]);
   friendOnline(uint32, uint8);
   teleportQueryFrom(uint32);
   teleportResponseFrom(uint32, int8, uint32, uint32, uint32);

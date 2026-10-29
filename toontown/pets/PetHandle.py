@@ -64,3 +64,44 @@ class PetHandle:
                 callWhenDone()
 
         PetDetail.PetDetail(self.doId, handleGotDetails)
+
+
+class PetDetailsHandle:
+    """Stands in for a doodle the client cannot see (it is only out in playgrounds and estates), built from the name and look the server
+    sends. It is enough for the call-a-doodle button in battle and the friends list; its mood is neutral."""
+
+    def __init__(self, petId, name, look, ownerId, cr):
+        self.doId = petId
+        self.name = name
+        self.style = list(look)
+        self.ownerId = ownerId
+        self.bFake = False
+        self.cr = cr
+
+    def getDoId(self):
+        return self.doId
+
+    def getOwnerId(self):
+        return self.ownerId
+
+    def isPet(self):
+        return True
+
+    def getName(self):
+        return self.name
+
+    def getDNA(self):
+        return self.style
+
+    def getFont(self):
+        return ToontownGlobals.getToonFont()
+
+    def getDominantMood(self):
+        return PetMood.PetMood.Neutral
+
+    def uniqueName(self, idString):
+        return idString + '-' + str(self.getDoId())
+
+    def updateMoodFromServer(self, callWhenDone = None):
+        if callWhenDone:
+            callWhenDone()
