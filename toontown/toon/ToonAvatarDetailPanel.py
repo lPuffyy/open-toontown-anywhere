@@ -80,6 +80,13 @@ class ToonAvatarDetailPanel(DirectFrame):
         self.bCancel = DirectButton(self, image=(buttons.find('**/CloseBtn_UP'), buttons.find('**/CloseBtn_DN'), buttons.find('**/CloseBtn_Rllvr')), image_scale=1.1, relief=None, text=TTLocalizer.AvatarDetailPanelCancel, text_scale=TTLocalizer.TADPbCancel, text_pos=(0.12, -0.01), pos=TTLocalizer.TADPbCancelPos, scale=2.0, command=self.__handleCancel)
         self.bCancel.hide()
         self.initialiseoptions(ToonAvatarDetailPanel)
+        if base.getAspectRatio() > 4.0 / 3.0 + 0.01 and hasattr(base, 'a2dpRightCenter'):
+            # a wide screen: the avatar panel beside this one hangs from the right edge (inside the phone's safe area), so hang this one
+            # from the same edge, or it is left behind in the 4:3 spot with a gap between the two
+            edge = base.a2dpRightCenter
+            inset = (base.a2dRightCenter.getX() - edge.getX()) if hasattr(base, 'a2dRightCenter') else 0.0
+            self.reparentTo(edge)
+            self.setPos(0.525 - 4.0 / 3.0 + inset, 0, 0.525)
         self.fsm.enterInitialState()
         self.fsm.request('begin')
         buttons.removeNode()
@@ -165,9 +172,14 @@ class ToonAvatarDetailPanel(DirectFrame):
         if base.cr.isFriend(self.avId):
             online = base.cr.isFriendOnline(self.avId)
         if online:
-            shardName = base.cr.getShardName(av.defaultShard)
-            hoodName = base.cr.hoodMgr.getFullnameFromId(av.lastHood)
-            if ZoneUtil.isWelcomeValley(av.lastHood):
+            # a toon that is near us is a live object, and the server only sends us the district and hood fields for ourselves; such a toon
+            # is in our district and our hood
+            me = base.localAvatar
+            shard = getattr(av, 'defaultShard', None) or me.defaultShard
+            lastHood = getattr(av, 'lastHood', None) or me.lastHood
+            shardName = base.cr.getShardName(shard)
+            hoodName = base.cr.hoodMgr.getFullnameFromId(lastHood)
+            if ZoneUtil.isWelcomeValley(lastHood):
                 shardName = '%s (%s)' % (TTLocalizer.WelcomeValley[-1], shardName)
             if self.playerInfo:
                 guiButton = loader.loadModel('phase_3/models/gui/quit_button')
@@ -206,12 +218,12 @@ class ToonAvatarDetailPanel(DirectFrame):
         xSpacing = 0.1835
         yOffset = 0.1
         ySpacing = -0.115
-        inventory = self.avatar.inventory
+        inventory = getattr(self.avatar, 'inventory', None)     # only the toon's own client has it; the server does not send it to other players
         inventoryModels = loader.loadModel('phase_3.5/models/gui/inventory_gui')
         buttonModel = inventoryModels.find('**/InventoryButtonUp')
         for track in range(0, len(Tracks)):
             DirectLabel(parent=self, relief=None, text=TextEncoder.upper(TTLocalizer.BattleGlobalTracks[track]), text_scale=TTLocalizer.TADPtrackLabel, text_align=TextNode.ALeft, pos=(-0.9, 0, TTLocalizer.TADtrackLabelPosZ + track * ySpacing))
-            if self.avatar.hasTrackAccess(track):
+            if inventory is not None and self.avatar.hasTrackAccess(track):
                 curExp, nextExp = inventory.getCurAndNextExpValues(track)
                 for item in range(0, len(Levels[track])):
                     level = Levels[track][item]
@@ -232,11 +244,12 @@ class ToonAvatarDetailPanel(DirectFrame):
     def __updateTrophyInfo(self):
         if self.createdAvatar:
             return
-        if self.avatar.trophyScore >= TrophyStarLevels[2]:
+        trophyScore = getattr(self.avatar, 'trophyScore', 0)
+        if trophyScore >= TrophyStarLevels[2]:
             color = TrophyStarColors[2]
-        elif self.avatar.trophyScore >= TrophyStarLevels[1]:
+        elif trophyScore >= TrophyStarLevels[1]:
             color = TrophyStarColors[1]
-        elif self.avatar.trophyScore >= TrophyStarLevels[0]:
+        elif trophyScore >= TrophyStarLevels[0]:
             color = TrophyStarColors[0]
         else:
             color = None
