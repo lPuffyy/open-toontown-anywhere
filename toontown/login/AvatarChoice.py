@@ -175,6 +175,7 @@ class AvatarChoice(DirectButton):
         DirectFrame.destroy(self)
         if self.deleteWithPasswordFrame:
             self.deleteWithPasswordFrame.destroy()
+        self.__publishYesButton(False)
 
     def __handleChoice(self):
         cleanupDialog('globalDialog')
@@ -188,13 +189,30 @@ class AvatarChoice(DirectButton):
         cleanupDialog('globalDialog')
         self.verify = TTDialog.TTGlobalDialog(doneEvent='verifyDone', message=TTLocalizer.AvatarChoiceDeleteConfirm % self.name, style=TTDialog.TwoChoice)
         self.verify.show()
+        self.__publishYesButton(True)
         self.accept('verifyDone', self.__handleVerifyDelete)
+
+    def __publishYesButton(self, on):
+        """In the browser, tell the page where the Yes button of the delete question is (its centre, as fractions of the window), so a tap on it can
+        open the phone's keyboard in the same tap: a phone only opens the keyboard from a real tap, and the typed confirmation box appears a moment
+        after. The same hook the Type a Name button uses."""
+        try:
+            import platform
+            where = ''
+            verify = getattr(self, 'verify', None)
+            if on and verify is not None and verify.buttonList:
+                p = verify.buttonList[0].getPos(render2d)
+                where = '%.4f,%.4f' % ((p[0] + 1.0) / 2.0, (1.0 - p[2]) / 2.0)
+            platform.window.ttr.typeBtn = where
+        except Exception:
+            pass
 
     def __handleNameYourToon(self):
         messenger.send(self.doneEvent, ['nameIt', self.position])
 
     def __handleVerifyDelete(self):
         status = self.verify.doneStatus
+        self.__publishYesButton(False)
         self.ignore('verifyDone')
         self.verify.cleanup()
         del self.verify
