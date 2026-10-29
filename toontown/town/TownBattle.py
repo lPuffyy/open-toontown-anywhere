@@ -622,6 +622,7 @@ class TownBattle(StateData.StateData):
             self.fsm.request('Attack')
 
     def enterSOSPetSearch(self):
+        print('doodle call: searching for pet %s' % self.petId)
         response = {}
         response['mode'] = 'PETSOSINFO'
         response['id'] = self.petId
@@ -646,6 +647,7 @@ class TownBattle(StateData.StateData):
             self.notify.error('invalid mode in handleSOSPetSearchPanelDone')
 
     def __handleProxyGenerated(self):
+        print('doodle call: the doodle is here, opening its panel')
         self.fsm.request('SOSPetInfo')
 
     def enterSOSPetInfo(self):
