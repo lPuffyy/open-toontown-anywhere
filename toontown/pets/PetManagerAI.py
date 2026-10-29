@@ -159,6 +159,14 @@ class PetManagerAI:
                 pet.trickAptitudes = list(apt[0])
             pet.generateWithRequiredAndId(petId, self.air.districtId, zoneId)
             self.pets[avId] = pet
+            self.notify.info('doodle %s placed at (%.1f, %.1f); its owner %s is at (%.1f, %.1f); asked to appear beside the owner: %s' % (petId, pet.getX(), pet.getY(), avId, av.getX(), av.getY(), pet.spawnNear is not None))
+
+            def howFar(task, pet = pet, avId = avId):
+                owner = self.air.doId2do.get(avId)
+                if owner is not None and not pet.isDeleted():
+                    self.notify.info('doodle %s is now at (%.1f, %.1f), its owner at (%.1f, %.1f): %.1f apart' % (pet.doId, pet.getX(), pet.getY(), owner.getX(), owner.getY(), pet.getDistance(owner)))
+                return task.done
+            taskMgr.doMethodLater(6.0, howFar, 'petHowFar-%d' % petId)
 
         self.air.dbInterface.queryObject(self.air.dbId, petId, got)
 
