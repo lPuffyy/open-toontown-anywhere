@@ -5,11 +5,11 @@ where it always did on 4:3 but follows the real screen corner on any other shape
 _anchors = {}
 
 
-def _anchor(name, corner, x, z=1.0):
+def _anchor(name, corner, x):
     node = _anchors.get(name)
     if node is None or node.isEmpty():
         node = corner.attachNewNode(name)
-        node.setPos(x, 0, z)
+        node.setPos(x, 0, 1)
         _anchors[name] = node
     return node
 
@@ -22,13 +22,3 @@ def bottomRight():
 def bottomLeft():
     """Origin where aspect2d's (-4/3, 0, -1) is on a 4:3 screen: the bottom left corner."""
     return _anchor('bottomLeftAnchor', base.a2dBottomLeft, 4.0 / 3.0)
-
-
-def topLeft():
-    """Origin where aspect2d's (-4/3, 0, 1) is on a 4:3 screen: the top left corner."""
-    return _anchor('topLeftAnchor', base.a2dTopLeft, 4.0 / 3.0, -1.0)
-
-
-def topLeftPopup():
-    """The same corner in the popup layer (aspect2dp), which chat windows and menus live in."""
-    return _anchor('topLeftPopupAnchor', base.a2dpTopLeft, 4.0 / 3.0, -1.0)

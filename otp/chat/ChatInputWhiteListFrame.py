@@ -17,8 +17,7 @@ class ChatInputWhiteListFrame(FSM.FSM, DirectFrame):
         FSM.FSM.__init__(self, 'ChatInputWhiteListFrame')
         self.okayToSubmit = True
         self.receiverId = None
-        from toontown.toonbase import ScreenAnchors
-        DirectFrame.__init__(self, parent=ScreenAnchors.topLeftPopup(), pos=(0, 0, 0.3), relief=None, image=DGG.getDefaultDialogGeom(), image_scale=(1.6, 1, 1.4), image_pos=(0, 0, -0.05), image_color=OTPGlobals.GlobalDialogColor, borderWidth=(0.01, 0.01))
+        DirectFrame.__init__(self, parent=aspect2dp, pos=(0, 0, 0.3), relief=None, image=DGG.getDefaultDialogGeom(), image_scale=(1.6, 1, 1.4), image_pos=(0, 0, -0.05), image_color=OTPGlobals.GlobalDialogColor, borderWidth=(0.01, 0.01))
         optiondefs = {'parent': self,
          'relief': DGG.SUNKEN,
          'scale': 0.05,

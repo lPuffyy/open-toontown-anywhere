@@ -3,7 +3,6 @@ from panda3d.core import *
 from otp.speedchat.SpeedChatTypes import *
 from toontown.speedchat.TTSpeedChatTypes import *
 from otp.speedchat.SpeedChat import SpeedChat
-from toontown.toonbase import ScreenAnchors
 from otp.speedchat import SpeedChatGlobals
 from toontown.speedchat import TTSpeedChatGlobals
 from toontown.speedchat import TTSCSingingTerminal
@@ -440,7 +439,7 @@ class TTChatInputSpeedChat(DirectObject.DirectObject):
         self.terminalSelectedEvent = self.speedChat.getEventName(SpeedChatGlobals.SCTerminalSelectedEvent)
         if base.config.GetBool('want-sc-auto-hide', 1):
             self.accept(self.terminalSelectedEvent, selectionMade)
-        self.speedChat.reparentTo(ScreenAnchors.topLeftPopup(), DGG.FOREGROUND_SORT_INDEX)
+        self.speedChat.reparentTo(aspect2dp, DGG.FOREGROUND_SORT_INDEX)
         scZ = 0.96
         self.speedChat.setPos(-1.05, 0, scZ)
         self.speedChat.setWhisperMode(self.whisperAvatarId != None)
