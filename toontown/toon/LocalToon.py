@@ -40,6 +40,7 @@ from toontown.quest import Quests
 from toontown.quest import QuestParser
 from toontown.toonbase.ToontownGlobals import *
 from toontown.toonbase import ToontownGlobals
+from toontown.toonbase import ScreenAnchors
 from toontown.toonbase import TTLocalizer
 from toontown.catalog import CatalogNotifyDialog
 from toontown.chat import ToontownChatManager
@@ -372,6 +373,7 @@ class LocalToon(DistributedToon.DistributedToon, LocalAvatar.LocalAvatar):
         self.laffMeter = LaffMeter.LaffMeter(self.style, self.hp, self.maxHp)
         self.laffMeter.setAvatar(self)
         self.laffMeter.setScale(0.075)
+        self.laffMeter.reparentTo(ScreenAnchors.bottomLeft())
         if self.style.getAnimal() == 'monkey':
             self.laffMeter.setPos(-1.18, 0.0, -0.87)
         else:

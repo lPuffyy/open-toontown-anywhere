@@ -14,6 +14,7 @@ from toontown.suit import SuitDNA
 from toontown.char import Char
 from toontown.suit import Suit
 from toontown.toonbase import TTLocalizer
+from toontown.toonbase import ScreenAnchors
 from toontown.toonbase import ToontownBattleGlobals
 from otp.speedchat import SpeedChatGlobals
 from toontown.ai import DistributedBlackCatMgr
@@ -848,6 +849,9 @@ class NPCMoviePlayer(DirectObject.DirectObject):
     def parseArrowsOn(self, line):
         arrows = self.getVar('arrows')
         token, x1, y1, h1, x2, y2, h2 = line
+        if max(x1, x2) > 1.0:
+            # pointing at the Shticker Book button in the bottom right corner: follow that corner, as the button does
+            return Func(lambda: arrows.arrowsOn(x1, y1, h1, x2, y2, h2, parent=ScreenAnchors.bottomRight()))
         return Func(arrows.arrowsOn, x1, y1, h1, x2, y2, h2)
 
     def parseArrowsOff(self, line):

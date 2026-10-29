@@ -18,12 +18,14 @@ class BlinkingArrows:
         del self.arrow1
         del self.arrow2
 
-    def arrowsOn(self, x1, y1, h1, x2, y2, h2, onTime = 0.75, offTime = 0.75):
+    def arrowsOn(self, x1, y1, h1, x2, y2, h2, onTime = 0.75, offTime = 0.75, parent = None):
         self.stopArrowsFlashing()
+        if parent is None:
+            parent = self.parent
         self.arrow1.setBin('gui-popup', 0)
         self.arrow2.setBin('gui-popup', 0)
-        self.arrow1.reparentTo(self.parent)
-        self.arrow2.reparentTo(self.parent)
+        self.arrow1.reparentTo(parent)
+        self.arrow2.reparentTo(parent)
         self.arrow1.setScale(0.2)
         self.arrow2.setScale(0.2)
         self.arrow1.setPos(x1, 0, y1)

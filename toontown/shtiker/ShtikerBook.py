@@ -1,6 +1,7 @@
 from panda3d.core import *
 from panda3d.otp import *
 from toontown.toonbase import ToontownGlobals
+from toontown.toonbase import ScreenAnchors
 from direct.showbase import DirectObject
 from direct.fsm import StateData
 from direct.gui.DirectGui import *
@@ -123,8 +124,8 @@ class ShtikerBook(DirectFrame, StateData.StateData):
         self['image'] = bookModel.find('**/big_book')
         self['image_scale'] = (2, 1, 1.5)
         self.resetFrameSize()
-        self.bookOpenButton = DirectButton(image=(bookModel.find('**/BookIcon_CLSD'), bookModel.find('**/BookIcon_OPEN'), bookModel.find('**/BookIcon_RLVR')), relief=None, pos=(1.175, 0, -0.83), scale=0.305, command=self.__open)
-        self.bookCloseButton = DirectButton(image=(bookModel.find('**/BookIcon_OPEN'), bookModel.find('**/BookIcon_CLSD'), bookModel.find('**/BookIcon_RLVR2')), relief=None, pos=(1.175, 0, -0.83), scale=0.305, command=self.__close)
+        self.bookOpenButton = DirectButton(image=(bookModel.find('**/BookIcon_CLSD'), bookModel.find('**/BookIcon_OPEN'), bookModel.find('**/BookIcon_RLVR')), relief=None, parent=ScreenAnchors.bottomRight(), pos=(1.175, 0, -0.83), scale=0.305, command=self.__open)
+        self.bookCloseButton = DirectButton(image=(bookModel.find('**/BookIcon_OPEN'), bookModel.find('**/BookIcon_CLSD'), bookModel.find('**/BookIcon_RLVR2')), relief=None, parent=ScreenAnchors.bottomRight(), pos=(1.175, 0, -0.83), scale=0.305, command=self.__close)
         self.bookOpenButton.hide()
         self.bookCloseButton.hide()
         self.nextArrow = DirectButton(parent=self, relief=None, image=(bookModel.find('**/arrow_button'), bookModel.find('**/arrow_down'), bookModel.find('**/arrow_rollover')), scale=(0.1, 0.1, 0.1), pos=(0.838, 0, -0.661), command=self.__pageChange, extraArgs=[1])
