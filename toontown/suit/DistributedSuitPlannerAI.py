@@ -146,6 +146,7 @@ class DistributedSuitPlannerAI(DistributedObjectAI.DistributedObjectAI, SuitPlan
 
         self.dnaStore.resetBlockNumbers()
         self.initBuildingsAndPoints()
+        self.minPathLen = self.findUsableMinPathLen()
         numSuits = simbase.config.GetInt('suit-count', -1)
         if numSuits >= 0:
             self.currDesired = numSuits
@@ -441,6 +442,19 @@ class DistributedSuitPlannerAI(DistributedObjectAI.DistributedObjectAI, SuitPlan
         self.notify.debug('DSP %d is planning a takeover attempt in zone %d' % (self.getDoId(), self.zoneId))
         return 1
 
+    def findUsableMinPathLen(self):
+        """The shortest walk a cog is made to take. A small area (a cog HQ courtyard) has too few points for a walk of MIN_PATH_LEN points, so no cog would
+        ever get a route there: use the longest of a few shorter lengths that works. Streets pass the first test at once and are left alone."""
+        points = self.streetPointList
+        if len(points) < 2:
+            return self.MIN_PATH_LEN
+        for length in (self.MIN_PATH_LEN, 20, 10, 2):
+            for _ in range(80):
+                start, end = random.sample(points, 2)
+                if self.genPath(start, end, length, self.MAX_PATH_LEN):
+                    return length
+        return self.MIN_PATH_LEN
+
     def chooseDestination(self, suit, startTime, toonBlockTakeover=None, cogdoTakeover=None, minPathLen=None, maxPathLen=None):
         possibles = []
         backup = []
@@ -480,7 +494,7 @@ class DistributedSuitPlannerAI(DistributedObjectAI.DistributedObjectAI, SuitPlan
             if suit.attemptingTakeover:
                 minPathLen = self.MIN_TAKEOVER_PATH_LEN
             else:
-                minPathLen = self.MIN_PATH_LEN
+                minPathLen = self.minPathLen
         if maxPathLen == None:
             maxPathLen = self.MAX_PATH_LEN
         retryCount = 0
