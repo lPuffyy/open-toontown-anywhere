@@ -356,6 +356,10 @@ class LocalAvatar(DistributedAvatar.DistributedAvatar, DistributedSmoothNode.Dis
             self.stopJumpLandTask()
 
     def returnToWalk(self, task):
+        # a later animation (the book, a teleport out) has taken over since the jump: forcing a state now would cut it off, and its done callback would never run
+        state = self.animFSM.getCurrentState().getName() if hasattr(self, 'animFSM') else None
+        if state not in (None, 'jumpSquat', 'jump', 'jumpAirborne', 'jumpLand', 'walk', 'run', 'neutral', 'off'):
+            return Task.done
         if self.sleepFlag:
             state = 'Sleep'
         elif self.hp > 0:
