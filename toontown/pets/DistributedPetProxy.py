@@ -133,7 +133,6 @@ class DistributedPetProxy(DistributedObject.DistributedObject):
     def announceGenerate(self):
         DistributedObject.DistributedObject.announceGenerate(self)
         self.traits = PetTraits.PetTraits(self.traitSeed, self.safeZone)
-        print(self.traits.traits)
         self.mood = PetMood.PetMood(self)
         self.lastKnownMood = self.mood.makeCopy()
         for mood, value in list(self.requiredMoodComponents.items()):

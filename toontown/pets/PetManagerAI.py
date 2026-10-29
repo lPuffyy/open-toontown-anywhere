@@ -182,6 +182,13 @@ class PetManagerAI:
                 proxy.broadcastDominantMood()
             except Exception:
                 self.notify.warning('could not make the battle doodle %s for %s: %s' % (petId, avId, traceback.format_exc()))
+                if proxy is not None and self.air.doId2do.get(petId) is proxy:
+                    # generating it failed part way: it is already in the tables and on the State Server, so take it out of both
+                    try:
+                        self.air.removeDOFromTables(proxy)
+                        self.air.requestDelete(proxy)
+                    except Exception:
+                        pass
                 proxy = None
             done(proxy)
 
