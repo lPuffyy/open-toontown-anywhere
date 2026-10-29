@@ -2675,6 +2675,8 @@ class DistributedToonAI(DistributedPlayerAI.DistributedPlayerAI, DistributedSmoo
     def incrementPopulation(self):
         if self.isPlayerControlled():
             DistributedPlayerAI.DistributedPlayerAI.incrementPopulation(self)
+            if getattr(self.air, 'halloweenTreats', None):
+                self.air.halloweenTreats.toonArrived(self)
             if self.air.suitInvasionManager.getInvading():
                 taskMgr.doMethodLater(5.0, self.__sendInvasionBulletin, self.uniqueName('invasionBulletin'))
 
@@ -3205,6 +3207,8 @@ class DistributedToonAI(DistributedPlayerAI.DistributedPlayerAI, DistributedSmoo
 
         def setSC(self, msgId):
             DistributedToonAI.notify.debug('setSC: %s' % msgId)
+            if getattr(self.air, 'halloweenTreats', None):
+                self.air.halloweenTreats.phraseSaid(self, msgId)
             from toontown.pets import PetObserve
             PetObserve.send(self.zoneId, PetObserve.getSCObserve(msgId, self.doId))
             if msgId in [21006]:

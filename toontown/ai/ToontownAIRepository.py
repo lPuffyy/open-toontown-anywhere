@@ -7,6 +7,7 @@ from otp.ai.TimeManagerAI import TimeManagerAI
 from otp.friends.FriendManagerAI import FriendManagerAI
 from otp.distributed.OtpDoGlobals import *
 from toontown.ai.HolidayManagerAI import HolidayManagerAI
+from toontown.ai.HalloweenTreatsAI import HalloweenTreatsAI
 from toontown.ai.NewsManagerAI import NewsManagerAI
 from toontown.ai.WelcomeValleyManagerAI import WelcomeValleyManagerAI
 from toontown.building.DistributedTrophyMgrAI import DistributedTrophyMgrAI
@@ -147,6 +148,7 @@ class ToontownAIRepository(ToontownInternalRepository):
 
         # Create our holiday manager...
         self.holidayManager = HolidayManagerAI(self)
+        self.halloweenTreats = HalloweenTreatsAI(self)
 
         # Create our zone data store...
         self.zoneDataStore = AIZoneDataStore()
