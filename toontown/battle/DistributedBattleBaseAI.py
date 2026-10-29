@@ -1095,6 +1095,7 @@ class DistributedBattleBaseAI(DistributedObjectAI.DistributedObjectAI, BattleBas
 
     def requestPetProxy(self, av):
         toonId = self.air.getAvatarIdFromSender()
+        self.notify.info('doodle call: toon %s asked for pet %s (ignoring=%s, state=%s)' % (toonId, av, self.ignoreResponses, self.fsm.getCurrentState().getName()))
         if self.ignoreResponses == 1:
             self.notify.debug('requestPetProxy() - ignoring toon: %d' % toonId)
             return
@@ -1113,6 +1114,8 @@ class DistributedBattleBaseAI(DistributedObjectAI.DistributedObjectAI, BattleBas
             return
         petId = toon.getPetId()
         zoneId = self.zoneId
+        if not (petId == av and petId and toonId not in self.pets and toonId not in self.petsLoading):
+            self.notify.info('doodle call: nothing to do (toon pet %s, asked %s, already out %s, loading %s)' % (petId, av, toonId in self.pets, toonId in self.petsLoading))
         if petId == av and petId and toonId not in self.pets and toonId not in self.petsLoading:
             self.petsLoading.add(toonId)
             air = self.air
@@ -1125,6 +1128,7 @@ class DistributedBattleBaseAI(DistributedObjectAI.DistributedObjectAI, BattleBas
                     petProxy.requestDelete()
                 else:
                     self.pets[toonId] = petProxy
+                    self.notify.info('doodle call: battle doodle %s is out in zone %s' % (petId, zoneId))
 
             air.petMgr.spawnBattleProxy(toonId, petId, zoneId, gotPetProxy)
         return
