@@ -226,6 +226,7 @@ class ToontownAIRepository(ToontownInternalRepository):
         # Generate our news manager...
         self.newsManager = NewsManagerAI(self)
         self.newsManager.generateWithRequired(OTP_ZONE_ID_MANAGEMENT)
+        self.holidayManager.start()
         self.suitInvasionManager.scheduleRandom()
 
         # Generate our Welcome Valley manager...
