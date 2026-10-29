@@ -199,6 +199,7 @@ class PetManagerAI:
                 proxy.dbObject = 1
                 proxy.generateWithRequiredAndId(petId, self.air.districtId, zoneId)
                 proxy.broadcastDominantMood()
+                self.__askWhereItIs(petId, zoneId)
             except Exception:
                 self.notify.warning('could not make the battle doodle %s for %s: %s' % (petId, avId, traceback.format_exc()))
                 if proxy is not None and self.air.doId2do.get(petId) is proxy:
@@ -221,6 +222,25 @@ class PetManagerAI:
         except Exception:
             self.notify.warning('could not read the doodle %s: %s' % (petId, traceback.format_exc()))
             done(None)
+
+    def __askWhereItIs(self, petId, zoneId):
+        """Diagnosis: ask the State Server whether it knows the battle doodle and where it is, and say so in the log (silence after a few seconds means it
+        does not know the object at all)."""
+        answered = []
+
+        def where(doId, parentId, zoneIdNow):
+            answered.append(1)
+            self.notify.info('doodle call: the State Server has the battle doodle %s at %s:%s (we put it in zone %s)' % (doId, parentId, zoneIdNow, zoneId))
+
+        def silence(task):
+            if not answered:
+                self.notify.warning('doodle call: the State Server did not answer about the battle doodle %s' % petId)
+            return task.done
+        try:
+            self.air.getLocation(petId, where)
+            taskMgr.doMethodLater(3.0, silence, 'petWhere-%d' % petId)
+        except Exception:
+            self.notify.warning('doodle call: could not ask where the battle doodle is: %s' % traceback.format_exc())
 
     def __clearPet(self, petId, avId, then):
         """Run then() once nothing in this district holds the doodle's id: its playground copy (or an earlier battle copy) is asked to go
