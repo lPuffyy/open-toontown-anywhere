@@ -104,7 +104,7 @@ class InteractWithAvatar(PetGoal):
 
     def enterChase(self):
         PetGoal.notify.debug('enterChase')
-        if self.brain.lookingAt(self.avatar.doId):
+        if self.brain.lookingAt(self.avatar.doId) or self.brain._isCloseTo(self.avatar):
 
             def goToInteract(task = None, self = self):
                 self.request('Interact')
@@ -114,6 +114,18 @@ class InteractWithAvatar(PetGoal):
         else:
             self.accept(self.brain.getObserveEventAttendingAvStart(self.avatar.doId), Functor(self.request, 'Interact'))
             self.brain._chase(self.avatar)
+
+            # the looking spheres that send that event need a collision traverser, which this server has none of for a playground: so also
+            # start once the pet has come close enough, checking now and then (leaving the Chase state stops this)
+            def checkNear(task = None, self = self):
+                if self.brain is None or not hasattr(self, 'avatar'):
+                    return Task.done
+                if self.brain._isCloseTo(self.avatar):
+                    self.request('Interact')
+                    return Task.done
+                return Task.again
+
+            taskMgr.doMethodLater(0.3, checkNear, self.transitionDoLaterName)
         return
 
     def exitChase(self):
@@ -237,11 +249,21 @@ class DoTrick(InteractWithAvatar):
     def getPriority(self):
         return PetConstants.PriorityDoTrick
 
+    TRICK_TIMEOUT = 20.0       # a trick that has not finished by then is dropped, so one that never starts cannot block every later trick
+
     def setGoalMgr(self, goalMgr):
         goalMgr._setHasTrickGoal(True)
         InteractWithAvatar.setGoalMgr(self, goalMgr)
+        taskMgr.doMethodLater(self.TRICK_TIMEOUT, self._expire, 'petTrickExpire-%s' % self.serialNum)
+
+    def _expire(self, task = None):
+        if self.goalMgr is not None:
+            PetGoal.notify.info('dropping a trick goal that did not finish')
+            self.announceDone()
+        return Task.done
 
     def clearGoalMgr(self):
+        taskMgr.remove('petTrickExpire-%s' % self.serialNum)
         self.goalMgr._setHasTrickGoal(False)
         InteractWithAvatar.clearGoalMgr(self)
 
