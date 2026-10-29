@@ -8,8 +8,11 @@ from toontown.pets.PetNameGenerator import PetNameGenerator
 class PetManagerAI:
     notify = DirectNotifyGlobal.directNotify.newCategory('PetManagerAI')
 
+    SPAWN_DELAY = 8.0        # seconds a toon must have been here before its pet is generated (see __watchToonsBody)
+
     def __init__(self, air):
         self.air = air
+        self.arrived = {}        # avId -> when this district first saw the toon
         self.pets = {}           # avId -> DistributedPetAI currently out with its owner
         self.loading = set()     # avIds whose pet is being read from the database
         self.lastSave = 0.0
@@ -59,14 +62,25 @@ class PetManagerAI:
                 if not pet.isDeleted():
                     self.savePet(pet)
                     pet.requestDelete()
+        now = time.time()
+        here = set()
         for av in list(self.air.doId2do.values()):
             if av.__class__.__name__ != 'DistributedToonAI' or not hasattr(av, 'getPetId'):
                 continue
+            here.add(av.doId)
             petId = av.getPetId()
+            firstSeen = self.arrived.setdefault(av.doId, now)
+            # A doodle has one id for the whole game, but every district can generate it. A toon who has just come from another
+            # district still has its pet there for a few seconds (that district removes it on its next look); generating it here
+            # first lets the other district's delete take the new one away, leaving a pet that exists only in this district's memory.
+            if now - firstSeen < self.SPAWN_DELAY:
+                continue
             if petId and av.doId not in self.pets and av.doId not in self.loading and self.__canHavePet(av.zoneId, av.doId):
                 self.loading.add(av.doId)
                 self.__spawn(av.doId, petId, av.zoneId)
-        now = time.time()
+        for avId in list(self.arrived):
+            if avId not in here:
+                del self.arrived[avId]
         if now - self.lastSave > 60.0:
             self.lastSave = now
             for pet in list(self.pets.values()):
@@ -93,6 +107,15 @@ class PetManagerAI:
                 return v[0] if v else default
             dna = [f('setHead', -1), f('setEars', -1), f('setNose', -1), f('setTail', -1), f('setBodyTexture'),
                    f('setColor'), f('setColorScale'), f('setEyeColor'), f('setGender')]
+            stale = self.air.doId2do.get(petId)
+            if stale is not None and stale not in self.pets.values():
+                # left behind by an earlier delete that never finished: clear it so the pet can be generated again
+                self.notify.warning('clearing a stale pet %s before spawning it for %s' % (petId, avId))
+                try:
+                    self.air.removeDOFromTables(stale)
+                    stale.delete()
+                except Exception:
+                    self.notify.warning('could not clear the stale pet %s: %s' % (petId, traceback.format_exc()))
             pet = DistributedPetAI.DistributedPetAI(self.air, dna=dna)
             pet.setOwnerId(avId)
             pet.setPetName(f('setPetName', 'Doodle'))
