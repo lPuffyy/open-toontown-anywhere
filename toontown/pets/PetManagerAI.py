@@ -159,6 +159,7 @@ class PetManagerAI:
                 pet.trickAptitudes = list(apt[0])
             pet.generateWithRequiredAndId(petId, self.air.districtId, zoneId)
             self.pets[avId] = pet
+            self.__askWhereItIs(petId, zoneId)
 
         self.air.dbInterface.queryObject(self.air.dbId, petId, got)
 
