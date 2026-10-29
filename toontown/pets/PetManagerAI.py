@@ -116,7 +116,18 @@ class PetManagerAI:
                     stale.delete()
                 except Exception:
                     self.notify.warning('could not clear the stale pet %s: %s' % (petId, traceback.format_exc()))
-            pet = DistributedPetAI.DistributedPetAI(self.air, dna=dna)
+            pet = DistributedPetAI.DistributedPetAI(self.air)
+            # the look has to be on the pet before it is generated: a client builds the doodle's model from the values it is told at that
+            # moment, and applying them afterwards (what the dna argument does) leaves every doodle default white
+            pet.setHead(dna[0])
+            pet.setEars(dna[1])
+            pet.setNose(dna[2])
+            pet.setTail(dna[3])
+            pet.setBodyTexture(dna[4])
+            pet.setColor(dna[5])
+            pet.setColorScale(dna[6])
+            pet.setEyeColor(dna[7])
+            pet.setGender(dna[8])
             pet.setOwnerId(avId)
             pet.setPetName(f('setPetName', 'Doodle'))
             pet.setTraitSeed(f('setTraitSeed'))
