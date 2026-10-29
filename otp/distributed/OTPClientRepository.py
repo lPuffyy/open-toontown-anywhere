@@ -817,6 +817,14 @@ class OTPClientRepository(ClientRepositoryBase):
         self.handler = None
         return
 
+    def __blockWebAutoReconnect(self, block):
+        """The browser game answers "Try to connect again?" by itself (webui._auto_reconnect, which gives up after 3 tries in 3 minutes). When the
+        same account signed in somewhere else, two devices then boot each other in turn. For that one case switch it off: fill its list of recent
+        tries with times far in the future (block), and clear the list again when the box goes away."""
+        rc = getattr(sys.modules.get('webui'), '_rc', None)
+        if isinstance(rc, dict):
+            rc['tries'] = [time.time() + 86400.0] * 3 if block else []
+
     @report(types=['args', 'deltaStamp'], dConfigParam='teleport')
     def enterNoConnection(self):
         messenger.send('connectionIssue')
@@ -836,6 +844,7 @@ class OTPClientRepository(ClientRepositoryBase):
         reconnect = 1
         if self.bootedIndex in (152, 127):
             reconnect = 0
+        self.__blockWebAutoReconnect(self.bootedIndex == 100)
         self.launcher.setDisconnectDetails(self.bootedIndex, message)
         style = OTPDialog.Acknowledge
         if reconnect and self.loginInterface.supportsRelogin():
@@ -858,6 +867,7 @@ class OTPClientRepository(ClientRepositoryBase):
     @report(types=['args', 'deltaStamp'], dConfigParam='teleport')
     def exitNoConnection(self):
         self.handler = None
+        self.__blockWebAutoReconnect(False)
         self.ignore('lostConnectionAck')
         self.lostConnectionBox.cleanup()
         messenger.send('connectionRetrying')
