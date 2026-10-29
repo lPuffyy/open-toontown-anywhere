@@ -327,8 +327,8 @@ class ShardPage(ShtikerPage.ShtikerPage):
             self.invasionText['text'] = TTLocalizer.ShardPageInvasion % plural
             try:
                 self.cogHead = Suit.attachSuitHead(self.detail, invasion)
-                self.cogHead.setScale(self.cogHead.getScale() * 1.5)
-                self.cogHead.setPos(0.2, 0, 0.0)
+                self.cogHead.setScale(self.cogHead.getScale() * 1.2)
+                self.cogHead.setPos(0.5, 0, -0.1)         # beside the globe: nearer the middle it covered the population line
             except Exception:
                 self.notify.warning('could not show the invading Cog head')
                 self.cogHead = None
