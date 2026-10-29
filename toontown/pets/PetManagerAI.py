@@ -146,6 +146,8 @@ class PetManagerAI:
             pet.setEyeColor(dna[7])
             pet.setGender(dna[8])
             pet.setOwnerId(avId)
+            if zoneId == av.zoneId and (av.getX() or av.getY()):
+                pet.spawnNear = (av.getX(), av.getY())       # appear beside its owner, not at a fixed spot (the owner's position is known once they have moved)
             pet.setPetName(f('setPetName', 'Doodle'))
             pet.setTraitSeed(f('setTraitSeed'))
             pet.setSafeZone(f('setSafeZone', zoneId))

@@ -41,6 +41,7 @@ class DistributedPetAI(DistributedSmoothNodeAI.DistributedSmoothNodeAI, PetLooke
         self.traitSeed = 0
         self.safeZone = ToontownGlobals.ToontownCentral
         self.initialDNA = dna
+        self.spawnNear = None          # (x, y) to appear beside, set before generating; otherwise a random spot near the zone's origin
         self.active = 1
         self.activated = 0
         self._outOfBounds = False
@@ -509,7 +510,10 @@ class DistributedPetAI(DistributedSmoothNodeAI.DistributedSmoothNodeAI, PetLooke
         self.activated = 1
         self.announceZoneChange(self.zoneId, ToontownGlobals.QuietZone)
         self.b_setParent(ToontownGlobals.SPRender)
-        self.setPos(randFloat(-20, 20), randFloat(-20, 20), 0)
+        if self.spawnNear is not None:
+            self.setPos(self.spawnNear[0] + randFloat(-5, 5), self.spawnNear[1] + randFloat(-5, 5), 0)
+        else:
+            self.setPos(randFloat(-20, 20), randFloat(-20, 20), 0)
         self.setH(randFloat(360))
         if self.initialDNA:
             self.setDNA(self.initialDNA)
