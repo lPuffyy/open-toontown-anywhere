@@ -2268,8 +2268,6 @@ class OTPClientRepository(ClientRepositoryBase):
             parentId = di.getUint32()
             zoneId = di.getUint32()
             classId = di.getUint16()
-            if 'Pet' in self.dclassesByNumber[classId].getName():
-                print('doodle call: %s %s entering %s:%s' % (self.dclassesByNumber[classId].getName(), doId, parentId, zoneId))
 
             # Determine whether or not we should add this generate
             # to the pending generates, or just generate it right away.
@@ -2287,8 +2285,6 @@ class OTPClientRepository(ClientRepositoryBase):
                 break
             else:
                 self.notify.warning('Received generate for %d from %d:%d, which is not a part of any existing interests!' % (doId, parentId, zoneId))
-                if 'Pet' in self.dclassesByNumber[classId].getName():
-                    print('doodle call: no interest covers pet %s at %s:%s' % (doId, parentId, zoneId))
                 interest = None
 
             if not interest or not interest.events:
@@ -2393,8 +2389,6 @@ class OTPClientRepository(ClientRepositoryBase):
                 # Nah. In this case, we'll use generateWithRequiredFields.
                 distObj = self.generateWithRequiredFields(dclass, doId, di, parentId, zoneId)
 
-            if 'Pet' in dclass.getName():
-                print('doodle call: pet %s became %s' % (doId, type(distObj).__name__))
             # We're done.
             dclass.stopGenerate()
 

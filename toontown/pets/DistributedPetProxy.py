@@ -152,7 +152,6 @@ class DistributedPetProxy(DistributedObject.DistributedObject):
         self.setLastSeenTimestamp(self.lastSeenTimestamp)
         self.updateOfflineMood()
         self.sendGenerateMessage = 1
-        print('doodle call: battle doodle %s arrived' % self.doId)
 
     def disable(self):
         if hasattr(self, 'lastKnownMood'):
@@ -171,7 +170,6 @@ class DistributedPetProxy(DistributedObject.DistributedObject):
 
     def setDominantMood(self, dominantMood):
         self.dominantMood = dominantMood
-        print('doodle call: doodle %s mood %s (announce %s)' % (self.doId, dominantMood, self.sendGenerateMessage))
         if self.sendGenerateMessage == 1:
             proxyGenerateMessage = 'petProxy-%d-generated' % self.doId
             messenger.send(proxyGenerateMessage)

@@ -1212,7 +1212,6 @@ class DistributedBattleBase(DistributedNode, BattleBase):
         elif mode == 'PETSOSINFO':
             petProxyId = response['id']
             self.notify.debug('got a PETSOSINFO for pet: %d' % petProxyId)
-            print('doodle call: asking the server for pet %s (already here: %s)' % (petProxyId, petProxyId in base.cr.doId2do))
             if petProxyId in base.cr.doId2do:
                 self.notify.debug('pet: %d was already in the repository' % petProxyId)
                 proxyGenerateMessage = 'petProxy-%d-generated' % petProxyId
