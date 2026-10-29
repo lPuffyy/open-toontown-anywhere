@@ -416,10 +416,27 @@ class ToontownClientRepository(OTPClientRepository.OTPClientRepository):
         pad.delayDelete = DelayDelete.DelayDelete(avatar, 'getAvatarDetails')
         avId = avatar.doId
         self.__queryAvatarMap[avId] = pad
-        self.__sendGetAvatarDetails(avId)
+        if __astron__:
+            # Astron has no "get avatar details" request. A toon on this shard already has all its fields, so answer from that; for any
+            # other toon there is nothing to ask, and the panel says no information is available.
+            taskMgr.doMethodLater(0.05, self.__answerAvatarDetails, 'avatarDetails-%d' % avId, extraArgs=[avId])
+        else:
+            self.__sendGetAvatarDetails(avId)
+
+    def __answerAvatarDetails(self, avId):
+        pad = self.__queryAvatarMap.pop(avId, None)
+        if pad is None:
+            return
+        gotData = int(self.doId2do.get(avId) is pad.avatar)
+        if isinstance(pad.func, str):
+            messenger.send(pad.func, list((gotData, pad.avatar) + pad.args))
+        else:
+            pad.func(*(gotData, pad.avatar) + pad.args)
+        pad.delayDelete.destroy()
 
     def cancelAvatarDetailsRequest(self, avatar):
         avId = avatar.doId
+        taskMgr.remove('avatarDetails-%d' % avId)
         if avId in self.__queryAvatarMap:
             pad = self.__queryAvatarMap.pop(avId)
             pad.delayDelete.destroy()
@@ -599,17 +616,17 @@ class ToontownClientRepository(OTPClientRepository.OTPClientRepository):
     if not __astron__:
         def handleCloseShard(self, msgType, di):
             if msgType == CLIENT_CREATE_OBJECT_REQUIRED:
-                di2 = PyDatagramIterator(di)
+                di2 = PyDatagramIterator(di.getDatagram(), di.getCurrentIndex())
                 parentId = di2.getUint32()
                 if self._doIdIsOnCurrentShard(parentId):
                     return
             elif msgType == CLIENT_CREATE_OBJECT_REQUIRED_OTHER:
-                di2 = PyDatagramIterator(di)
+                di2 = PyDatagramIterator(di.getDatagram(), di.getCurrentIndex())
                 parentId = di2.getUint32()
                 if self._doIdIsOnCurrentShard(parentId):
                     return
             elif msgType == CLIENT_OBJECT_UPDATE_FIELD:
-                di2 = PyDatagramIterator(di)
+                di2 = PyDatagramIterator(di.getDatagram(), di.getCurrentIndex())
                 doId = di2.getUint32()
                 if self._doIdIsOnCurrentShard(doId):
                     return
@@ -617,17 +634,17 @@ class ToontownClientRepository(OTPClientRepository.OTPClientRepository):
     else:
         def handleCloseShard(self, msgType, di):
             if msgType == CLIENT_ENTER_OBJECT_REQUIRED:
-                di2 = PyDatagramIterator(di)
+                di2 = PyDatagramIterator(di.getDatagram(), di.getCurrentIndex())
                 parentId = di2.getUint32()
                 if self._doIdIsOnCurrentShard(parentId):
                     return
             elif msgType == CLIENT_ENTER_OBJECT_REQUIRED_OTHER:
-                di2 = PyDatagramIterator(di)
+                di2 = PyDatagramIterator(di.getDatagram(), di.getCurrentIndex())
                 parentId = di2.getUint32()
                 if self._doIdIsOnCurrentShard(parentId):
                     return
             elif msgType == CLIENT_OBJECT_SET_FIELD:
-                di2 = PyDatagramIterator(di)
+                di2 = PyDatagramIterator(di.getDatagram(), di.getCurrentIndex())
                 doId = di2.getUint32()
                 if self._doIdIsOnCurrentShard(doId):
                     return

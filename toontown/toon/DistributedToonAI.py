@@ -288,6 +288,7 @@ class DistributedToonAI(DistributedPlayerAI.DistributedPlayerAI, DistributedSmoo
                 self.exitEstate()
             if self.zoneId != ToontownGlobals.QuietZone:
                 self.announceZoneChange(ToontownGlobals.QuietZone, self.zoneId)
+        taskMgr.remove(self.uniqueName('invasionBulletin'))
         taskName = self.uniqueName('cheesy-expires')
         taskMgr.remove(taskName)
         taskName = self.uniqueName('next-catalog')
@@ -2675,7 +2676,12 @@ class DistributedToonAI(DistributedPlayerAI.DistributedPlayerAI, DistributedSmoo
         if self.isPlayerControlled():
             DistributedPlayerAI.DistributedPlayerAI.incrementPopulation(self)
             if self.air.suitInvasionManager.getInvading():
-                taskMgr.doMethodLater(5.0, lambda task: (self.air.suitInvasionManager.sendBulletin(self.doId), task.done)[1], self.uniqueName('invasionBulletin'))
+                taskMgr.doMethodLater(5.0, self.__sendInvasionBulletin, self.uniqueName('invasionBulletin'))
+
+    def __sendInvasionBulletin(self, task):
+        if self.air:                    # the toon may have left in the five seconds since
+            self.air.suitInvasionManager.sendBulletin(self.doId)
+        return task.done
 
     def decrementPopulation(self):
         if self.isPlayerControlled():
