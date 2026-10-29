@@ -197,7 +197,6 @@ class PetManagerAI:
                 apt = fields.get('setTrickAptitudes')
                 if apt:
                     proxy.trickAptitudes = list(apt[0])
-                proxy.dbObject = 1
                 proxy.generateWithRequiredAndId(petId, self.air.districtId, zoneId)
                 proxy.broadcastDominantMood()
                 self.__askWhereItIs(petId, zoneId)
