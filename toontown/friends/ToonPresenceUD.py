@@ -1,6 +1,7 @@
 import json
 import os
 import time
+import traceback
 
 from direct.directnotify import DirectNotifyGlobal
 from direct.distributed.DistributedObjectGlobalUD import DistributedObjectGlobalUD
@@ -18,6 +19,7 @@ class ToonPresenceUD(DistributedObjectGlobalUD):
         DistributedObjectGlobalUD.__init__(self, air)
         self.online = {}                    # avId -> set of that toon's friends' avIds
         self.district = {}                  # avId -> name of the district the toon is in
+        self.detailsAsked = {}              # avId of a client -> when it last asked for a toon's details
         taskMgr.doMethodLater(self.STATUS_EVERY, self.__writeStatus, 'toonPresenceStatus')
 
     def __writeStatus(self, task):
@@ -85,6 +87,46 @@ class ToonPresenceUD(DistributedObjectGlobalUD):
     def __friends(self, a, b):
         """True when a and b are both playing and b has a as a friend."""
         return a in self.online and b in self.online and a in self.online[b]
+
+    # ---- another toon's details, for the toon details panel: read from the database, whether or not that toon is playing
+    DETAILS_COOLDOWN = 0.5               # seconds a client must wait between two requests
+
+    def requestAvatarDetails(self, avId):
+        asker = self.air.getAvatarIdFromSender()
+        if not asker or not avId:
+            return
+        now = time.time()
+        if now - self.detailsAsked.get(asker, 0.0) < self.DETAILS_COOLDOWN:
+            return
+        self.detailsAsked[asker] = now
+        if len(self.detailsAsked) > 500:
+            self.detailsAsked = {a: t for a, t in self.detailsAsked.items() if now - t < 10.0}
+
+        def refuse():
+            self.sendUpdateToAvatarId(asker, 'avatarDetailsResponse', [avId, 1, b'', b'', [], 0, 0, 0, 0])
+
+        def answer(dclass, fields):
+            try:
+                if dclass != self.air.dclassesByName['DistributedToonUD'] or not fields:
+                    return refuse()
+
+                def get(name, default):
+                    value = fields.get(name)
+                    return value[0] if value else default
+                experience, inventory = get('setExperience', None), get('setInventory', None)
+                if experience is None or inventory is None:
+                    return refuse()
+                self.sendUpdateToAvatarId(asker, 'avatarDetailsResponse', [avId, 0, experience, inventory,
+                 list(get('setTrackAccess', [0, 0, 0, 0, 1, 1, 0])), get('setMaxHp', 15), get('setHp', 15),
+                 get('setDefaultShard', 0), get('setLastHood', 0)])
+            except Exception:
+                self.notify.warning('could not answer a details request for toon %s: %s' % (avId, traceback.format_exc()))
+                refuse()
+        try:
+            self.air.dbInterface.queryObject(self.air.dbId, avId, answer)
+        except Exception:
+            self.notify.warning('could not ask the database for toon %s: %s' % (avId, traceback.format_exc()))
+            refuse()
 
     def relayTeleportQuery(self, toAvId):
         fromAvId = self.air.getAvatarIdFromSender()

@@ -6,6 +6,7 @@ from direct.interval.IntervalGlobal import ivalMgr
 from direct.distributed.PyDatagram import PyDatagram
 from direct.distributed.PyDatagramIterator import PyDatagramIterator
 from direct.fsm import State
+import traceback
 from direct.showbase.PythonUtil import Functor, ScratchPad
 from otp.avatar import Avatar
 from otp.distributed import OTPClientRepository
@@ -417,17 +418,39 @@ class ToontownClientRepository(OTPClientRepository.OTPClientRepository):
         avId = avatar.doId
         self.__queryAvatarMap[avId] = pad
         if __astron__:
-            # Astron has no "get avatar details" request. A toon on this shard already has all its fields, so answer from that; for any
-            # other toon there is nothing to ask, and the panel says no information is available.
-            taskMgr.doMethodLater(0.05, self.__answerAvatarDetails, 'avatarDetails-%d' % avId, extraArgs=[avId])
+            # Astron has no "get avatar details" request: ask the UberDOG's ToonPresence, which reads the toon from the database. If nothing
+            # comes back the panel says no information is available.
+            self.toonPresence.up_requestAvatarDetails(avId)
+            taskMgr.doMethodLater(10.0, self.__answerAvatarDetails, 'avatarDetails-%d' % avId, extraArgs=[avId, None])
         else:
             self.__sendGetAvatarDetails(avId)
 
-    def __answerAvatarDetails(self, avId):
+    def handleAvatarDetailsResponse(self, avId, code, experience, inventory, trackAccess, maxHp, hp, shard, lastHood):
+        taskMgr.remove('avatarDetails-%d' % avId)
+        details = None if code else (experience, inventory, trackAccess, maxHp, hp, shard, lastHood)
+        self.__answerAvatarDetails(avId, details)
+
+    def __answerAvatarDetails(self, avId, details):
         pad = self.__queryAvatarMap.pop(avId, None)
         if pad is None:
             return
-        gotData = int(self.doId2do.get(avId) is pad.avatar)
+        gotData = 0
+        if details:
+            experience, inventory, trackAccess, maxHp, hp, shard, lastHood = details
+            avatar = pad.avatar
+            try:
+                avatar.setExperience(experience)
+                avatar.setInventory(inventory)
+                avatar.setDefaultShard(shard)
+                avatar.setLastHood(lastHood)
+                if self.doId2do.get(avId) is not avatar:
+                    # a toon we cannot see: fill in the rest too. For a toon beside us these arrive already, and are more up to date.
+                    avatar.setTrackAccess(trackAccess)
+                    avatar.setMaxHp(maxHp)
+                    avatar.setHp(hp)
+                gotData = 1
+            except Exception:
+                self.notify.warning('could not use the details of avatar %d: %s' % (avId, traceback.format_exc()))
         if isinstance(pad.func, str):
             messenger.send(pad.func, list((gotData, pad.avatar) + pad.args))
         else:

@@ -20,7 +20,13 @@ class ToonPresence(DistributedObjectGlobal):
     def up_removeFriend(self, toAvId):
         self.sendUpdate('relayRemoveFriend', [toAvId])
 
+    def up_requestAvatarDetails(self, avId):
+        self.sendUpdate('requestAvatarDetails', [avId])
+
     # ---- from the server
+    def avatarDetailsResponse(self, avId, code, experience, inventory, trackAccess, maxHp, hp, shard, lastHood):
+        base.cr.handleAvatarDetailsResponse(avId, code, experience, inventory, trackAccess, maxHp, hp, shard, lastHood)
+
     def friendOnline(self, friendId, online):
         if hasattr(base, 'localAvatar'):
             base.localAvatar.setFriendOnline(friendId, online)
