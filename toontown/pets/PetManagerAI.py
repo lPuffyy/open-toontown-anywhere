@@ -13,6 +13,7 @@ class PetManagerAI:
     def __init__(self, air):
         self.air = air
         self.arrived = {}        # avId -> when this district first saw the toon
+        self.whyLogged = {}      # avId -> when we last said why its doodle is not out
         self.pets = {}           # avId -> DistributedPetAI currently out with its owner
         self.loading = set()     # avIds whose pet is being read from the database
         self.lastSave = 0.0
@@ -45,6 +46,13 @@ class PetManagerAI:
         host = self.air.doId2do.get(ownerId)
         return host is not None and host.zoneId in estateMgr.getEstateZones(ownerId)
 
+    def __why(self, av, now, reason):
+        """Say (at most once a minute per toon) why a toon with a doodle has none beside it: otherwise a doodle that never shows leaves no trace."""
+        last = self.whyLogged.get(av.doId, 0.0)
+        if now - last >= 60.0:
+            self.whyLogged[av.doId] = now
+            self.notify.info('toon %s has a doodle but none is out: %s' % (av.doId, reason))
+
     def __watchToons(self, task):
         # a pet bug must never take the district down: log it and try again on the next tick
         try:
@@ -73,9 +81,17 @@ class PetManagerAI:
             # A doodle has one id for the whole game, but every district can generate it. A toon who has just come from another
             # district still has its pet there for a few seconds (that district removes it on its next look); generating it here
             # first lets the other district's delete take the new one away, leaving a pet that exists only in this district's memory.
+            if petId and av.doId not in self.pets:
+                if now - firstSeen < self.SPAWN_DELAY:
+                    self.__why(av, now, 'waiting for the arrival delay')
+                elif av.doId in self.loading:
+                    self.__why(av, now, 'still reading the doodle from the database')
+                elif not self.__canHavePet(av.zoneId, av.doId):
+                    self.__why(av, now, 'no doodle allowed in zone %s' % av.zoneId)
             if now - firstSeen < self.SPAWN_DELAY:
                 continue
             if petId and av.doId not in self.pets and av.doId not in self.loading and self.__canHavePet(av.zoneId, av.doId):
+                self.notify.info('spawning the doodle %s of %s in zone %s' % (petId, av.doId, av.zoneId))
                 self.loading.add(av.doId)
                 self.__spawn(av.doId, petId, av.zoneId)
         for avId in list(self.arrived):
@@ -100,6 +116,7 @@ class PetManagerAI:
             self.loading.discard(avId)
             av = self.air.doId2do.get(avId)
             if fields is None or av is None or av.zoneId != zoneId or avId in self.pets:
+                self.notify.info('not spawning the doodle %s of %s: %s' % (petId, avId, 'the database has no record of it' if fields is None else 'the toon moved or already has it'))
                 return
 
             def f(name, default=0):
