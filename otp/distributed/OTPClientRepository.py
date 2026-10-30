@@ -20,6 +20,10 @@ from direct.showbase import MessengerLeakDetector
 from direct.showbase.GarbageReportScheduler import GarbageReportScheduler
 from direct.showbase import LeakDetectors
 from direct.distributed.PyDatagram import PyDatagram
+try:
+    from direct.distributed.ConnectionRepository import CConnectionRepository
+except ImportError:
+    CConnectionRepository = None
 from otp.avatar.DistributedPlayer import DistributedPlayer
 from otp.login import LoginTTSpecificDevAccount
 from otp.login.CreateAccountScreen import CreateAccountScreen
@@ -1196,8 +1200,8 @@ class OTPClientRepository(ClientRepositoryBase):
 
     @report(types=['args'], dConfigParam='teleport')
     def detectLeaks(self, okTasks = None, okEvents = None):
-        if not __dev__ or configIsToday('allow-unclean-exit'):
-            return
+        if not __dev__ or configIsToday('allow-unclean-exit') or not ConfigVariableBool('detect-leaks', False).value:
+            return          # a developer aid: in the browser build it threw a NameError on every district change and cut the player's connection
         leakedTasks = self.detectLeakedTasks(okTasks)
         leakedEvents = self.detectLeakedEvents(okEvents)
         leakedIvals = self.detectLeakedIntervals()
@@ -1324,7 +1328,7 @@ class OTPClientRepository(ClientRepositoryBase):
          'TCRSetZoneDone',
          'aspectRatioChanged',
          'newDistributedDirectory',
-         CConnectionRepository.getOverflowEventName(),
+         CConnectionRepository.getOverflowEventName() if CConnectionRepository else 'overflow',
          self._getLostConnectionEvent(),
          'render-texture-targets-changed',
          'gotExtraFriendHandles']
