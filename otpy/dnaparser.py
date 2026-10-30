@@ -1,7 +1,7 @@
 """Reader for Disney's text DNA files (the grammar of Open Toontown's dnaParser.yxx / dnaLexer.lxx), written as a small recursive-descent parser."""
 import re
 
-from panda3d.core import Filename, FontPool, Loader, LoaderOptions, LVecBase3f, LVecBase4f, NodePath, TexturePool, oldToNewHpr
+from panda3d.core import ConfigVariableBool, Filename, FontPool, Loader, LoaderOptions, LVecBase3f, LVecBase4f, NodePath, TexturePool, oldToNewHpr
 
 from . import dna as D
 
@@ -52,6 +52,10 @@ def _tokenize(text, errors):
         else:
             errors.append("line %d: stray character %r" % (line, s))
     return out
+
+
+# keep neighbourhood and street models in memory after the first visit: going back is then nearly instant, at the cost of memory
+_RAM_CACHE_HOOD_MODELS = ConfigVariableBool("dna-ram-cache-hood-models", False)
 
 
 class _Parser:
@@ -187,7 +191,9 @@ class _Parser:
             else:
                 self.model_kind = 1 if kw == "HOOD_MODEL" else 2
                 opts = LoaderOptions()
-                opts.set_flags(opts.get_flags() | LoaderOptions.LF_no_ram_cache)
+                if not _RAM_CACHE_HOOD_MODELS.get_value():
+                    # (the original game kept a neighbourhood's own models out of the memory cache, so each visit reads them again)
+                    opts.set_flags(opts.get_flags() | LoaderOptions.LF_no_ram_cache)
                 node = loader.load_sync(fn, opts)
         except Exception as e:                       # noqa
             D._log("could not load model", fn, e)
