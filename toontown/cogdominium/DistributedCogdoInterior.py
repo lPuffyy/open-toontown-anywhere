@@ -178,7 +178,21 @@ class DistributedCogdoInterior(DistributedObject.DistributedObject):
         self.cageLowerSfx = loader.loadSfx('phase_5/audio/sfx/CHQ_SOS_cage_lower.ogg')
         self.sendUpdate('setAvatarJoined', [])
 
+    def __narrowView(self):
+        # on a wide screen the edges of the picture show the room beyond the elevator's front plate (as in DistributedSuitInterior)
+        if getattr(self, 'savedHfov', None) is None:
+            hfov = base.camLens.getHfov()
+            if hfov > 52.0:
+                self.savedHfov = hfov
+                base.camLens.setFov(52.0)
+
+    def __restoreView(self):
+        if getattr(self, 'savedHfov', None) is not None:
+            base.camLens.setFov(self.savedHfov)
+            self.savedHfov = None
+
     def disable(self):
+        self.__restoreView()
         self.fsm.requestFinalState()
         self.__cleanupIntervals()
         self.ignoreAll()
@@ -485,12 +499,13 @@ class DistributedCogdoInterior(DistributedObject.DistributedObject):
         self.elevatorModelIn.reparentTo(elevIn)
         self.leftDoorIn.setPos(3.5, 0, 0)
         self.rightDoorIn.setPos(-3.5, 0, 0)
+        self.__narrowView()
         camera.reparentTo(self.elevatorModelIn)
         camera.setH(180)
         camera.setP(0)
         camera.setPos(0, 14, 4)
         base.playMusic(self.elevatorMusic, looping=1, volume=0.8)
-        track = Sequence(Func(base.transitions.noTransitions), ElevatorUtils.getRideElevatorInterval(ELEVATOR_NORMAL), ElevatorUtils.getOpenInterval(self, self.leftDoorIn, self.rightDoorIn, self.openSfx, None, type=ELEVATOR_NORMAL), Func(camera.wrtReparentTo, render))
+        track = Sequence(Func(base.transitions.noTransitions), ElevatorUtils.getRideElevatorInterval(ELEVATOR_NORMAL), ElevatorUtils.getOpenInterval(self, self.leftDoorIn, self.rightDoorIn, self.openSfx, None, type=ELEVATOR_NORMAL), Func(camera.wrtReparentTo, render), Func(self.__restoreView))
         for toon in self.toons:
             track.append(Func(toon.wrtReparentTo, render))
 
@@ -520,6 +535,7 @@ class DistributedCogdoInterior(DistributedObject.DistributedObject):
         self.d_elevatorDone()
 
     def exitElevator(self):
+        self.__restoreView()
         self.elevatorMusic.stop()
         if self._movie:
             self._movie.end()

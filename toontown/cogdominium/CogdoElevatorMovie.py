@@ -29,6 +29,8 @@ class CogdoElevatorMovie(CogdoGameMovie):
         self.toonHead.reparentTo(aspect2d)
         self._toonDialogueSfx.play()
         self.toonHead.setClipPlane(self.clipPlane)
+        # the browser's graphics layer has no clip planes: also cut at the same line with a scissor box
+        self.toonHead.setScissor(self.clipPlane, Point3(-50, -50, 0), Point3(50, 50, 50))
 
     def makeSuit(self, suitType):
         self.notify.debug('makeSuit()')

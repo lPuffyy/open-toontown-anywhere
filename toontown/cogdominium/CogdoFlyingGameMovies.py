@@ -27,11 +27,15 @@ class CogdoFlyingGameIntro(CogdoGameMovie):
             self.cogHead.reparentTo(hidden)
             self._toonDialogueSfx.play()
             self.toonHead.setClipPlane(self.clipPlane)
+            # the browser's graphics layer has no clip planes: also cut at the same line with a scissor box
+            self.toonHead.setScissor(self.clipPlane, Point3(-50, -50, 0), Point3(50, 50, 50))
         else:
             self.toonHead.reparentTo(hidden)
             self.cogHead.reparentTo(aspect2d)
             self._cogDialogueSfx.play()
             self.cogHead.setClipPlane(self.clipPlane)
+            # the browser's graphics layer has no clip planes: also cut at the same line with a scissor box
+            self.cogHead.setScissor(self.clipPlane, Point3(-50, -50, 0), Point3(50, 50, 50))
 
     def makeSuit(self, suitType):
         suit = Suit.Suit()
