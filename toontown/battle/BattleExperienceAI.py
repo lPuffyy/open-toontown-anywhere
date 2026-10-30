@@ -136,6 +136,15 @@ def assignRewards(activeToons, toonSkillPtsGained, suitsKilled, zoneId, helpfulT
             totalExp = exp + toon.experience.getExp(i)
             if toon.inventory.numItem(i, uberIndex) > 0:
                 hasUber = 1
+            # Maxing a track (reaching its level 7 gag) gives one of that gag straight away, even with a full bag (the inventory lets
+            # level 7 gags past the carry limit); more are then earned every 500 skill points as before.
+            unlockAt = ToontownBattleGlobals.Levels[i][uberIndex]
+            if not hasUber and exp > 0 and toon.experience.getExp(i) < unlockAt <= totalExp:
+                toon.experience.setExp(i, unlockAt)
+                if toon.inventory.addItem(i, uberIndex) > 0:
+                    hasUber = 1
+                    BattleExperienceAINotify.info('toon %d maxed track %d: awarded its level 7 gag' % (toon.doId, i))
+                exp = totalExp - unlockAt
             if totalExp >= needed or totalExp >= ToontownBattleGlobals.MaxSkill:
                 if toon.inventory.totalProps < toon.getMaxCarry() and not hasUber:
                     uberLevel = ToontownBattleGlobals.LAST_REGULAR_GAG_LEVEL + 1
