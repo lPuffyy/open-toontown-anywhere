@@ -11,9 +11,6 @@ from toontown.toonbase import TTLocalizer
 from direct.showbase import PythonUtil
 
 class Elevator(StateData.StateData):
-    # The camera rides behind the elevator and looks in through its front plate, which is only as wide as the original 4:3 view needs. On a
-    # wider screen the edges of the picture show the room beyond early, so the view is narrowed while the toon is on board.
-    BoardedMaxHfov = 40.0
 
     def __init__(self, elevatorState, doneEvent, distElevator):
         StateData.StateData.__init__(self, doneEvent)
@@ -32,7 +29,6 @@ class Elevator(StateData.StateData):
         distElevator.elevatorFSM = self
         self.reverseBoardingCamera = False
         self.skipDFABoard = 0
-        self.savedHfov = None
 
     def load(self):
         self.elevatorState.addChild(self.fsm)
@@ -41,20 +37,7 @@ class Elevator(StateData.StateData):
         self.downButton = self.buttonModels.find('**/InventoryButtonDown')
         self.rolloverButton = self.buttonModels.find('**/InventoryButtonRollover')
 
-    def narrowView(self):
-        if self.savedHfov is None:
-            hfov = base.camLens.getHfov()
-            if hfov > self.BoardedMaxHfov:
-                self.savedHfov = hfov
-                base.camLens.setFov(self.BoardedMaxHfov)
-
-    def restoreView(self):
-        if self.savedHfov is not None:
-            base.camLens.setFov(self.savedHfov)
-            self.savedHfov = None
-
     def unload(self):
-        self.restoreView()
         self.elevatorState.removeChild(self.fsm)
         self.distElevator.elevatorFSM = None
         del self.distElevator
@@ -72,7 +55,6 @@ class Elevator(StateData.StateData):
         self.fsm.request('elevatorDFA')
 
     def exit(self):
-        self.restoreView()
         self.ignoreAll()
 
     def signalDone(self, doneStatus):
@@ -114,7 +96,6 @@ class Elevator(StateData.StateData):
         pass
 
     def enterBoarding(self, nodePath):
-        self.narrowView()
         camera.wrtReparentTo(nodePath)
         if self.reverseBoardingCamera:
             heading = PythonUtil.fitDestAngle2Src(camera.getH(nodePath), 180)
@@ -160,13 +141,13 @@ class Elevator(StateData.StateData):
         pass
 
     def exitElevatorClosing(self):
-        self.restoreView()
+        pass
 
     def enterExiting(self):
         pass
 
     def exitExiting(self):
-        self.restoreView()
+        pass
 
     def enterFinal(self):
         pass
