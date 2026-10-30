@@ -139,7 +139,15 @@ class DistributedFurnitureManager(DistributedObject.DistributedObject):
 
     def moveItemFromAtticResponse(self, retcode, objectId, context):
         if retcode >= 0:
-            dfitem = base.cr.doId2do[objectId]
+            dfitem = base.cr.doId2do.get(objectId)
+            if dfitem is None:
+                # the server's answer can arrive before the new furniture object has been generated here: wait for it
+                # (the editor used to throw a KeyError and stop responding)
+                base.cr.relatedObjectMgr.requestObjects([objectId],
+                    allCallback=lambda objs: self.doCallbackContext(context, [retcode, objs[0]]),
+                    timeout=10,
+                    timeoutCallback=lambda ids: self.doCallbackContext(context, [-1, None]))
+                return
         else:
             dfitem = None
         self.doCallbackContext(context, [retcode, dfitem])
