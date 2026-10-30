@@ -100,9 +100,9 @@ class DistributedSuitInterior(DistributedObject.DistributedObject):
         # on a wide screen the edges of the picture show the room beyond the elevator's front plate (see Elevator.py)
         if getattr(self, 'savedHfov', None) is None:
             hfov = base.camLens.getHfov()
-            if hfov > 40.0:
+            if hfov > 52.0:
                 self.savedHfov = hfov
-                base.camLens.setFov(40.0)
+                base.camLens.setFov(52.0)
 
     def __restoreView(self):
         if getattr(self, 'savedHfov', None) is not None:
