@@ -82,6 +82,7 @@ Settings the person running the server may want to change live in one small file
 | `winter` | `"auto"` | Winter street decorations, the winter Speed Chat menu and the carol menu. `"auto"`: December 1 to January 3. `"on"` or `"off"` forces it. |
 | `valentines` | `"auto"` | Valentine's Day: double Toon-up from safe-zone hearts. `"auto"`: February 7 to 15. `"on"` or `"off"` forces it. |
 | `jellybean_days` | `"off"` | Extra jellybeans from trolley games and fishing. `"auto"`: every Saturday and Sunday. `"on"` forces it. Off unless you set it, because it changes the economy. |
+| `invasion_minutes` | `30` | A Cog invasion also ends by itself after this many minutes (it otherwise ends when 1000 Cogs are defeated). |
 
 The server looks at the file again every few seconds, so a change reaches the next battle without a restart (a holiday change takes up to a minute, and players already in the game see it at once). The browser game reads the same file
 (served as `/gameconfig.json`) when the page starts the game, so players pick the change up the next time they load the page. A missing file, or a

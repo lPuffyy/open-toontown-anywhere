@@ -1,6 +1,7 @@
 import random
 from direct.directnotify import DirectNotifyGlobal
 from toontown.suit import SuitDNA
+from toontown.toonbase import GameConfig
 from toontown.toonbase import ToontownGlobals
 
 class SuitInvasionManagerAI:
@@ -9,6 +10,7 @@ class SuitInvasionManagerAI:
     RandomCogCount = 1000
     RandomDelay = (10 * 60, 25 * 60)       # seconds between one random invasion ending (or the server starting) and the next
     EXCLUDED = ()
+    DurationMinutes = 30                     # an invasion also ends by itself after this long (gameconfig.json: invasion_minutes), so one nobody finishes does not run forever
     SAFE_DISTRICTS = ('Silly Meadow',)       # districts that never have an invasion
 
     def __init__(self, air):
@@ -54,11 +56,19 @@ class SuitInvasionManagerAI:
         self.notify.warning('invasion begins: %s x%d skeleton=%d' % (cogType, numSuits, self.skeleton))
         self.__broadcast(ToontownGlobals.SuitInvasionBegin)
         self.__publish()
+        taskMgr.remove('suitInvasionTimeout')
+        taskMgr.doMethodLater(max(0.1, float(GameConfig.get('invasion_minutes', self.DurationMinutes))) * 60, self.__timeout, 'suitInvasionTimeout')
         return True
+
+    def __timeout(self, task):
+        self.notify.warning('invasion of %s ends: time is up with %d left' % (self.cogType, self.numSuits))
+        self.stopInvasion()
+        return task.done
 
     def stopInvasion(self):
         if not self.getInvading():
             return
+        taskMgr.remove('suitInvasionTimeout')
         self.__broadcast(ToontownGlobals.SuitInvasionEnd)
         self.cogType = None
         self.skeleton = 0
