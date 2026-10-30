@@ -96,7 +96,21 @@ class DistributedSuitInterior(DistributedObject.DistributedObject):
         self.ignore(self.announceGenerateName)
         self.sendUpdate('setAvatarJoined', [])
 
+    def __narrowView(self):
+        # on a wide screen the edges of the picture show the room beyond the elevator's front plate (see Elevator.py)
+        if getattr(self, 'savedHfov', None) is None:
+            hfov = base.camLens.getHfov()
+            if hfov > 40.0:
+                self.savedHfov = hfov
+                base.camLens.setFov(40.0)
+
+    def __restoreView(self):
+        if getattr(self, 'savedHfov', None) is not None:
+            base.camLens.setFov(self.savedHfov)
+            self.savedHfov = None
+
     def disable(self):
+        self.__restoreView()
         self.fsm.requestFinalState()
         self.__cleanupIntervals()
         self.ignoreAll()
@@ -287,11 +301,12 @@ class DistributedSuitInterior(DistributedObject.DistributedObject):
         self.elevatorModelOut.reparentTo(elevOut)
         self.leftDoorOut.setPos(3.5, 0, 0)
         self.rightDoorOut.setPos(-3.5, 0, 0)
+        self.__narrowView()
         camera.reparentTo(self.elevatorModelIn)
         camera.setH(180)
         camera.setPos(0, 14, 4)
         base.playMusic(self.elevatorMusic, looping=1, volume=0.8)
-        track = Sequence(ElevatorUtils.getRideElevatorInterval(ELEVATOR_NORMAL), ElevatorUtils.getOpenInterval(self, self.leftDoorIn, self.rightDoorIn, self.openSfx, None, type=ELEVATOR_NORMAL), Func(camera.wrtReparentTo, render))
+        track = Sequence(ElevatorUtils.getRideElevatorInterval(ELEVATOR_NORMAL), ElevatorUtils.getOpenInterval(self, self.leftDoorIn, self.rightDoorIn, self.openSfx, None, type=ELEVATOR_NORMAL), Func(camera.wrtReparentTo, render), Func(self.__restoreView))
         for toon in self.toons:
             track.append(Func(toon.wrtReparentTo, render))
 
@@ -313,6 +328,7 @@ class DistributedSuitInterior(DistributedObject.DistributedObject):
         self.d_elevatorDone()
 
     def exitElevator(self):
+        self.__restoreView()
         self.elevatorMusic.stop()
         self.__finishInterval(self.elevatorName)
         return None
