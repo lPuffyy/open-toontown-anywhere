@@ -31,7 +31,11 @@ class CogdoMazeGuiManager:
     def _initTimer(self):
         self._timer = ToontownTimer()
         self._timer.hide()
-        self._timer.posInTopRightCorner()
+        # Hang it from the top-right screen corner (the same spot as posInTopRightCorner on a 4:3 screen), so a wide screen keeps it in the
+        # corner; the tag tells the browser version not to move it again while its "present" animation is sliding it into place.
+        self._timer.reparentTo(base.a2dTopRight)
+        self._timer.setPos(1.16 - 4.0 / 3.0, 0, 0.83 - 1.0)
+        self._timer.setTag('anch', '1')
 
     def _initMessageDisplay(self):
         self.messageDisplay = CogdoGameMessageDisplay('CogdoMazeMessageDisplay', self.root, pos=Globals.MessageLabelPos)
