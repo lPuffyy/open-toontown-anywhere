@@ -41,6 +41,7 @@ class CogdoElevatorMovie(CogdoGameMovie):
         suit.setScale(1, 1, 2)
         suit.setPos(0, 0, -4.4)
         suit.reparentTo(self.toonHead)
+        suit.loop('neutral')        # the disguise suit is its own character: without this it stood in its arms-out bind pose
         for part in suit.getHeadParts():
             part.hide()
 
