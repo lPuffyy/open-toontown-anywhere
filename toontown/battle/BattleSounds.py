@@ -5,7 +5,10 @@ class BattleSounds:
     notify = DirectNotifyGlobal.directNotify.newCategory('BattleSounds')
 
     def __init__(self):
-        self.mgr = AudioManager.createAudioManager()
+        # a build without Panda's own audio library (the browser) supplies its sound managers through ShowBase: a bare
+        # createAudioManager() there gives a silent one, which muted every gag sound and the max-gag fanfare
+        maker = getattr(base, 'makeExtraSfxManager', None)
+        self.mgr = maker() if maker is not None else AudioManager.createAudioManager()
         self.isValid = 0
         if self.mgr != None and self.mgr.isValid():
             self.isValid = 1
