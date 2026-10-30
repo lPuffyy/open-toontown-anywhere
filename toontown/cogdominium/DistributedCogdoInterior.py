@@ -402,6 +402,7 @@ class DistributedCogdoInterior(DistributedObject.DistributedObject):
 
     def enterWaitForAllToonsInside(self, ts = 0):
         base.transitions.fadeOut(0)
+        self.__narrowView()         # already narrow while the screen is black, so the ride's first frame is not drawn at the wide view
         return None
 
     def exitWaitForAllToonsInside(self):

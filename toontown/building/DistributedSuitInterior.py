@@ -255,6 +255,7 @@ class DistributedSuitInterior(DistributedObject.DistributedObject):
         return None
 
     def enterWaitForAllToonsInside(self, ts = 0):
+        self.__narrowView()         # before the ride's first frame, so it is never drawn at the wide view
         return None
 
     def exitWaitForAllToonsInside(self):
