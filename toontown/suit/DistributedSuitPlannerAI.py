@@ -47,7 +47,10 @@ class DistributedSuitPlannerAI(DistributedObjectAI.DistributedObjectAI, SuitPlan
     SUIT_BUILDING_NUM_SUITS = 1.5
     SUIT_BUILDING_TIMEOUT = [
      None, None, None, None, None, None, 72, 60, 48, 36, 24, 12, 6, 3, 1, 0.5]
-    TOTAL_SUIT_BUILDING_PCT = 18 * CogdoPopFactor
+    # The original game held 27% of all buildings (with Field Offices) for thousands of toons; a small town can't win that many back.
+    TOTAL_SUIT_BUILDING_PCT = config.GetFloat('cog-building-pct', 8.0)
+    STREET_MAX_PCT = config.GetFloat('cog-building-street-max-pct', 25.0)
+    TRIM_EVERY = config.GetFloat('cog-building-trim-minutes', 10.0) * 60.0
     BUILDING_HEIGHT_DISTRIBUTION = [
      14, 18, 25, 23, 20]
     TOTAL_BWEIGHT = 0
@@ -120,6 +123,8 @@ class DistributedSuitPlannerAI(DistributedObjectAI.DistributedObjectAI, SuitPlan
         self.pendingBuildingTracks = []
         self.pendingBuildingHeights = []
         self.pendingCogdoHeights = []
+        self.lastTrim = 0
+        self.trimming = False
         self.suitList = []
         self.numFlyInSuits = 0
         self.numBuildingSuits = 0
@@ -649,8 +654,49 @@ class DistributedSuitPlannerAI(DistributedObjectAI.DistributedObjectAI, SuitPlan
                     oldest.b_setVictorList([0, 0, 0, 0])
                     oldest.updateSavedBy([])
                     oldest.toonTakeOver()
+            self.__trimExtraBuildings()
         self.__waitForNextUpkeep()
         return Task.done
+
+    def streetCap(self):
+        """The most cog buildings and Field Offices this street may hold together."""
+        return max(1, int(len(self.frontdoorPointList) * self.STREET_MAX_PCT / 100))
+
+    def __trimExtraBuildings(self):
+        """When a street holds more cog buildings (or Field Offices) than it is meant to, because the town-wide share was lowered or
+        the street went over its cap, give the oldest idle one back to the toons now and then. It is not moved to another street."""
+        now = time.time()
+        if now - self.lastTrim < self.TRIM_EVERY:
+            return
+        cogdos = self.buildingMgr.getCogdoBlocks()
+        suits = [b for b in self.buildingMgr.getSuitBlocks() if b not in cogdos]
+        for blocks, target, state in ((suits, self.targetNumSuitBuildings, 'suit'), (cogdos, self.targetNumCogdos, 'cogdo')):
+            if len(blocks) <= target:
+                continue
+            oldest = None
+            for b in blocks:
+                building = self.buildingMgr.getBuilding(b)
+                if building.fsm.getCurrentState().getName() != state or hasattr(building, 'interior'):
+                    continue
+                elevator = getattr(building, 'elevator', None)
+                if elevator is None or elevator.fsm.getCurrentState().getName() != 'waitEmpty':
+                    continue
+                if oldest is None or building.becameSuitTime < oldest.becameSuitTime:
+                    oldest = building
+            if oldest is None:
+                continue
+            self.lastTrim = now
+            self.notify.info('Street %d has %d %s buildings for a target of %d; giving block %d back to the toons.' % (self.zoneId, len(blocks), state, target, oldest.block))
+            oldest.b_setVictorList([0, 0, 0, 0])
+            oldest.updateSavedBy([])
+            if state == 'cogdo':
+                oldest.buildingDefeated = True
+            self.trimming = True
+            try:
+                oldest.toonTakeOver()
+            finally:
+                self.trimming = False
+            return
 
     def adjustSuitPopulation(self, task):
         hoodInfo = self.SuitHoodInfo[self.hoodInfoIdx]
@@ -685,6 +731,8 @@ class DistributedSuitPlannerAI(DistributedObjectAI.DistributedObjectAI, SuitPlan
         building.cogdoTakeOver(suitTrack, difficulty, buildingHeight)
 
     def recycleBuilding(self, isCogdo):
+        if self.trimming:
+            return
         bmin = self.SuitHoodInfo[self.hoodInfoIdx][self.SUIT_HOOD_INFO_BMIN]
         current = len(self.buildingMgr.getSuitBlocks())
         target = self.targetNumSuitBuildings + self.targetNumCogdos
@@ -726,6 +774,7 @@ class DistributedSuitPlannerAI(DistributedObjectAI.DistributedObjectAI, SuitPlan
                     numBuildings = len(sp.buildingMgr.getSuitBlocks()) - len(sp.buildingMgr.getCogdoBlocks())
                 else:
                     numBuildings = 0
+                numBuildings = min(numBuildings, sp.streetCap())
                 if numBuildings > sp.targetNumSuitBuildings:
                     more = numBuildings - sp.targetNumSuitBuildings
                     sp.targetNumSuitBuildings += more
@@ -742,6 +791,7 @@ class DistributedSuitPlannerAI(DistributedObjectAI.DistributedObjectAI, SuitPlan
                         numCogdos = len(sp.buildingMgr.getCogdoBlocks())
                     else:
                         numCogdos = 0
+                    numCogdos = min(numCogdos, max(0, sp.streetCap() - sp.targetNumSuitBuildings))
                     if numCogdos > sp.targetNumCogdos:
                         more = numCogdos - sp.targetNumCogdos
                         sp.targetNumCogdos += more
@@ -840,7 +890,7 @@ class DistributedSuitPlannerAI(DistributedObjectAI.DistributedObjectAI, SuitPlan
                     numCogdos = 0
                     numBldgs = 0
                     numTotalBuildings = 0
-                if numCogdos + numBldgs >= currHoodInfo[self.SUIT_HOOD_INFO_BMAX] or numCogdos + numBldgs >= numTotalBuildings:
+                if numCogdos + numBldgs >= currHoodInfo[self.SUIT_HOOD_INFO_BMAX] or numCogdos + numBldgs >= numTotalBuildings or (zoneId in self.air.suitPlanners and numCogdos + numBldgs >= sp.streetCap()):
                     self.notify.info('Zone %d has enough buildings.' % zoneId)
                     hoodInfo.remove(currHoodInfo)
                     weight = currHoodInfo[self.SUIT_HOOD_INFO_BWEIGHT]
@@ -925,7 +975,7 @@ class DistributedSuitPlannerAI(DistributedObjectAI.DistributedObjectAI, SuitPlan
                     numCogdos = 0
                     numBldgs = 0
                     numTotalBuildings = 0
-                if numCogdos + numBldgs >= currHoodInfo[self.SUIT_HOOD_INFO_BMAX] or numCogdos + numBldgs >= numTotalBuildings:
+                if numCogdos + numBldgs >= currHoodInfo[self.SUIT_HOOD_INFO_BMAX] or numCogdos + numBldgs >= numTotalBuildings or (zoneId in self.air.suitPlanners and numCogdos + numBldgs >= sp.streetCap()):
                     self.notify.info('Zone %d has enough cogdos.' % zoneId)
                     hoodInfo.remove(currHoodInfo)
                     weight = currHoodInfo[self.SUIT_HOOD_INFO_BWEIGHT]
