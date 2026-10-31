@@ -19,7 +19,7 @@ import math, time, random
 
 class DistributedSuitPlannerAI(DistributedObjectAI.DistributedObjectAI, SuitPlannerBase.SuitPlannerBase):
     CogdoPopFactor = config.GetFloat('cogdo-pop-factor', 1.5)
-    CogdoRatio = min(1.0, max(0.0, config.GetFloat('cogdo-ratio', 0.5)))
+    CogdoRatio = min(1.0, max(0.0, config.GetFloat('cogdo-ratio', 0.2)))
     MinimumOfOne = config.GetBool('minimum-of-one-building', 0)
     SuitHoodInfo = [
      [
@@ -48,9 +48,9 @@ class DistributedSuitPlannerAI(DistributedObjectAI.DistributedObjectAI, SuitPlan
     SUIT_BUILDING_TIMEOUT = [
      None, None, None, None, None, None, 72, 60, 48, 36, 24, 12, 6, 3, 1, 0.5]
     # The original game held 27% of all buildings (with Field Offices) for thousands of toons; a small town can't win that many back.
-    TOTAL_SUIT_BUILDING_PCT = config.GetFloat('cog-building-pct', 8.0)
-    STREET_MAX_PCT = config.GetFloat('cog-building-street-max-pct', 25.0)
-    TRIM_EVERY = config.GetFloat('cog-building-trim-minutes', 10.0) * 60.0
+    TOTAL_SUIT_BUILDING_PCT = config.GetFloat('cog-building-pct', 12.0)
+    STREET_MAX_PCT = config.GetFloat('cog-building-street-max-pct', 40.0)
+    TRIM_EVERY = config.GetFloat('cog-building-trim-minutes', 20.0) * 60.0
     BUILDING_HEIGHT_DISTRIBUTION = [
      14, 18, 25, 23, 20]
     TOTAL_BWEIGHT = 0
