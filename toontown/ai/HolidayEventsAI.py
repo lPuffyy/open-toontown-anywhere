@@ -64,14 +64,14 @@ class ResistanceEventMgrAI(EventObjectHolidayAI):
 class FireworkManagerAI(HolidayBaseAI.HolidayBaseAI):
     """A fireworks holiday: a show in every playground at the top of each hour."""
     notify = DirectNotifyGlobal.directNotify.newCategory('FireworkManagerAI')
-    zoneToStyleDict = {ToontownGlobals.DonaldsDock: 5,
+    zoneToStyleDict = {ToontownGlobals.DockHarbor: 5,
                        ToontownGlobals.ToontownCentral: 0,
                        ToontownGlobals.TheBrrrgh: 4,
-                       ToontownGlobals.MinniesMelodyland: 3,
-                       ToontownGlobals.DaisyGardens: 1,
+                       ToontownGlobals.MelodyMeadow: 3,
+                       ToontownGlobals.GardenGrove: 1,
                        ToontownGlobals.OutdoorZone: 0,
-                       ToontownGlobals.GoofySpeedway: 0,
-                       ToontownGlobals.DonaldsDreamland: 2}
+                       ToontownGlobals.SpeedwayPark: 0,
+                       ToontownGlobals.SlumberSprings: 2}
 
     def __init__(self, air, holidayId):
         HolidayBaseAI.HolidayBaseAI.__init__(self, air, holidayId)
