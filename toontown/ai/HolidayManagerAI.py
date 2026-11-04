@@ -9,7 +9,9 @@ from toontown.toonbase import ToontownGlobals
 class HolidayManagerAI:
     """Decides which holidays are on and tells the players. The district announces the list through its news manager; the client does the rest
     (street decorations, a spooky sky, the holiday's Speed Chat phrases). A holiday is on between two dates (the server's date), or the person
-    running the server can force it on or off in gameconfig.json:  {"halloween": "auto"}  ("auto" = by date, "on", or "off"); the same for winter, valentines and jellybean_days."""
+    running the server can force it on or off in gameconfig.json:  {"halloween": "auto"}  ("auto" = by date, "on", or "off"); the same for every
+name in SCHEDULE. Holidays with a server side (Trick-or-Treat, caroling, fireworks, invasions, Bingo Night...) also get their runner
+(see runnerFor) started and stopped with them."""
     notify = DirectNotifyGlobal.directNotify.newCategory('HolidayManagerAI')
     CHECK_EVERY = 60.0                # seconds between looks at the date and the settings
 
@@ -17,12 +19,46 @@ class HolidayManagerAI:
     # wrap past New Year); weekdays is a set of datetime weekday numbers (Monday is 0) the holiday is on, or None for every day
     SCHEDULE = {
         'halloween': ([ToontownGlobals.HALLOWEEN_PROPS, ToontownGlobals.HALLOWEEN_COSTUMES], (10, 20), (11, 1), None),
+        'trick_or_treat': ([ToontownGlobals.TRICK_OR_TREAT], (10, 20), (11, 1), None),
+        'black_cat_day': ([ToontownGlobals.BLACK_CAT_DAY], (10, 31), (10, 31), None),
+        'halloween_invasion': ([ToontownGlobals.HALLOWEEN], (10, 31), (11, 1), None),
         'winter': ([ToontownGlobals.WINTER_DECORATIONS, ToontownGlobals.WINTER_CAROLING], (12, 1), (1, 3), None),
+        'new_years_fireworks': ([ToontownGlobals.NEWYEARS_FIREWORKS], (12, 31), (1, 1), None),
+        'july4_fireworks': ([ToontownGlobals.JULY4_FIREWORKS], (6, 30), (7, 4), None),
         'valentines': ([ToontownGlobals.VALENTINES_DAY], (2, 7), (2, 15), None),
+        'fish_bingo': ([ToontownGlobals.FISH_BINGO_NIGHT], (1, 1), (12, 31), {2}),
+        'polar_place': ([ToontownGlobals.POLAR_PLACE_EVENT], (1, 1), (12, 31), None),
+        'resistance_event': ([ToontownGlobals.RESISTANCE_EVENT], (1, 1), (12, 31), None),
         'jellybean_days': ([ToontownGlobals.JELLYBEAN_TROLLEY_HOLIDAY, ToontownGlobals.JELLYBEAN_FISHING_HOLIDAY, ToontownGlobals.JELLYBEAN_PARTIES_HOLIDAY], (1, 1), (12, 31), {5, 6}),
     }
-    # holidays that change the economy are off unless gameconfig.json asks for them ("auto" or "on")
-    DEFAULT_OFF = ('jellybean_days',)
+    # holidays that change the economy, or were one-off promotions, are off unless gameconfig.json asks for them ("auto" or "on")
+    DEFAULT_OFF = ('jellybean_days', 'polar_place', 'resistance_event', 'fish_bingo')
+
+    @staticmethod
+    def runnerFor(holidayId):
+        """The server object that runs a holiday while it is on (ported from the original game), or None."""
+        from toontown.ai import HolidayEventsAI as E
+        runners = {ToontownGlobals.VALENTINES_DAY: E.ValentinesDayMgrAI,
+                   ToontownGlobals.NEWYEARS_FIREWORKS: E.FireworkManagerAI,
+                   ToontownGlobals.JULY4_FIREWORKS: E.FireworkManagerAI,
+                   ToontownGlobals.HALLOWEEN: E.HolidaySuitInvasionManagerAI,
+                   ToontownGlobals.POLAR_PLACE_EVENT: E.PolarPlaceEventMgrAI,
+                   ToontownGlobals.RESISTANCE_EVENT: E.ResistanceEventMgrAI}
+        if holidayId in runners:
+            return runners[holidayId]
+        if holidayId == ToontownGlobals.TRICK_OR_TREAT:
+            from toontown.ai.TrickOrTreatMgrAI import TrickOrTreatMgrAI
+            return TrickOrTreatMgrAI
+        if holidayId == ToontownGlobals.WINTER_CAROLING:
+            from toontown.ai.WinterCarolingMgrAI import WinterCarolingMgrAI
+            return WinterCarolingMgrAI
+        if holidayId == ToontownGlobals.BLACK_CAT_DAY:
+            from toontown.ai.BlackCatHolidayMgrAI import BlackCatHolidayMgrAI
+            return BlackCatHolidayMgrAI
+        if holidayId == ToontownGlobals.FISH_BINGO_NIGHT:
+            from toontown.fishing.BingoNightHolidayAI import BingoNightHolidayAI
+            return BingoNightHolidayAI
+        return None
 
     def __init__(self, air):
         self.air = air
@@ -70,10 +106,24 @@ class HolidayManagerAI:
         if wanted == set(self.currentHolidays):
             return
         for holidayId in sorted(set(self.currentHolidays) - wanted):
-            self.currentHolidays.pop(holidayId, None)
+            runner = self.currentHolidays.pop(holidayId, None)
+            if runner is not None:
+                try:
+                    runner.stop()
+                except Exception:
+                    self.notify.warning('could not stop holiday %d: %s' % (holidayId, traceback.format_exc()))
             self.notify.info('holiday %d ended' % holidayId)
         for holidayId in sorted(wanted - set(self.currentHolidays)):
-            self.currentHolidays[holidayId] = None
+            runner = None
+            try:
+                cls = self.runnerFor(holidayId)
+                if cls is not None:
+                    runner = cls(self.air, holidayId)
+                    runner.start()
+            except Exception:
+                runner = None
+                self.notify.warning('could not start holiday %d: %s' % (holidayId, traceback.format_exc()))
+            self.currentHolidays[holidayId] = runner
             self.notify.info('holiday %d started' % holidayId)
         news = getattr(self.air, 'newsManager', None)
         if news is not None:

@@ -26,6 +26,8 @@ class FishBingoScheduleAI:
             self.ponds.remove(pond)
 
     def shouldRun(self):
+        if getattr(self, 'holidayOn', False):
+            return True           # the Bingo Night holiday (HolidayManagerAI: "fish_bingo") runs it all night
         if not self.ENABLED:
             return False
         return (time.time() % self.PERIOD) < self.DURATION
