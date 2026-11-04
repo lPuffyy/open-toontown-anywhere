@@ -63,6 +63,15 @@ name in SCHEDULE. Holidays with a server side (Trick-or-Treat, caroling, firewor
     def __init__(self, air):
         self.air = air
         self.currentHolidays = {}      # holiday id -> the object that runs it (or None); the id being a key is what the game code checks
+        self.forced = {}               # holiday id -> True/False, set by staff with a magic word until the server restarts
+
+    def forceHoliday(self, holidayId, on):
+        """A magic word turns a holiday on or off in this district (None goes back to the schedule)."""
+        if on is None:
+            self.forced.pop(holidayId, None)
+        else:
+            self.forced[holidayId] = bool(on)
+        self.update()
 
     def isHolidayRunning(self, holidayId):
         return holidayId in self.currentHolidays
@@ -103,6 +112,8 @@ name in SCHEDULE. Holidays with a server side (Trick-or-Treat, caroling, firewor
     def update(self, today=None):
         today = today or datetime.date.today()
         wanted = set(self.scheduledIds(today, lambda name: GameConfig.get(name, None)))
+        wanted |= {h for h, on in self.forced.items() if on}
+        wanted -= {h for h, on in self.forced.items() if not on}
         if wanted == set(self.currentHolidays):
             return
         for holidayId in sorted(set(self.currentHolidays) - wanted):

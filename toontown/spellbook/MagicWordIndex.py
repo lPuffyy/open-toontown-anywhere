@@ -827,6 +827,148 @@ class Fireworks(MagicWord):
             del self.fireworkShows[zoneId]
 
 
+# ---- staff words from the original game's magic word manager (rewritten for this one) --------------------------------------
+class SetMoney(MagicWord):
+    aliases = ["beans", "money"]
+    desc = "Sets the jelly beans a toon carries (up to their jar)."
+    execLocation = MagicWordConfig.EXEC_LOC_SERVER
+    arguments = [("amount", int, True)]
+
+    def handleWord(self, invoker, avId, toon, *args):
+        amount = max(0, min(args[0], toon.getMaxMoney()))
+        toon.b_setMoney(amount)
+        return f"{toon.getName()} now carries {amount} jelly beans."
+
+
+class SetBankMoney(MagicWord):
+    aliases = ["bank", "bankmoney"]
+    desc = "Sets the jelly beans in a toon's bank (up to its size)."
+    execLocation = MagicWordConfig.EXEC_LOC_SERVER
+    arguments = [("amount", int, True)]
+
+    def handleWord(self, invoker, avId, toon, *args):
+        amount = max(0, min(args[0], toon.getMaxBankMoney()))
+        toon.b_setBankMoney(amount)
+        return f"{toon.getName()} now has {amount} jelly beans in the bank."
+
+
+class Holiday(MagicWord):
+    aliases = ["startholiday", "endholiday"]
+    desc = "Turns a holiday on or off in this district until the server restarts (auto: back to the calendar)."
+    advancedDesc = "Use the holiday's id from ToontownGlobals, e.g. 13 Trick-or-Treat, 57 Winter Caroling, 2 New Year's fireworks, 3 Halloween invasions."
+    execLocation = MagicWordConfig.EXEC_LOC_SERVER
+    affectRange = [MagicWordConfig.AFFECT_SELF]
+    arguments = [("holidayId", int, True), ("onOffAuto", str, False, "on")]
+
+    def handleWord(self, invoker, avId, toon, *args):
+        holidayId, mode = args[0], args[1].lower()
+        on = {'on': True, 'off': False, 'auto': None}.get(mode, True)
+        self.air.holidayManager.forceHoliday(holidayId, on)
+        running = holidayId in self.air.holidayManager.currentHolidays
+        return f"Holiday {holidayId} is {'on' if running else 'off'} in this district ({mode})."
+
+
+class Invasion(MagicWord):
+    aliases = ["startinvasion", "stopinvasion", "endinvasion"]
+    desc = "Starts a cog invasion in this district (or stops one: ~invasion stop)."
+    execLocation = MagicWordConfig.EXEC_LOC_SERVER
+    affectRange = [MagicWordConfig.AFFECT_SELF]
+    arguments = [("cog", str, False, "random"), ("count", int, False, 1000), ("skeleton", int, False, 0)]
+
+    def handleWord(self, invoker, avId, toon, *args):
+        from toontown.suit import SuitDNA
+        mgr = self.air.suitInvasionManager
+        cog, count, skeleton = args[0].lower(), args[1], args[2]
+        if cog in ('stop', 'end', 'off'):
+            if not mgr.getInvading():
+                return "There is no invasion here."
+            mgr.stopInvasion()
+            return "Stopped the invasion."
+        if mgr.getInvading():
+            return "There is already an invasion here."
+        if cog == 'random':
+            cog = random.choice(SuitDNA.suitHeadTypes)
+        if cog not in SuitDNA.suitHeadTypes:
+            return f"Unknown cog '{cog}' (use a short name like 'tf' or 'random')."
+        if not mgr.startInvasion(cog, count, bool(skeleton)):
+            return "Could not start an invasion here (a safe district?)."
+        return f"Started an invasion of {count} {'skelecog ' if skeleton else ''}{cog}."
+
+
+class RentCannons(MagicWord):
+    aliases = ["cannons", "estatecannons"]
+    desc = "Gives a toon's estate the cannon rental (with the target and flying treasures) for some minutes."
+    execLocation = MagicWordConfig.EXEC_LOC_SERVER
+    arguments = [("minutes", int, False, 60)]
+
+    def handleWord(self, invoker, avId, toon, *args):
+        from toontown.estate.DistributedEstateAI import DistributedEstateAI
+        from toontown.toonbase import ToontownGlobals
+        estate = self.air.estateMgr.estate.get(toon.doId)
+        if estate is not None:
+            estate.rentItem(ToontownGlobals.RentalCannon, args[0])
+        else:
+            DistributedEstateAI.rentWhileAway(toon.doId, ToontownGlobals.RentalCannon, args[0])
+        return f"{toon.getName()}'s estate has cannons for {args[0]} minutes."
+
+
+class UnlockEmotes(MagicWord):
+    aliases = ["emotes", "allemotes"]
+    desc = "Unlocks every emote for a toon."
+    execLocation = MagicWordConfig.EXEC_LOC_SERVER
+
+    def handleWord(self, invoker, avId, toon, *args):
+        toon.b_setEmoteAccess([1] * len(toon.getEmoteAccess()))
+        return f"Unlocked every emote for {toon.getName()}."
+
+
+class SetCheesyEffect(MagicWord):
+    aliases = ["cheesy", "cheesyeffect"]
+    desc = "Gives a toon a cheesy effect (0 normal, 1 big head, 2 small head, ... 12 pumpkin, 14 snowman) for some minutes."
+    execLocation = MagicWordConfig.EXEC_LOC_SERVER
+    arguments = [("effect", int, True), ("minutes", int, False, 60)]
+
+    def handleWord(self, invoker, avId, toon, *args):
+        expire = int(time.time() / 60) + max(1, args[1]) if args[0] else 0
+        toon.b_setCheesyEffect(args[0], 0, expire)
+        return f"Gave {toon.getName()} cheesy effect {args[0]}."
+
+
+class PartyNow(MagicWord):
+    aliases = ["startpartynow"]
+    desc = "Lets a toon's planned party start right away (to test parties)."
+    execLocation = MagicWordConfig.EXEC_LOC_SERVER
+
+    def handleWord(self, invoker, avId, toon, *args):
+        from toontown.parties import PartyGlobals, PartyStoreAI
+        changed = None
+        with PartyStoreAI.transaction() as data:
+            for pid, p in data['parties'].items():
+                if p['hostId'] == toon.doId and p['status'] == PartyGlobals.PartyStatus.Pending:
+                    p['start'] = self.air.partyManager.now().strftime(PartyStoreAI.TIME_FORMAT)
+                    p['status'] = PartyGlobals.PartyStatus.CanStart
+                    changed = pid
+                    break
+        if changed is None:
+            return f"{toon.getName()} has no planned party waiting to start."
+        toon.sendUpdate('setPartyCanStart', [int(changed)])
+        self.air.partyManager.pushToToon(toon)
+        return f"{toon.getName()}'s party {changed} can start now (Events page)."
+
+
+class EndParty(MagicWord):
+    aliases = ["stopparty"]
+    desc = "Ends the party a toon is hosting in this district."
+    execLocation = MagicWordConfig.EXEC_LOC_SERVER
+
+    def handleWord(self, invoker, avId, toon, *args):
+        mgr = self.air.partyManager
+        if toon.doId not in mgr.parties:
+            return f"{toon.getName()} isn't hosting a party in this district."
+        mgr._DistributedPartyManagerAI__endParty(toon.doId)
+        return f"Ended {toon.getName()}'s party."
+
+
 # Instantiate all classes defined here to register them.
 # A bit hacky, but better than the old system
 for item in list(globals().values()):
