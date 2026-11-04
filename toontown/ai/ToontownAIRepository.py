@@ -213,6 +213,8 @@ class ToontownAIRepository(ToontownInternalRepository):
 
     def createGlobals(self):
         self.toonPresence = self.generateGlobalObject(OTP_DO_ID_TOON_PRESENCE, 'ToonPresence')
+        # the Codes tab of the Options page (every district listens; the one the toon is in answers)
+        self.codeRedemptionMgr = self.generateGlobalObject(OTP_DO_ID_TOONTOWN_CODE_REDEMPTION_MANAGER, 'TTCodeRedemptionMgr')
         taskMgr.doMethodLater(60.0, self.__refreshPresence, 'refreshPresence')
         """
         Creates "global" (distributed) objects.
