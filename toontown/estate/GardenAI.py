@@ -3,6 +3,7 @@
 An EstateGarden owns one DistributedGardenPlotAI per planting spot of the estate. Planting swaps the plot for a plant object, digging the
 plant up swaps the plot back. The state of every spot is saved to estate_data/<ownerId>_garden.json."""
 import json
+import math
 import os
 import time
 import traceback
@@ -36,11 +37,11 @@ class LawnDecorAI(DistributedNodeAI):
         return self.index
 
     def getHeading(self):
-        return self.garden.spots[self.index][2]
+        return self.garden.spotPlace(self.index)[2]
 
     def getPosition(self):
-        spot = self.garden.spots[self.index]
-        return (spot[0], spot[1], 0.0)
+        x, y, h = self.garden.spotPlace(self.index)
+        return (x, y, 0.0)
 
     def getOwnerIndex(self):
         return 0
@@ -338,6 +339,22 @@ class EstateGarden:
 
     def kindAt(self, index):
         return self.spots[index][3]
+
+    def spotPlace(self, index):
+        """(x, y, heading) of a planting spot. Tree and statue spots are written as x, y, heading; a flower spot is written as
+        (which flower bed, which slot in it), and stands in that slot of the bed (as the original game placed them)."""
+        spot = self.spots[index]
+        if spot[3] != GardenGlobals.FLOWER_TYPE:
+            return spot[0], spot[1], spot[2]
+        bx, by, bh, boxType = GardenGlobals.estateBoxes[0][spot[0]]
+        if boxType == GardenGlobals.BOX_THREE:
+            offset = -3.42 + spot[1] * 3.56
+        elif boxType == GardenGlobals.BOX_TWO:
+            offset = -1.8 + spot[1] * 3.6
+        else:
+            offset = 0.0
+        rad = math.radians(bh)
+        return bx + offset * math.cos(rad), by + offset * math.sin(rad), bh
 
     def __savePath(self):
         return os.path.join(SAVE_DIR, '%d_garden.json' % self.ownerId)

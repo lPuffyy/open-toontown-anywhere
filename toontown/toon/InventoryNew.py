@@ -958,6 +958,7 @@ class InventoryNew(InventoryBase.InventoryBase, DirectFrame):
         self.deleteExitButton.hide()
         self.runButton.hide()
         self.sosButton.hide()
+        self.fireButton.hide()             # (the battle's Fire button: planting is done by pressing a gag)
         self.passButton['text'] = TTLocalizer.lCancel
         self.passButton.show()
         for track in range(len(Tracks)):
