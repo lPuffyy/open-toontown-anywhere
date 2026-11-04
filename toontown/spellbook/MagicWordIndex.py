@@ -868,6 +868,24 @@ class Holiday(MagicWord):
         return f"Holiday {holidayId} is {'on' if running else 'off'} in this district ({mode})."
 
 
+class SillyPhase(MagicWord):
+    aliases = ["sillymeter", "setphase"]
+    desc = "Moves a phased holiday (the Silly Meter by default) to a phase in this district, until its next phase date."
+    advancedDesc = "Turn the holiday on first (~holiday 60). Ids: 60 Silly Meter, 58 Hydrant Zero, 61 Mailbox Zero, 62 Trashcan Zero, 64-66 street props in battle."
+    execLocation = MagicWordConfig.EXEC_LOC_SERVER
+    affectRange = [MagicWordConfig.AFFECT_SELF]
+    arguments = [("phase", int, True), ("holidayId", int, False, 60)]
+
+    def handleWord(self, invoker, avId, toon, *args):
+        phase, holidayId = args[0], args[1]
+        runner = self.air.holidayManager.currentHolidays.get(holidayId)
+        if runner is None or not hasattr(runner, 'forcePhase'):
+            return f"Holiday {holidayId} is not running here (~holiday {holidayId} on)."
+        if not runner.forcePhase(phase):
+            return f"Holiday {holidayId} has phases 0 to {runner.getNumPhases() - 1}."
+        return f"Holiday {holidayId} is at phase {phase}."
+
+
 class Invasion(MagicWord):
     aliases = ["startinvasion", "stopinvasion", "endinvasion"]
     desc = "Starts a cog invasion in this district (or stops one: ~invasion stop)."

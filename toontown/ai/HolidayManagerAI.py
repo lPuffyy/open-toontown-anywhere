@@ -26,6 +26,7 @@ name in SCHEDULE. Holidays with a server side (Trick-or-Treat, caroling, firewor
         'new_years_fireworks': ([ToontownGlobals.NEWYEARS_FIREWORKS], (12, 31), (1, 1), None),
         'july4_fireworks': ([ToontownGlobals.JULY4_FIREWORKS], (6, 30), (7, 4), None),
         'valentines': ([ToontownGlobals.VALENTINES_DAY], (2, 7), (2, 15), None),
+        'april_fools': ([ToontownGlobals.APRIL_FOOLS_COSTUMES], (3, 31), (4, 7), None),
         'fish_bingo': ([ToontownGlobals.FISH_BINGO_NIGHT], (1, 1), (12, 31), {2}),
         'polar_place': ([ToontownGlobals.POLAR_PLACE_EVENT], (1, 1), (12, 31), None),
         'resistance_event': ([ToontownGlobals.RESISTANCE_EVENT], (1, 1), (12, 31), None),
@@ -38,6 +39,10 @@ name in SCHEDULE. Holidays with a server side (Trick-or-Treat, caroling, firewor
     def runnerFor(holidayId):
         """The server object that runs a holiday while it is on (ported from the original game), or None."""
         from toontown.ai import HolidayEventsAI as E
+        from toontown.ai import SillyMeterHolidaysAI
+        silly = SillyMeterHolidaysAI.runnerClass(holidayId)
+        if silly is not None:
+            return silly
         runners = {ToontownGlobals.VALENTINES_DAY: E.ValentinesDayMgrAI,
                    ToontownGlobals.NEWYEARS_FIREWORKS: E.FireworkManagerAI,
                    ToontownGlobals.JULY4_FIREWORKS: E.FireworkManagerAI,
@@ -55,6 +60,8 @@ name in SCHEDULE. Holidays with a server side (Trick-or-Treat, caroling, firewor
         if holidayId == ToontownGlobals.BLACK_CAT_DAY:
             from toontown.ai.BlackCatHolidayMgrAI import BlackCatHolidayMgrAI
             return BlackCatHolidayMgrAI
+        if holidayId == ToontownGlobals.APRIL_FOOLS_COSTUMES:
+            return E.AprilFoolsManagerAI
         if holidayId == ToontownGlobals.FISH_BINGO_NIGHT:
             from toontown.fishing.BingoNightHolidayAI import BingoNightHolidayAI
             return BingoNightHolidayAI
@@ -75,6 +82,39 @@ name in SCHEDULE. Holidays with a server side (Trick-or-Treat, caroling, firewor
 
     def isHolidayRunning(self, holidayId):
         return holidayId in self.currentHolidays
+
+    def getCurPhase(self, holidayId):
+        """The phase a phased holiday (Silly Meter, the Zeros, street props helping in battle) is in, or -1."""
+        runner = self.currentHolidays.get(holidayId)
+        return runner.getCurPhase() if runner is not None and hasattr(runner, 'getCurPhase') else -1
+
+    # ---- the Silly Meter story and the street props (see SillyMeterHolidaysAI)
+    def sillyStart(self):
+        from toontown.ai import SillyMeterHolidaysAI
+        return SillyMeterHolidaysAI.parseStart(GameConfig.get('silly_meter_start', None))
+
+    def sillyIds(self, now):
+        from toontown.ai import SillyMeterHolidaysAI as S
+        storyStart = self.sillyStart()
+        ids = set(S.storyIds(now, storyStart))
+        for holidayId in S.PROP_BUFFS:
+            if S.propsTimes(holidayId, now, storyStart, GameConfig.get('silly_props', None)) is not None:
+                ids.add(holidayId)
+        return ids
+
+    def phaseTimes(self, holidayId):
+        """(start, end, phase dates) for a phased holiday that is starting now. A holiday a magic word forces on outside the story
+        starts at its first phase now (street props: helping)."""
+        from toontown.ai import SillyMeterHolidaysAI as S
+        now = datetime.datetime.today()
+        storyStart = self.sillyStart()
+        if holidayId in S.PROP_BUFFS:
+            return S.propsTimes(holidayId, now, storyStart, GameConfig.get('silly_props', None)) or S.propsTimes(holidayId, now, None, 'on')
+        if storyStart is not None:
+            start, end, phases = S.storyTimes(holidayId, storyStart)
+            if start <= now < end:
+                return start, end, phases
+        return S.storyTimes(holidayId, now - (S.STORY[holidayId][0] - S.STORY_START))
 
     def isMoreXpHolidayRunning(self):
         return ToontownGlobals.MORE_XP_HOLIDAY in self.currentHolidays
@@ -112,6 +152,18 @@ name in SCHEDULE. Holidays with a server side (Trick-or-Treat, caroling, firewor
     def update(self, today=None):
         today = today or datetime.date.today()
         wanted = set(self.scheduledIds(today, lambda name: GameConfig.get(name, None)))
+        wanted |= self.sillyIds(datetime.datetime.today())
+        storyStart = self.sillyStart()
+        if storyStart != getattr(self, 'lastSillyStart', None):
+            # the story's start date changed: restart its holidays so their phase managers get the new dates
+            from toontown.ai import SillyMeterHolidaysAI as S
+            if hasattr(self, 'lastSillyStart'):
+                for holidayId in [h for h in self.currentHolidays if h in S.STORY]:
+                    runner = self.currentHolidays.pop(holidayId)
+                    if runner is not None:
+                        runner.stop()
+                    self.notify.info('holiday %d ended (the Silly Meter story start changed)' % holidayId)
+            self.lastSillyStart = storyStart
         wanted |= {h for h, on in self.forced.items() if on}
         wanted -= {h for h, on in self.forced.items() if not on}
         if wanted == set(self.currentHolidays):

@@ -1,5 +1,7 @@
 from direct.directnotify import DirectNotifyGlobal
-from direct.distributed.DistributedObjectAI import DistributedObjectAI
+from toontown.ai.DistributedPhaseEventMgrAI import DistributedPhaseEventMgrAI
 
-class DistributedMailboxZeroMgrAI(DistributedObjectAI):
+
+class DistributedMailboxZeroMgrAI(DistributedPhaseEventMgrAI):
+    """Mailbox Zero, the street prop that wakes up first: which of his moves the clients play."""
     notify = DirectNotifyGlobal.directNotify.newCategory('DistributedMailboxZeroMgrAI')
