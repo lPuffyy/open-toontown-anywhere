@@ -96,11 +96,33 @@ class DistributedMailboxAI(DistributedObjectAI):
             retcode = ToontownGlobals.P_InvalidIndex
         self.sendUpdateToAvatarId(self.air.getAvatarIdFromSender(), 'discardItemResponse', [context, retcode])
 
+    # party invitations (the party manager keeps them; see DistributedPartyManagerAI)
+    def __answerInvite(self, context, inviteKey, status):
+        from toontown.parties import PartyGlobals
+        avId = self.air.getAvatarIdFromSender()
+        toon = self.air.doId2do.get(avId)
+        mine = toon is not None and any(i.inviteKey == inviteKey for i in getattr(toon, 'invites', []))
+        if not mine:
+            retcode = ToontownGlobals.P_InvalidIndex
+        elif self.air.partyManager.setInviteStatus(avId, inviteKey, status):
+            retcode = ToontownGlobals.P_ItemAvailable
+        else:
+            retcode = ToontownGlobals.P_InvalidIndex
+        self.sendUpdateToAvatarId(avId, 'acceptItemResponse', [context, retcode])
+
     def acceptInviteMessage(self, context, inviteKey):
-        pass
+        from toontown.parties import PartyGlobals
+        self.__answerInvite(context, inviteKey, PartyGlobals.InviteStatus.Accepted)
 
     def rejectInviteMessage(self, context, inviteKey):
-        pass
+        from toontown.parties import PartyGlobals
+        self.__answerInvite(context, inviteKey, PartyGlobals.InviteStatus.Rejected)
 
     def markInviteReadButNotReplied(self, inviteKey):
-        pass
+        from toontown.parties import PartyGlobals
+        avId = self.air.getAvatarIdFromSender()
+        toon = self.air.doId2do.get(avId)
+        for invite in getattr(toon, 'invites', []):
+            if invite.inviteKey == inviteKey and invite.status == PartyGlobals.InviteStatus.NotRead:
+                self.air.partyManager.setInviteStatus(avId, inviteKey, PartyGlobals.InviteStatus.ReadButNotReplied)
+                break

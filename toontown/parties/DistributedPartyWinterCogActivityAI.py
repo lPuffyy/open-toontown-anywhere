@@ -1,5 +1,12 @@
 from direct.directnotify import DirectNotifyGlobal
-from direct.distributed.DistributedObjectAI import DistributedObjectAI
+from toontown.parties import PartyGlobals
+from toontown.parties.DistributedPartyCogActivityAI import DistributedPartyCogActivityAI
 
-class DistributedPartyWinterCogActivityAI(DistributedObjectAI):
+
+class DistributedPartyWinterCogActivityAI(DistributedPartyCogActivityAI):
+    """The Cog activity in its holiday look."""
     notify = DirectNotifyGlobal.directNotify.newCategory('DistributedPartyWinterCogActivityAI')
+
+    def __init__(self, air, partyDoId, x, y, h):
+        DistributedPartyCogActivityAI.__init__(self, air, partyDoId, x, y, h)
+        self.activityId = PartyGlobals.ActivityIds.PartyWinterCog

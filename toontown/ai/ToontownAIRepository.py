@@ -168,6 +168,12 @@ class ToontownAIRepository(ToontownInternalRepository):
 
         # Create our quest manager...
         self.questManager = QuestManagerAI(self)
+
+        # The server's clock in its own time zone (parties and party invitations are dated by it)...
+        import time
+        from toontown.parties.ToontownTimeManager import ToontownTimeManager
+        self.toontownTimeManager = ToontownTimeManager(serverTimeUponLogin=int(time.time()),
+                                                       globalClockRealTimeUponLogin=globalClock.getRealTime())
         self.fishManager = FishManagerAI(self)
 
         # Create our promotion manager...
@@ -457,7 +463,20 @@ class ToontownAIRepository(ToontownInternalRepository):
         return spots
 
     def findPartyHats(self, dnaData, zoneId):
-        return []  # TODO
+        """The party gates of a playground ("party_gate" props in its map)."""
+        gates = []
+        if 'party_gate' in dnaData.getName():
+            from toontown.safezone.DistributedPartyGateAI import DistributedPartyGateAI
+            gate = DistributedPartyGateAI(self)
+            gate.generateWithRequired(zoneId)
+            gates.append(gate)
+        else:
+            if isinstance(dnaData, DNAVisGroup):
+                visId = int(dnaData.getName().split(':', 1)[0]) % 1000
+                zoneId = ZoneUtil.getHoodId(zoneId) + visId
+            for i in range(dnaData.getNumChildren()):
+                gates.extend(self.findPartyHats(dnaData.at(i), zoneId))
+        return gates
 
     def findRacingPads(self, dnaData, zoneId, area, type='racing_pad', overrideDNAZone=False):
         kartPads, kartPadGroups = [], []
