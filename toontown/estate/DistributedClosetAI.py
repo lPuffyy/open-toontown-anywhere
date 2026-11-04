@@ -18,7 +18,7 @@ class DistributedClosetAI(DistributedFurnitureItemAI):
     def d_setMovie(self, mode, avId):
         self.sendUpdate('setMovie', [mode, avId, globalClockDelta.getRealNetworkTime(bits=16)])
 
-    def __state(self, mode, av):
+    def _state(self, mode, av):
         tops = list(av.getClothesTopsList()) if av else []
         bots = list(av.getClothesBottomsList()) if av else []
         gender = av.dna.gender if av else 'm'
@@ -33,16 +33,16 @@ class DistributedClosetAI(DistributedFurnitureItemAI):
             self.sendUpdateToAvatarId(avId, 'freeAvatar', [])
             return
         self.customerId = avId
-        self.__state(ClosetGlobals.OPEN, av)
+        self._state(ClosetGlobals.OPEN, av)
         taskMgr.doMethodLater(ClosetGlobals.TIMEOUT_TIME, self.__timeout, self.uniqueName('timeout'))
 
     def __timeout(self, task):
         avId = self.customerId
         if avId:
             self.d_setMovie(ClosetGlobals.CLOSET_MOVIE_TIMEOUT, avId)
-        self.__finish()
+        self._finish()
 
-    def __finish(self):
+    def _finish(self):
         taskMgr.remove(self.uniqueName('timeout'))
         self.customerId = 0
         self.sendUpdate('setState', [ClosetGlobals.CLOSED, 0, self.getOwnerId(), 'm', [], []])
@@ -62,7 +62,7 @@ class DistributedClosetAI(DistributedFurnitureItemAI):
         if finished == 2 and avId == self.getOwnerId():
             self.__commit(av, blob, which)
         self.d_setMovie(ClosetGlobals.CLOSET_MOVIE_COMPLETE, avId)
-        self.__finish()
+        self._finish()
         self.d_setMovie(ClosetGlobals.CLOSET_MOVIE_CLEAR, 0)
 
     def __commit(self, av, blob, which):
@@ -109,4 +109,4 @@ class DistributedClosetAI(DistributedFurnitureItemAI):
                 else:
                     av.b_setClothesBottomsList(lst)
                 break
-        self.__state(ClosetGlobals.OPEN, av)
+        self._state(ClosetGlobals.OPEN, av)

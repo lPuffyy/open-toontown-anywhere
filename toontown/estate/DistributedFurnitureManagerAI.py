@@ -3,6 +3,7 @@ from direct.distributed.DistributedObjectAI import DistributedObjectAI
 from toontown.catalog import CatalogItem, CatalogItemList, CatalogFurnitureItem
 from toontown.estate.DistributedFurnitureItemAI import DistributedFurnitureItemAI
 from toontown.estate.DistributedClosetAI import DistributedClosetAI
+from toontown.estate.DistributedTrunkAI import DistributedTrunkAI
 from toontown.estate.DistributedBankAI import DistributedBankAI
 from toontown.estate.DistributedPhoneAI import DistributedPhoneAI
 
@@ -62,7 +63,9 @@ class DistributedFurnitureManagerAI(DistributedObjectAI):
 
     def __spawn(self, item):
         flags = item.getFlags()
-        if flags & CatalogFurnitureItem.FLCloset:
+        if flags & CatalogFurnitureItem.FLTrunk:
+            obj = DistributedTrunkAI(self.air, self, item)
+        elif flags & CatalogFurnitureItem.FLCloset:
             obj = DistributedClosetAI(self.air, self, item)
         elif flags & CatalogFurnitureItem.FLBank:
             obj = DistributedBankAI(self.air, self, item)
