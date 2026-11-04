@@ -98,6 +98,11 @@ class EstateManagerAI(DistributedObjectAI):
         self.houses[ownerId] = [house]
         estate.houses = self.houses[ownerId]
         owner.b_setHouseId(house.doId)
+        try:
+            estate.start()
+        except Exception:
+            import traceback
+            self.notify.warning('could not start the estate treasures or rental: %s' % traceback.format_exc())
         self.notify.info('created estate %s (zone %s) for toon %s' % (estate.doId, estateZone, ownerId))
 
     def __createGarden(self, owner, estate, estateZone):

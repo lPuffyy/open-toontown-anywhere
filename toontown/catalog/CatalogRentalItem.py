@@ -55,7 +55,9 @@ class CatalogRentalItem(CatalogItem.CatalogItem):
                 self.notify.debug('rental -- has estate')
                 estate.rentItem(self.typeIndex, self.duration)
             else:
-                self.notify.debug('rental -- something not there')
+                # bought away from home: the estate starts the rental when it is next built
+                from toontown.estate.DistributedEstateAI import DistributedEstateAI
+                DistributedEstateAI.rentWhileAway(avatar.doId, self.typeIndex, self.duration)
         return ToontownGlobals.P_ItemAvailable
 
     def getPicture(self, avatar):

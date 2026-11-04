@@ -38,6 +38,7 @@ class DistributedHouseAI(DistributedObjectAI):
         self.interiorWindows = b''
         self.deletedItems = b''
         self.cannonEnabled = 0
+        self.cannon = None
         self.extDoor = None
         self.intDoor = None
         self.interior = None
@@ -123,6 +124,20 @@ class DistributedHouseAI(DistributedObjectAI):
 
     def getCannonEnabled(self):
         return self.cannonEnabled
+
+    def setCannonEnabled(self, enabled, estateId=0, targetId=0):
+        """The estate's cannon rental: each house gets a cannon in front of it while it lasts."""
+        from toontown.estate import CannonGlobals
+        from toontown.estate.DistributedCannonAI import DistributedCannonAI
+        self.cannonEnabled = int(bool(enabled))
+        if self.cannonEnabled and self.cannon is None:
+            self.cannon = DistributedCannonAI(self.air, estateId, targetId, *CannonGlobals.cannonDrops[self.housePos])
+            self.cannon.generateWithRequired(self.estateZone)
+        elif not self.cannonEnabled and self.cannon is not None:
+            if not self.cannon.isDeleted():
+                self.cannon.requestDelete()
+            self.cannon = None
+        # (setCannonEnabled is a required field, not broadcast: the cannon itself is its own object the clients see)
 
     # building the house -------------------------------------------------------------------------------------------
     def generate_all(self):
@@ -232,9 +247,9 @@ class DistributedHouseAI(DistributedObjectAI):
     def destroy_all(self):
         if self.furnitureMgr is not None:
             self.furnitureMgr.destroy()
-        for obj in (self.mailbox, self.interior, self.intDoor, self.extDoor):
+        for obj in (self.cannon, self.mailbox, self.interior, self.intDoor, self.extDoor):
             if obj is not None and not obj.isDeleted():
                 obj.requestDelete()
-        self.furnitureMgr = self.mailbox = self.interior = self.intDoor = self.extDoor = None
+        self.furnitureMgr = self.cannon = self.mailbox = self.interior = self.intDoor = self.extDoor = None
         if not self.isDeleted():
             self.requestDelete()
