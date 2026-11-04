@@ -148,3 +148,19 @@ class HolidaySuitInvasionManagerAI(HolidayBaseAI.HolidayBaseAI):
             mgr.startInvasion(random.choice(SuitDNA.suitHeadTypes), self.NUM_SUITS, skeleton)
         if task is not None:
             return task.again
+
+
+class AprilFoolsManagerAI(HolidayBaseAI.HolidayBaseAI):
+    """April Toons: the clients do the rest (low gravity at estates, silly doodles, the April Toons SpeedChat menu); this tells
+    toons already at an estate to switch their gravity when the holiday starts or ends."""
+
+    def __send(self, field):
+        estateMgr = getattr(self.air, 'estateMgr', None)
+        if estateMgr is not None:
+            estateMgr.sendUpdate(field, [])
+
+    def start(self):
+        self.__send('startAprilFools')
+
+    def stop(self):
+        self.__send('stopAprilFools')
