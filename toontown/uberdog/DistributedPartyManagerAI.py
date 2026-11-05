@@ -109,8 +109,16 @@ class DistributedPartyManagerAI(DistributedObjectAI):
                             p['refunded'] = True
                             refunds.append((p['hostId'], int(pid), p.get('cost', 0)))
                 for hostId, run in list(data['running'].items()):
-                    if run.get('endTime', 0) + 120 < time.time():
-                        del data['running'][hostId]        # a party whose district went away without cleaning up
+                    if int(hostId) in self.parties:
+                        run['beat'] = time.time()          # (still going on here)
+                    elif run.get('beat', 0) + 3 * CHECK_EVERY < time.time():
+                        # a party whose district went away (restarted) without cleaning up: the host can start it again
+                        del data['running'][hostId]
+                runningIds = {run.get('partyId') for run in data['running'].values()}
+                for pid, p in data['parties'].items():
+                    if p['status'] == PartyStatus.Started and int(pid) not in runningIds:
+                        # (no district has it going any more, e.g. it was restarted: the host can start it again)
+                        p['status'] = PartyStatus.CanStart if now < self.parseTime(p['end']) else PartyStatus.Finished
                 # parties long over are forgotten after a week
                 old = [pid for pid, p in data['parties'].items()
                        if p['status'] in (PartyStatus.Cancelled, PartyStatus.Finished, PartyStatus.NeverStarted)
@@ -304,7 +312,7 @@ class DistributedPartyManagerAI(DistributedObjectAI):
             if started is None:
                 return None
             zoneId = self.air.allocateZone()
-            data['running'][str(hostId)] = {'partyId': started[0], 'shardId': self.air.districtId, 'zoneId': zoneId,
+            data['running'][str(hostId)] = {'partyId': started[0], 'shardId': self.air.districtId, 'zoneId': zoneId, 'beat': time.time(),
                                             'guests': 0, 'hostName': host.getName(), 'isPrivate': started[1]['isPrivate'],
                                             'activityIds': [a[0] for a in started[1]['activities']],
                                             'endTime': time.mktime(self.parseTime(started[1]['end']).timetuple())}
