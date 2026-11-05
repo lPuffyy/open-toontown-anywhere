@@ -230,7 +230,9 @@ class DistributedDivingGame(DistributedMinigame):
         camera.setZ(36)
         camera.setH(0)
         camera.setX(0)
-        base.camLens.setFov(45)
+        # (framed for a 4:3 screen: on a wide phone keep the same top-to-bottom view, or the treasure on the sea floor is cut off)
+        from toontown.toonbase.ToontownBattleGlobals import wideFov
+        base.camLens.setFov(wideFov(45, 1.0))
         camera.setY(-54)
         base.camLens.setFar(1500)
         self.introMovie = self.getIntroMovie()

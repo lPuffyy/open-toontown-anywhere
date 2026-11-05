@@ -855,7 +855,7 @@ def getUberFlagSafe(flagMask, index):
         return getUberFlag(flagMask, index)
 
 
-def wideFov(fov):
+def wideFov(fov, headroom = 1.22):
     """The battle cameras were framed for a 4:3 screen, where `fov` is the horizontal angle. On a wider screen the same horizontal angle
     shows far less up and down (Cog heads fall off the top), so widen the horizontal angle to keep the original vertical view."""
     import math
@@ -865,8 +865,8 @@ def wideFov(fov):
         return fov
     if aspect <= 4.0 / 3.0 + 0.01:
         return fov
-    h = 2.0 * math.degrees(math.atan(math.tan(math.radians(fov) / 2.0) * aspect / (4.0 / 3.0) * 1.22))
-    # (the extra 1.22 leaves headroom: tall Cogs still lost their heads behind the top of a phone screen)
+    h = 2.0 * math.degrees(math.atan(math.tan(math.radians(fov) / 2.0) * aspect / (4.0 / 3.0) * headroom))
+    # (the extra 1.22 leaves headroom: tall Cogs still lost their heads behind the top of a phone screen; fixed minigame cameras pass 1.0)
     return min(h, 130.0)
 
 

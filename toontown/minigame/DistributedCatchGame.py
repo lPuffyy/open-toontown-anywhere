@@ -336,6 +336,9 @@ class DistributedCatchGame(DistributedMinigame):
         self.scorePanels = []
         camera.reparentTo(render)
         camera.setPosHpr(*self.CameraPosHpr)
+        # (the overhead camera was framed for a 4:3 screen: on a wide phone keep the whole field top to bottom)
+        from toontown.toonbase.ToontownBattleGlobals import wideFov
+        base.camLens.setFov(max(ToontownGlobals.DefaultCameraFov, wideFov(52.0, 1.0)))
         lt = base.localAvatar
         lt.reparentTo(render)
         self.__placeToon(self.localAvId)
@@ -391,6 +394,7 @@ class DistributedCatchGame(DistributedMinigame):
         self.notify.debug('offstage')
         DistributedSmoothNode.activateSmoothing(1, 0)
         self.introMovie.finish()
+        base.camLens.setFov(ToontownGlobals.DefaultCameraFov)
         for avId in list(self.toonSDs.keys()):
             self.toonSDs[avId].exit()
 
