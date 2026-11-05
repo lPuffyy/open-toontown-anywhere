@@ -142,6 +142,13 @@ class AvatarChoice(DirectButton):
             trashcanGui = loader.loadModel('phase_3/models/gui/trashcan_gui')
             self.deleteButton = DirectButton(parent=self, image=(trashcanGui.find('**/TrashCan_CLSD'), trashcanGui.find('**/TrashCan_OPEN'), trashcanGui.find('**/TrashCan_RLVR')), text=('', TTLocalizer.AvatarChoiceDelete, TTLocalizer.AvatarChoiceDelete), text_fg=(1, 1, 1, 1), text_shadow=(0, 0, 0, 1), text_scale=0.15, text_pos=(0, -0.1), text_font=ToontownGlobals.getInterfaceFont(), relief=None, pos=DELETE_POSITIONS[position], scale=0.45, command=self.__handleDelete)
             trashcanGui.removeNode()
+            # bottom left, across from Delete (hidden while the toon still needs naming, where Name Your Toon sits)
+            guiButton = loader.loadModel('phase_3/models/gui/quit_button')
+            delX, delY, delZ = DELETE_POSITIONS[position]
+            self.makeoverButton = DirectButton(parent=self, relief=None, image=(guiButton.find('**/QuitBtn_UP'), guiButton.find('**/QuitBtn_DN'), guiButton.find('**/QuitBtn_RLVR')), image_scale=(1.35, 1, 1.6), text=TTLocalizer.AvatarChoiceMakeover, text_fg=(1, 1, 1, 1), text_shadow=(0, 0, 0, 1), text_scale=0.13, text_pos=(0, -0.04), text_font=ToontownGlobals.getInterfaceFont(), pos=(-delX - 0.04, 0, delZ + 0.03), scale=0.45, command=self.__handleMakeover)
+            guiButton.removeNode()
+            if not self.nameYourToonButton.isHidden():
+                self.makeoverButton.hide()
         self.resetFrameSize()
         self.avForLogging = None
         if av:
@@ -168,6 +175,12 @@ class AvatarChoice(DirectButton):
             del self.statusText
             self.deleteButton.destroy()
             del self.deleteButton
+            self.makeoverButton.destroy()
+            del self.makeoverButton
+            self.ignore('makeoverVerifyDone')
+            if hasattr(self, 'makeoverVerify'):
+                self.makeoverVerify.cleanup()
+                del self.makeoverVerify
             self.nameYourToonButton.destroy()
             del self.nameYourToonButton
             loader.unloadModel('phase_3/models/gui/trashcan_gui')
@@ -206,6 +219,21 @@ class AvatarChoice(DirectButton):
             platform.window.ttr.typeBtn = where
         except Exception:
             pass
+
+    def __handleMakeover(self):
+        cleanupDialog('globalDialog')
+        from toontown.makeatoon import Makeover
+        self.makeoverVerify = TTDialog.TTGlobalDialog(doneEvent='makeoverVerifyDone', message=TTLocalizer.AvatarChoiceMakeoverConfirm % {'name': self.name, 'cost': Makeover.cost()}, style=TTDialog.TwoChoice)
+        self.makeoverVerify.show()
+        self.accept('makeoverVerifyDone', self.__handleMakeoverVerified)
+
+    def __handleMakeoverVerified(self):
+        status = self.makeoverVerify.doneStatus
+        self.ignore('makeoverVerifyDone')
+        self.makeoverVerify.cleanup()
+        del self.makeoverVerify
+        if status == 'ok':
+            messenger.send(self.doneEvent, ['makeover', self.position])
 
     def __handleNameYourToon(self):
         messenger.send(self.doneEvent, ['nameIt', self.position])

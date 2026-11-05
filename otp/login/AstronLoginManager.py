@@ -58,3 +58,9 @@ class AstronLoginManager(DistributedObjectGlobal):
 
     def sendRequestPlayAvatar(self, avId):
         self.sendUpdate('requestPlayAvatar', [avId])
+
+    def sendRequestMakeover(self, avId, dnaString, newName):
+        self.sendUpdate('requestMakeover', [avId, dnaString, int(newName)])
+
+    def makeoverResponse(self, avId, result):
+        messenger.send('makeoverResponse', [avId, result])

@@ -92,6 +92,11 @@ class GenderShop(StateData.StateData):
         self._createRandomToon('f')
 
     def _createRandomToon(self, gender):
+        current = self.makeAToon.getToon()
+        if current is not None and current is not self.toon:
+            # a makeover starts with the toon as it is; put it aside (Make-a-Toon deletes it when it unloads)
+            current.reparentTo(hidden)
+            self.makeAToon.originalToon = current
         if self.toon:
             self.toon.stopBlink()
             self.toon.stopLookAroundNow()

@@ -343,6 +343,7 @@ class OTPClientRepository(ClientRepositoryBase):
                   self.exitCreateAvatar, [
                       'noConnection',
                       'chooseAvatar',
+                      'waitForAvatarList',
                       'waitForSetAvatarResponse',
                       'shutdown']),
             State('waitForDeleteAvatarResponse',

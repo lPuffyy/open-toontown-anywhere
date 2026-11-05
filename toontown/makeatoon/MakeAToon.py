@@ -24,13 +24,20 @@ from . import BodyShop
 from . import ColorShop
 from . import MakeClothesGUI
 from . import NameShop
+from . import Makeover
 import random
 
 class MakeAToon(StateData.StateData):
     notify = DirectNotifyGlobal.directNotify.newCategory('MakeAToon')
 
-    def __init__(self, parentFSM, avList, doneEvent, index, isPaid):
+    def __init__(self, parentFSM, avList, doneEvent, index, isPaid, makeover = False):
         self.isPaid = isPaid
+        # makeover: the toon in this slot already exists and goes through the shops again (see Makeover); makeoverPaid once the server saved it
+        self.makeoverAv = None
+        self.makeoverPaid = False
+        self.makeoverNewName = 0
+        self.makeoverDialog = None
+        self.originalToon = None
         StateData.StateData.__init__(self, doneEvent)
         self.phase = 3
         self.names = ['',
@@ -54,11 +61,15 @@ class MakeAToon(StateData.StateData):
                 self.namelessPotAv = av
             self.nameList.append(av.name)
 
+        if makeover and self.warp:
+            self.makeoverAv = self.namelessPotAv
+            self.warp = 0
         self.fsm = ClassicFSM.ClassicFSM('MakeAToon', [State.State('Init', self.enterInit, self.exitInit, ['GenderShop', 'NameShop']),
          State.State('GenderShop', self.enterGenderShop, self.exitGenderShop, ['BodyShop']),
          State.State('BodyShop', self.enterBodyShop, self.exitBodyShop, ['GenderShop', 'ColorShop']),
          State.State('ColorShop', self.enterColorShop, self.exitColorShop, ['BodyShop', 'ClothesShop']),
-         State.State('ClothesShop', self.enterClothesShop, self.exitClothesShop, ['ColorShop', 'NameShop']),
+         State.State('ClothesShop', self.enterClothesShop, self.exitClothesShop, ['ColorShop', 'NameShop', 'MakeoverFinish']),
+         State.State('MakeoverFinish', self.enterMakeoverFinish, self.exitMakeoverFinish, ['ClothesShop', 'NameShop']),
          State.State('NameShop', self.enterNameShop, self.exitNameShop, ['ClothesShop']),
          State.State('Done', self.enterDone, self.exitDone, [])], 'Init', 'Done')
         self.parentFSM = parentFSM
@@ -70,11 +81,16 @@ class MakeAToon(StateData.StateData):
         self.ns = NameShop.NameShop(self, 'NameShop-done', avList, index, self.isPaid)
         self.shop = GENDERSHOP
         self.shopsVisited = []
-        if self.warp:
+        if self.warp or self.makeoverAv:
             self.shopsVisited = [GENDERSHOP,
              BODYSHOP,
              COLORSHOP,
              CLOTHESSHOP]
+        if self.makeoverAv:
+            # the clothes shop also offers the outfit the toon has on now (while it stays the same gender)
+            dna = ToonDNA.ToonDNA()
+            dna.makeFromNetString(self.makeoverAv.dna)
+            self.cls.keepOutfit = (dna.getGender(), (dna.topTex, dna.topTexColor, dna.sleeveTex, dna.sleeveTexColor), (dna.botTex, dna.botTexColor))
         self.music = None
         self.soundBack = None
         self.fsm.enterInitialState()
@@ -106,6 +122,12 @@ class MakeAToon(StateData.StateData):
             self.toon.reparentTo(render)
             self.toon.loop('neutral')
             self.toon.setPosHpr(-4.1, -2, 0, 200, 0, 0)
+        elif self.makeoverAv:
+            self.toon.reparentTo(render)
+            self.toon.loop('neutral')
+            self.toon.setPos(self.toonPosition)
+            self.toon.setHpr(self.toonHpr)
+            self.toon.setScale(self.toonScale)
         self.guiTopBar.show()
         self.guiBottomBar.show()
         self.guiCancelButton.show()
@@ -238,7 +260,7 @@ class MakeAToon(StateData.StateData):
         self.smoke = render.attachNewNode(smokeSeqNode)
         self.smoke.setScale(1, 1, 0.75)
         self.smoke.hide()
-        if self.warp:
+        if self.warp or self.makeoverAv:
             self.dna = ToonDNA.ToonDNA()
             self.dna.makeFromNetString(self.namelessPotAv.dna)
             self.toon = Toon.Toon()
@@ -306,6 +328,15 @@ class MakeAToon(StateData.StateData):
         if self.toon:
             self.toon.delete()
         del self.toon
+        if self.originalToon:
+            self.originalToon.stopBlink()
+            self.originalToon.stopLookAroundNow()
+            self.originalToon.delete()
+            self.originalToon = None
+        self.ignore('makeoverResponse')
+        if self.makeoverDialog:
+            self.makeoverDialog.cleanup()
+            self.makeoverDialog = None
         self.cleanupDropIval()
         self.cleanupRoomSquishIval()
         self.cleanupPropSquishIval()
@@ -384,6 +415,8 @@ class MakeAToon(StateData.StateData):
             self.fsm.request('ColorShop')
         elif self.shop == COLORSHOP:
             self.fsm.request('ClothesShop')
+        elif self.makeoverAv and not self.makeoverPaid:
+            self.fsm.request('MakeoverFinish')
         else:
             self.fsm.request('NameShop')
 
@@ -594,6 +627,79 @@ class MakeAToon(StateData.StateData):
         self.ns.exit()
         self.ignore('NameShop-done')
         taskMgr.remove('nameShopOpeningTask')
+
+    def enterMakeoverFinish(self):
+        # the name room, with the question over it: pay and keep the name, pay and pick a new one, or the back arrow to the clothes
+        self.shop = NAMESHOP
+        self.guiTopBar['text'] = TTLocalizer.MakeoverTitle
+        self.guiTopBar['text_fg'] = (0.0, 0.98, 0.5, 1)
+        self.guiTopBar['text_scale'] = TTLocalizer.MATenterNameShop
+        self.dropRoom(self.nameWalls, self.nameProps)
+        self.spotlight.setPos(2, -1.95, 0.41)
+        self.spotlight.setScale(2.3)
+        self.toon.setPos(Point3(1.5, -4, 0))
+        self.toon.setH(120)
+        self.rotateLeftButton.hide()
+        self.rotateRightButton.hide()
+        self.guiLastButton.show()
+        self.acceptOnce('last', self.goToLastShop)
+        name = self.makeoverAv.name
+        self.__makeoverDialog(TTLocalizer.MakeoverFinish % {'cost': Makeover.cost(), 'name': name}, TTDialog.TwoChoice, self.__handleMakeoverChoice, okButtonText=TTLocalizer.MakeoverKeepName, cancelButtonText=TTLocalizer.MakeoverNewName)
+
+    def exitMakeoverFinish(self):
+        self.ignore('last')
+        self.ignore('makeoverResponse')
+        self.__clearMakeoverDialog()
+        self.guiLastButton.hide()
+        self.squishRoom(self.nameWalls)
+        self.squishProp(self.nameProps)
+        self.spotlight.setPos(1.18, -1.27, 0.41)
+        self.spotlight.setScale(2.6)
+
+    def __makeoverDialog(self, text, style, callback, **kw):
+        self.__clearMakeoverDialog()
+        self.makeoverDialog = TTDialog.TTGlobalDialog(doneEvent='makeoverDialogDone', message=text, style=style, fadeScreen=0, pos=(0, 0, 0.25), **kw)
+        self.makeoverDialog.show()
+        if callback:
+            self.acceptOnce('makeoverDialogDone', callback)
+
+    def __clearMakeoverDialog(self):
+        self.ignore('makeoverDialogDone')
+        if self.makeoverDialog:
+            self.makeoverDialog.cleanup()
+            self.makeoverDialog = None
+
+    def __handleMakeoverChoice(self):
+        self.makeoverNewName = int(self.makeoverDialog.doneStatus != 'ok')
+        self.guiLastButton.hide()
+        self.ignore('last')
+        self.__makeoverDialog(TTLocalizer.MakeoverWaiting, TTDialog.NoButtons, None)
+        self.acceptOnce('makeoverResponse', self.__handleMakeoverResponse)
+        base.cr.astronLoginManager.sendRequestMakeover(self.makeoverAv.id, self.toon.style.makeNetString(), self.makeoverNewName)
+
+    def __handleMakeoverResponse(self, avId, result):
+        if result == Makeover.OK:
+            self.makeoverPaid = True
+            self.__clearMakeoverDialog()
+            self.makeoverAv.dna = self.toon.style.makeNetString()
+            if self.makeoverNewName:
+                # now the toon is waiting for a name, like a toon that was never named: the usual name shop does the rest
+                self.warp = 1
+                self.namelessPotAv = self.makeoverAv
+                self.nameList = [n for n in self.nameList if n != self.makeoverAv.name]
+                self.progressing = 0
+                self.fsm.request('NameShop')
+            else:
+                self.doneStatus = 'makeover'
+                base.transitions.fadeOut(finishIval=EventInterval(self.doneEvent))
+            return
+        if result == Makeover.NOT_ENOUGH_BEANS:
+            text = TTLocalizer.MakeoverNotEnough % {'name': self.makeoverAv.name, 'cost': Makeover.cost()}
+        elif result == Makeover.NOT_ALLOWED:
+            text = TTLocalizer.MakeoverNotAllowed
+        else:
+            text = TTLocalizer.MakeoverFailed
+        self.__makeoverDialog(text, TTDialog.Acknowledge, lambda: self.fsm.request('ClothesShop'))
 
     def rejectName(self):
         self.ns.rejectName(TTLocalizer.RejectNameText)

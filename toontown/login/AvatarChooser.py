@@ -265,7 +265,7 @@ class AvatarChooser(StateData.StateData):
             self.__handleCreate()
         elif panelDoneStatus == 'delete':
             self.__handleDelete()
-        elif panelDoneStatus == 'create':
+        elif panelDoneStatus in ('create', 'makeover'):
             self.__handleCreate()
 
     def getChoice(self):

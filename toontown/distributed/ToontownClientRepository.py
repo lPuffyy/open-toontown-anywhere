@@ -269,6 +269,8 @@ class ToontownClientRepository(OTPClientRepository.OTPClientRepository):
             self.downloadAck.enter(4)
         elif done == 'create':
             self.loginFSM.request('createAvatar', [avList, index])
+        elif done == 'makeover':
+            self.loginFSM.request('createAvatar', [avList, index, None, True])
         elif done == 'delete':
             self.loginFSM.request('waitForDeleteAvatarResponse', [avatarChoice])
 
@@ -294,7 +296,7 @@ class ToontownClientRepository(OTPClientRepository.OTPClientRepository):
         self.avChoice.exit()
         self.loginFSM.request('createAvatar', [avList, index])
 
-    def enterCreateAvatar(self, avList, index, newDNA = None):
+    def enterCreateAvatar(self, avList, index, newDNA = None, makeover = False):
         if self.music:
             self.music.stop()
             self.music = None
@@ -305,7 +307,7 @@ class ToontownClientRepository(OTPClientRepository.OTPClientRepository):
              ''], newDNA.makeNetString(), index, 1)
             avList.append(self.newPotAv)
         base.transitions.noFade()
-        self.avCreate = MakeAToon.MakeAToon(self.loginFSM, avList, 'makeAToonComplete', index, self.isPaid())
+        self.avCreate = MakeAToon.MakeAToon(self.loginFSM, avList, 'makeAToonComplete', index, self.isPaid(), makeover=makeover)
         self.avCreate.load()
         self.avCreate.enter()
         if not __astron__:
@@ -326,7 +328,11 @@ class ToontownClientRepository(OTPClientRepository.OTPClientRepository):
 
     def __handleMakeAToon(self, avList, avPosition):
         done = self.avCreate.getDoneStatus()
-        if done == 'cancel':
+        if done == 'makeover' or done == 'cancel' and self.avCreate.makeoverPaid:
+            # the toon's look (and maybe name state) changed on the server: fetch the list again so Pick-a-Toon shows it
+            self.avCreate.exit()
+            self.loginFSM.request('waitForAvatarList')
+        elif done == 'cancel':
             if hasattr(self, 'newPotAv'):
                 if self.newPotAv in avList:
                     avList.remove(self.newPotAv)

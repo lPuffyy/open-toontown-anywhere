@@ -13,6 +13,13 @@ class MakeClothesGUI(ClothesGUI.ClothesGUI):
         if gender != self.gender:
             self.tops = ToonDNA.getRandomizedTops(gender, tailorId=ToonDNA.MAKE_A_TOON)
             self.bottoms = ToonDNA.getRandomizedBottoms(gender, tailorId=ToonDNA.MAKE_A_TOON)
+            # a makeover (MakeAToon sets keepOutfit) also offers the clothes the toon wears now, first, while it stays the same gender
+            keep = getattr(self, 'keepOutfit', None)
+            if keep and keep[0] == gender:
+                if keep[1] not in self.tops:
+                    self.tops.insert(0, keep[1])
+                if keep[2] not in self.bottoms:
+                    self.bottoms.insert(0, keep[2])
             self.gender = gender
             self.topChoice = 0
             self.bottomChoice = 0

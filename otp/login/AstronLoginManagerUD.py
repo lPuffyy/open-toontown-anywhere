@@ -21,6 +21,7 @@ from direct.distributed.MsgTypes import (
 from otp.otpbase import OTPGlobals
 
 from otp.login import NameJudge
+from toontown.makeatoon import Makeover
 from toontown.makeatoon.NameGenerator import NameGenerator
 from toontown.toon.ToonDNA import ToonDNA
 from toontown.toonbase import TTLocalizer
@@ -700,6 +701,84 @@ class AcknowledgeNameOperation(AvatarOperation):
         self._handleDone()
 
 
+class MakeoverOperation(AvatarOperation):
+    """A toon on the account gets a new look from Make-a-Toon (see toontown.makeatoon.Makeover), paid with its jellybeans: the jar first,
+    then the bank. With newName, its name goes back to "not named yet", and the client then names it the usual way."""
+
+    def __init__(self, loginManager, sender):
+        AvatarOperation.__init__(self, loginManager, sender)
+        self.setCallback(self.__handleRetrieveAvatar)
+        self.avId = None
+        self.dna = None
+        self.newName = 0
+
+    def start(self, avId, dna, newName):
+        self.avId = avId
+        self.dna = dna
+        self.newName = newName
+        AvatarOperation.start(self)
+
+    def __answer(self, result):
+        self.loginManager.sendUpdateToAccountId(self.sender, 'makeoverResponse', [self.avId, result])
+        self._handleDone()
+
+    def __handleRetrieveAvatar(self):
+        if not self.avId or self.avId not in self.avList:
+            self._handleCloseConnection('Tried to make over an avatar not in the account!')
+            return
+
+        self.loginManager.air.dbInterface.queryObject(self.loginManager.air.dbId, self.avId, self.__handleAvatarRetrieved)
+
+    def __handleAvatarRetrieved(self, dclass, fields):
+        if dclass != self.loginManager.air.dclassesByName['DistributedToonUD']:
+            self._handleCloseConnection('One of the account\'s avatars is invalid!')
+            return
+
+        try:
+            oldDna = fields['setDNAString'][0]
+            problem = Makeover.problem(oldDna, self.dna)
+            if problem:
+                self.loginManager.notify.warning('makeover of %s refused: %s' % (self.avId, problem))
+                self.__answer(Makeover.NOT_ALLOWED)
+                return
+
+            cost = Makeover.cost()
+            money = fields.get('setMoney', (0,))[0]
+            bank = fields.get('setBankMoney', (0,))[0]
+            if money + bank < cost:
+                self.__answer(Makeover.NOT_ENOUGH_BEANS)
+                return
+
+            fromJar = min(money, cost)
+            newFields = {'setDNAString': (self.dna,),
+                         'setMoney': (money - fromJar,),
+                         'setBankMoney': (bank - (cost - fromJar),)}
+            # only if nothing changed since we looked, so beans can't be spent twice
+            oldFields = {'setDNAString': (oldDna,),
+                         'setMoney': (money,),
+                         'setBankMoney': (bank,)}
+            if self.newName:
+                newFields['WishNameState'] = ('OPEN',)
+                newFields['WishName'] = ('',)
+
+            self.cost = cost
+            self.loginManager.air.dbInterface.updateObject(self.loginManager.air.dbId, self.avId,
+                                                           self.loginManager.air.dclassesByName['DistributedToonUD'],
+                                                           newFields, oldFields, self.__handleUpdated)
+        except Exception:
+            self.loginManager.notify.warning('makeover of %s failed: %s' % (self.avId, traceback.format_exc()))
+            self.__answer(Makeover.FAILED)
+
+    def __handleUpdated(self, fields):
+        if fields:
+            # something changed under us (the toon spent beans somewhere): nothing was saved, let the player try again
+            self.__answer(Makeover.FAILED)
+            return
+
+        self.loginManager.air.writeServerEvent('makeover', self.avId, self.sender, '%d|%d' % (self.cost, self.newName))
+        self.__answer(Makeover.OK)
+
+
 class RemoveAvatarOperation(GetAvatarsOperation):
 
     def __init__(self, loginManager, sender):
@@ -964,6 +1043,10 @@ class AstronLoginManagerUD(DistributedObjectGlobalUD):
     def requestRemoveAvatar(self, avId):
         # Someone is requesting to have an avatar removed; run a RemoveAvatarOperation:
         self.runGameOperation(RemoveAvatarOperation, avId)
+
+    def requestMakeover(self, avId, dna, newName):
+        # Someone wants a new look for one of their toons; run a MakeoverOperation:
+        self.runGameOperation(MakeoverOperation, avId, dna, newName)
 
     def requestPlayAvatar(self, avId):
         # Someone is requesting to play on an avatar.
