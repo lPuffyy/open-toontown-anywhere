@@ -204,7 +204,8 @@ class InventoryBase(DirectObject.DirectObject):
             tempInv = newInventory
         for track in range(len(Tracks)):
             for level in range(len(Levels[track])):
-                if tempInv[track][level] > self.getMax(track, level):
+                # (only a gag gaining past its limit is refused: one already held over it, e.g. a cake from before, must not block every purchase)
+                if tempInv[track][level] > self.getMax(track, level) and tempInv[track][level] > self.inventory[track][level]:
                     return 0
                 if tempInv[track][level] > 0 and not self.toon.hasTrackAccess(track):
                     commentStr = "Player %s trying to purchase gag they don't have track access to. track: %s level: %s" % (self.toon.doId, track, level)
