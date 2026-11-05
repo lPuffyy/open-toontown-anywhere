@@ -121,8 +121,9 @@ class DistributedGardenPlotAI(LawnDecorAI):
         av = self.garden.ownerAv()
         if not self.isOwner() or av is None or self.garden.kindAt(self.index) != GardenGlobals.GAG_TREE_TYPE:
             return self.d_movie(GardenGlobals.MOVIE_PLANT_REJECTED, self.air.getAvatarIdFromSender())
-        power = GardenGlobals.getShovelPower(av.getShovel(), av.getShovelSkill())
-        if not 0 <= level < 7 or level >= power or not av.inventory.numItem(track, level):
+        # (as the original game: the shovel limits flowers only; a tree needs the gag, no tree of it yet, and the tree one level below)
+        if not 0 <= level < 7 or not av.inventory.numItem(track, level) or self.garden.hasTree(track, level) \
+                or (level > 0 and not self.garden.hasTree(track, level - 1)):
             return self.d_movie(GardenGlobals.MOVIE_PLANT_REJECTED, av.doId)
         av.inventory.setItem(track, level, av.inventory.numItem(track, level) - 1)
         av.d_setInventory(av.inventory.makeNetString())
@@ -339,6 +340,10 @@ class EstateGarden:
 
     def kindAt(self, index):
         return self.spots[index][3]
+
+    def hasTree(self, track, level):
+        treeType = GardenGlobals.getTreeTypeIndex(track, level)
+        return any(getattr(o, 'data', {}).get('kind') == TREE and o.data.get('type') == treeType for o in self.objects.values())
 
     def spotPlace(self, index):
         """(x, y, heading) of a planting spot. Tree and statue spots are written as x, y, heading; a flower spot is written as
