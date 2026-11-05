@@ -320,7 +320,7 @@ class QuietZoneState(StateData.StateData):
         def getCogHQViszones(self, zoneId):
             loader = base.cr.playGame.hood.loader
 
-            if zoneId in (ToontownGlobals.LawbotOfficeExt, ToontownGlobals.BossbotHQ):
+            if zoneId in (ToontownGlobals.LawbotOfficeExt,):
                 # There are no viszones for these zones, just return an empty list.
                 return []
             
