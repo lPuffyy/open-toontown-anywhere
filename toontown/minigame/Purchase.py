@@ -217,8 +217,11 @@ class Purchase(PurchaseBase):
         return Task.done
 
     def __handlePlayAgain(self):
-        for headFrame in self.headFrames:
+        # (the gag panel goes away, so set the waiting toons' boxes out in one centred row; left where the panel placed them they overlapped)
+        spacing = min(0.8, (2 * base.a2dRight - 0.2) / max(1, len(self.headFrames)))
+        for i, headFrame in enumerate(self.headFrames):
             headFrame[1].wrtReparentTo(aspect2d)
+            headFrame[1].setPos((i - (len(self.headFrames) - 1) / 2.0) * spacing, 0, -0.5)
 
         self.toon.inventory.reparentTo(hidden)
         self.toon.inventory.hide()

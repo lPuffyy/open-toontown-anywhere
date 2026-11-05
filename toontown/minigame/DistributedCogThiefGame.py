@@ -578,8 +578,7 @@ class DistributedCogThiefGame(DistributedMinigame):
                     cogPos = cog.suit.getPos()
                     collisionPos = colEntry.getContactPos(render)
                     if (cogPos - collisionPos).length() > 4:
-                        import pdb
-                        pdb.set_trace()
+                        self.notify.warning('cog %s hit barrel %s from %s away' % (cogIndex, barrelIndex, (cogPos - collisionPos).length()))
                     self.sendUpdate('cogHitBarrel', [timestamp,
                      cogIndex,
                      barrelIndex,

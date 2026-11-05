@@ -1204,7 +1204,7 @@ class DistributedTargetGame(DistributedMinigame):
         if stateName == 'fly':
             if self.arrowKeys.upPressed():
                 pass
-            if self.arrowKeys.downPressed():
+            if self.arrowKeys.downPressed() or self.arrowKeys.jumpPressed():    # (on a phone the action/jump button opens it too)
                 self.gameFSM.request('fall')
         elif stateName == 'fall':
             if self.driftX > self.TOONXZ_SPEED:
