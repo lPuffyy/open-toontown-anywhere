@@ -30,7 +30,7 @@ RUN printf 'import sys\nsys.path.insert(0, "/ot/src")\ntry:\n    import otpy.ins
 # the game's code (see .dockerignore: no resources, no databases, no Windows files)
 COPY . /ot/src
 COPY --from=astron /abuild/astrond /ot/src/astron/linux/astrond
-COPY docker/auth_service.py docker/wsbridge.py docker/discord_status.py docker/nginx.conf docker/run.sh /ot/
+COPY docker/auth_service.py docker/wsbridge.py docker/discord_status.py docker/nginx.conf docker/run.sh docker/mod.html /ot/
 COPY docker/live.prc /ot/src/etc/live.prc
 # Astron's client port is opened to the bridge inside the container only
 RUN sed 's#bind: 127.0.0.1:7198#bind: 0.0.0.0:7198#' /ot/src/astron/config/astrond.yml > /ot/src/astron/config/astrond-linux.yml \

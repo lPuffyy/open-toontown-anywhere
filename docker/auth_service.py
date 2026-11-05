@@ -27,6 +27,7 @@ def auth(text):
             save(db); return None,u
         # (the name exists: a new player picking a taken name gets here too, so say both)
         if not hmac.compare_digest(u["hash"],pbk(pw,u["salt"])): return "That name is taken, or the password is wrong. New here? Try another name.",None
+        if u.get("banned"): return "This account has been banned.",None
         return None,u
 def throttled(keys):
     now=time.time()
@@ -86,12 +87,132 @@ def client_log(ip,text):
             f.write("%s %s %s%s"%(time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime(now)),ip,line,chr(10)))
     except Exception: return False
     return True
+# ---- the moderator panel (/mod/): for accounts marked "admin" in users.json. The districts write who is playing to
+# MOD/online-<district>.json and carry out the commands left in MOD/cmd/ (toontown/ai/ModToolsAI.py).
+MOD="/ot/data/mod"; MOD_PAGE="/ot/mod.html"; MOD_LOG=os.path.join(MOD,"audit.log"); SESSION_HOURS=12
+def mod_secret():
+    p=os.path.join(MOD,"secret")
+    try: return bytes.fromhex(open(p).read().strip())
+    except Exception:
+        os.makedirs(MOD,exist_ok=True); s=os.urandom(32); open(p,"w").write(s.hex()); os.chmod(p,0o600); return s
+def mod_token(name):
+    exp=str(int(time.time())+SESSION_HOURS*3600); msg=name+"|"+exp
+    return msg+"|"+hmac.new(mod_secret(),msg.encode(),hashlib.sha256).hexdigest()
+def mod_user(token):
+    """the moderator's account name for a valid, unexpired session token from an account that is still an admin, else None"""
+    try:
+        name,exp,sig=token.split("|")
+        if not hmac.compare_digest(sig,hmac.new(mod_secret(),(name+"|"+exp).encode(),hashlib.sha256).hexdigest()): return None
+        if int(exp)<time.time(): return None
+        u=load()["users"].get(name)
+        return name if u and u.get("admin") and not u.get("banned") else None
+    except Exception: return None
+def mod_audit(by,what):
+    os.makedirs(MOD,exist_ok=True)
+    with LOCK, open(MOD_LOG,"a",encoding="utf8") as f: f.write("%s %s %s\n"%(time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime()),by,what.replace("\n"," ")))
+def mod_state():
+    try: accounts=json.load(open(os.path.join(MOD,"accounts.json")))
+    except Exception: accounts={}
+    districts=[]
+    for f in sorted(os.listdir(MOD)) if os.path.isdir(MOD) else []:
+        if not (f.startswith("online-") and f.endswith(".json")): continue
+        try: d=json.load(open(os.path.join(MOD,f)))
+        except Exception: continue
+        d["stale"]=time.time()-d.get("updated",0)>30
+        for t in d.get("toons",[]): t["account"]=accounts.get(str(t["avId"]),"")
+        districts.append(d)
+    users=load()["users"]
+    banned=[dict(name=k,**v["banned"]) if isinstance(v.get("banned"),dict) else {"name":k} for k,v in users.items() if v.get("banned")]
+    try: log=open(MOD_LOG,encoding="utf8").read().splitlines()[-40:][::-1]
+    except Exception: log=[]
+    return {"now":int(time.time()),"districts":districts,"banned":banned,"log":log,"accountCount":len(users)}
+def mod_command(action,avId,text,by):
+    os.makedirs(os.path.join(MOD,"cmd"),exist_ok=True); os.makedirs(os.path.join(MOD,"done"),exist_ok=True)
+    now=time.time()
+    for sub in ("cmd","done"):                           # tidy up: the districts ignore commands older than a minute
+        for f in os.listdir(os.path.join(MOD,sub)):
+            p=os.path.join(MOD,sub,f)
+            try:
+                if now-os.path.getmtime(p)>180: os.remove(p)
+            except OSError: pass
+    cid="%d-%s.json"%(int(now*1000),os.urandom(3).hex()); p=os.path.join(MOD,"cmd",cid)
+    json.dump({"action":action,"avId":int(avId),"text":text,"by":by,"time":now},open(p+".tmp","w")); os.replace(p+".tmp",p)
+    return cid
+def mod_action(req,by):
+    """returns (error or None, result dict)"""
+    action=req.get("action"); text=str(req.get("text",""))[:250].strip()
+    if action in ("message","kick"):
+        avId=int(req.get("avId",0))
+        if not avId: return "Pick a toon.",None
+        if action=="message" and not text: return "Write a message.",None
+        cid=mod_command(action,avId,text,by); mod_audit(by,"%s toon %s (%s) %s"%(action,avId,req.get("name",""),text)); return None,{"id":cid}
+    if action=="broadcast":
+        if not text: return "Write a message.",None
+        cid=mod_command("message",0,text,by); mod_audit(by,"broadcast "+text); return None,{"id":cid}
+    if action in ("ban","unban"):
+        name=str(req.get("account","")).strip().lower()
+        with LOCK:
+            db=load(); u=db["users"].get(name)
+            if u is None: return "No account called %s."%name,None
+            if action=="ban":
+                if u.get("admin"): return "Admin accounts can't be banned here.",None
+                u["banned"]={"reason":text,"by":by,"time":int(time.time())}
+            else: u.pop("banned",None)
+            save(db)
+        mod_audit(by,"%s account %s %s"%(action,name,text))
+        ids=[]
+        if action=="ban":                                # log out every toon of that account that is playing now
+            for d in mod_state()["districts"]:
+                for t in d.get("toons",[]):
+                    if t.get("account")==name: ids.append(mod_command("ban",t["avId"],"This account has been banned."+(" Reason: "+text if text else ""),by))
+        return None,{"ids":ids}
+    return "Unknown action.",None
+def mod_result(cid):
+    try: return json.load(open(os.path.join(MOD,"done",os.path.basename(cid))))
+    except Exception: return {"ok":False,"pending":True}
 class H(http.server.BaseHTTPRequestHandler):
     def reply(self,code,msg):
         self.send_response(code); self.end_headers(); self.wfile.write(msg.encode())
+    def reply_json(self,code,obj):
+        b=json.dumps(obj).encode(); self.send_response(code); self.send_header("Content-Type","application/json")
+        self.send_header("Cache-Control","no-store"); self.end_headers(); self.wfile.write(b)
+    def mod_session(self):
+        a=self.headers.get("Authorization","")
+        return mod_user(a[7:]) if a.startswith("Bearer ") else None
+    def do_GET(self):
+        path=self.path.split("?")[0]
+        if path in ("/mod","/mod/"):
+            try: page=open(MOD_PAGE,"rb").read()
+            except OSError: return self.reply(404,"")
+            self.send_response(200); self.send_header("Content-Type","text/html; charset=utf-8"); self.send_header("Cache-Control","no-store")
+            self.send_header("X-Frame-Options","DENY"); self.send_header("Referrer-Policy","no-referrer"); self.end_headers(); return self.wfile.write(page)
+        if path=="/mod/api/state":
+            by=self.mod_session()
+            if not by: return self.reply_json(401,{"error":"Sign in again."})
+            return self.reply_json(200,dict(mod_state(),you=by))
+        if path=="/mod/api/result":
+            if not self.mod_session(): return self.reply_json(401,{"error":"Sign in again."})
+            q=dict(x.split("=",1) for x in self.path.split("?",1)[-1].split("&") if "=" in x)
+            return self.reply_json(200,mod_result(q.get("id","")))
+        self.reply(404,"")
     def do_POST(self):
         n=int(self.headers.get("Content-Length","0")); raw=self.rfile.read(n); body=raw.decode("utf-8","replace") if n<4096 else ""
         ip=self.headers.get("X-Forwarded-For") or self.client_address[0]
+        if self.path=="/mod/api/login":
+            keys=("mod-ip:"+ip,)
+            if throttled(keys): return self.reply_json(429,{"error":"Too many tries. Try again in an hour."})
+            err,u=auth(body) if ":" in body and body.split(":",1)[0].strip().lower() in load()["users"] else ("No.",None)
+            if err or not u or not u.get("admin"):
+                note_fail(keys); return self.reply_json(403,{"error":"That account can't use the moderator panel."})
+            name=body.split(":",1)[0].strip().lower(); mod_audit(name,"signed in from "+ip)
+            return self.reply_json(200,{"token":mod_token(name),"name":name})
+        if self.path=="/mod/api/action":
+            by=self.mod_session()
+            if not by: return self.reply_json(401,{"error":"Sign in again."})
+            try: req=json.loads(body)
+            except ValueError: return self.reply_json(400,{"error":"Bad request."})
+            err,res=mod_action(req,by)
+            return self.reply_json(400 if err else 200,{"error":err} if err else res)
         if self.path=="/auth":
             err,u=auth(body)
             if err: return self.reply(403,err)

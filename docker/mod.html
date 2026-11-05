@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>TTA Mod Panel</title>
+<style>
+:root { --bg: #eef3fb; --card: #fff; --ink: #1a2a4a; --mute: #5b6a86; --line: #d3dcec; --accent: #1f4da6; --accent-ink: #fff;
+        --warn: #b4540a; --bad: #b3261e; --ok: #1d7a3a; --chip: #e3eaf7; color-scheme: light }
+@media (prefers-color-scheme: dark) { :root { --bg: #0f1522; --card: #172034; --ink: #e4eaf6; --mute: #94a2bd; --line: #2a3650;
+        --accent: #6f9cf2; --accent-ink: #0b1220; --warn: #f0a050; --bad: #ff8077; --ok: #6fd391; --chip: #22304b; color-scheme: dark } }
+* { box-sizing: border-box }
+[hidden] { display: none !important }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif }
+.wrap { max-width: 980px; margin: 0 auto; display: grid; gap: 14px;
+        padding: max(14px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)) }
+header { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: baseline; justify-content: space-between }
+h1 { margin: 0; font-size: 1.35rem } h2 { margin: 0 0 8px; font-size: 1.05rem }
+.sub { color: var(--mute); font-size: .88rem }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; min-width: 0 }
+input, textarea { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; width: 100% }
+textarea { resize: vertical; min-height: 60px }
+button { font: inherit; font-weight: 600; border: 1px solid var(--line); background: var(--chip); color: var(--ink); border-radius: 8px; padding: 6px 12px; cursor: pointer }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent) }
+button.danger { color: var(--bad) } button.danger.solid { background: var(--bad); color: #fff; border-color: var(--bad) }
+button:disabled { opacity: .5; cursor: default }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center }
+.grow { flex: 1 1 180px; min-width: 0 }
+.err { color: var(--bad) } .ok { color: var(--ok) }
+.stats { display: flex; gap: 8px; flex-wrap: wrap }
+.stat { background: var(--chip); border-radius: 999px; padding: 3px 12px; font-size: .88rem }
+.stat b { font-variant-numeric: tabular-nums }
+table { width: 100%; border-collapse: collapse; font-size: .93rem }
+th { text-align: left; color: var(--mute); font-weight: 600; font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; padding: 4px 6px; border-bottom: 1px solid var(--line) }
+td { padding: 7px 6px; border-bottom: 1px solid var(--line); vertical-align: top }
+tr:last-child td { border-bottom: 0 }
+.name { font-weight: 650 } .tag { display: inline-block; font-size: .72rem; font-weight: 700; padding: 0 6px; border-radius: 6px; background: var(--chip); color: var(--mute); margin-left: 4px }
+.tag.battle { color: var(--warn) } .tag.staff { color: var(--accent) }
+.acts { white-space: nowrap; text-align: right }
+.acts button { padding: 4px 9px; font-size: .85rem }
+.tablewrap { overflow-x: auto }
+.empty { color: var(--mute); padding: 6px 0 }
+.panel { border: 2px solid var(--accent); }
+.log { font: 12.5px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; color: var(--mute); max-height: 260px; overflow: auto; white-space: pre-wrap; word-break: break-word }
+.cols { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)) }
+@media (max-width: 620px) {
+  thead { display: none } table, tbody, tr, td { display: block } tr { padding: 8px 0; border-bottom: 1px solid var(--line) }
+  td { border: 0; padding: 2px 0 } .acts { text-align: left; padding-top: 6px }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div><h1>Mod Panel</h1><div class="sub">Toontown: Anywhere</div></div>
+    <div class="row" id="who" hidden><span class="sub" id="whoName"></span><button id="signOut">Sign out</button></div>
+  </header>
+
+  <section class="card" id="loginCard" hidden>
+    <h2>Sign in</h2>
+    <form id="loginForm" class="row">
+      <input class="grow" id="lu" autocomplete="username" placeholder="Account name" autocapitalize="off">
+      <input class="grow" id="lp" type="password" autocomplete="current-password" placeholder="Password">
+      <button class="primary" type="submit">Sign in</button>
+    </form>
+    <p class="sub">Only accounts marked admin can sign in. <span id="lmsg" class="err"></span></p>
+  </section>
+
+  <div id="main" hidden style="display:grid;gap:14px">
+    <div class="row">
+      <div class="stats" id="stats"></div>
+      <input class="grow" id="filter" placeholder="Search toon, account or place">
+    </div>
+
+    <section class="card panel" id="actCard" hidden>
+      <h2 id="actTitle"></h2>
+      <p class="sub" id="actInfo" style="margin:0 0 8px"></p>
+      <textarea id="actText" maxlength="250"></textarea>
+      <div class="row" style="margin-top:8px">
+        <button class="primary" id="actGo"></button><button id="actCancel">Cancel</button>
+        <span id="actMsg" class="sub"></span>
+      </div>
+    </section>
+
+    <div id="districts"></div>
+
+    <div class="cols">
+      <section class="card">
+        <h2>Message everyone</h2>
+        <textarea id="bcText" maxlength="250" placeholder="Shown to every toon online, in every district"></textarea>
+        <div class="row" style="margin-top:8px"><button class="primary" id="bcGo">Send to everyone</button><span id="bcMsg" class="sub"></span></div>
+      </section>
+      <section class="card">
+        <h2>Bans</h2>
+        <div class="row"><input class="grow" id="banName" placeholder="Account name" autocapitalize="off"><input class="grow" id="banReason" placeholder="Reason (they see this)"></div>
+        <div class="row" style="margin-top:8px"><button class="danger" id="banGo">Ban account</button><span id="banMsg" class="sub"></span></div>
+        <div id="bans" style="margin-top:10px"></div>
+      </section>
+    </div>
+
+    <section class="card"><h2>Activity</h2><div class="log" id="log"></div></section>
+  </div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const store = { get(k) { try { return sessionStorage.getItem(k) } catch (e) { return null } },
+                set(k, v) { try { v == null ? sessionStorage.removeItem(k) : sessionStorage.setItem(k, v) } catch (e) {} } };
+let token = store.get('modToken'), state = null, timer = null, act = null;
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function ago(t) { const s = Math.max(0, (state ? state.now : Date.now() / 1000) - t);
+  return s < 60 ? Math.round(s) + 's' : s < 3600 ? Math.round(s / 60) + 'm' : Math.floor(s / 3600) + 'h ' + Math.round(s % 3600 / 60) + 'm' }
+async function api(path, body) {
+  const r = await fetch('api/' + path, { method: body ? 'POST' : 'GET', headers: Object.assign({ 'Content-Type': 'application/json' }, token ? { Authorization: 'Bearer ' + token } : {}),
+                                         body: body ? (typeof body === 'string' ? body : JSON.stringify(body)) : undefined });
+  let j = {}; try { j = await r.json() } catch (e) {}
+  if (r.status === 401) { signOut(); throw new Error(j.error || 'Sign in again.') }
+  if (!r.ok) throw new Error(j.error || 'Something went wrong (' + r.status + ').');
+  return j;
+}
+function showLogin(msg) { $('loginCard').hidden = false; $('main').hidden = true; $('who').hidden = true; $('lmsg').textContent = msg || ''; }
+function signOut() { token = null; store.set('modToken', null); clearInterval(timer); timer = null; showLogin(); }
+$('signOut').onclick = signOut;
+$('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault(); $('lmsg').textContent = '';
+  try { const j = await api('login', $('lu').value.trim().toLowerCase() + ':' + $('lp').value); token = j.token; store.set('modToken', token); $('lp').value = ''; start(); }
+  catch (err) { $('lmsg').textContent = err.message }
+});
+function start() { $('loginCard').hidden = true; $('main').hidden = false; $('who').hidden = false; refresh(); clearInterval(timer); timer = setInterval(refresh, 5000); }
+async function refresh() {
+  try { state = await api('state'); render() } catch (e) { if (token) $('stats').innerHTML = '<span class="err">' + esc(e.message) + '</span>' }
+}
+function render() {
+  $('whoName').textContent = 'Signed in as ' + state.you;
+  const q = $('filter').value.trim().toLowerCase();
+  const all = state.districts.flatMap((d) => d.toons);
+  $('stats').innerHTML = '<span class="stat"><b>' + all.length + '</b> online</span>' + state.districts.map((d) =>
+    '<span class="stat">' + esc(d.district) + ' <b>' + d.toons.length + '</b>' + (d.stale ? ' <span class="err">not responding</span>' : '') + '</span>').join('') +
+    '<span class="stat"><b>' + state.accountCount + '</b> accounts</span>';
+  $('districts').innerHTML = state.districts.map((d) => {
+    const toons = d.toons.filter((t) => !q || [t.name, t.account, t.where].some((v) => String(v).toLowerCase().includes(q)))
+                         .sort((a, b) => a.name.localeCompare(b.name));
+    const rows = toons.map((t) => '<tr><td><span class="name">' + esc(t.name) + '</span>' + (t.access > 0 ? '<span class="tag staff">staff</span>' : '') +
+      (t.battle ? '<span class="tag battle">in battle</span>' : '') + '<div class="sub">' + esc(t.account || 'account unknown') + ' · id ' + t.avId + '</div></td>' +
+      '<td>' + esc(t.where) + '<div class="sub">zone ' + t.zone + '</div></td><td>' + t.hp + '/' + t.maxHp + '</td><td>' + ago(t.since) + '</td>' +
+      '<td class="acts"><button data-a="message" data-id="' + t.avId + '">Message</button> <button class="danger" data-a="kick" data-id="' + t.avId + '">Kick</button> ' +
+      (t.account ? '<button class="danger" data-a="ban" data-id="' + t.avId + '">Ban</button>' : '') + '</td></tr>').join('');
+    return '<section class="card" style="margin-bottom:14px"><h2>' + esc(d.district) + ' <span class="sub">' + d.toons.length + ' playing</span></h2>' +
+      (rows ? '<div class="tablewrap"><table><thead><tr><th>Toon</th><th>Where</th><th>Laff</th><th>Online</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>'
+            : '<div class="empty">' + (q && d.toons.length ? 'No match.' : 'Nobody here.') + '</div>') + '</section>';
+  }).join('') || '<section class="card empty">No district has reported yet. The game server may be starting.</section>';
+  $('bans').innerHTML = state.banned.length ? '<table><tbody>' + state.banned.map((b) => '<tr><td><span class="name">' + esc(b.name) + '</span><div class="sub">' +
+      esc(b.reason || 'no reason given') + (b.by ? ' · by ' + esc(b.by) : '') + (b.time ? ' · ' + new Date(b.time * 1000).toLocaleString() : '') +
+      '</div></td><td class="acts"><button data-unban="' + esc(b.name) + '">Unban</button></td></tr>').join('') + '</tbody></table>' : '<div class="empty">No banned accounts.</div>';
+  $('log').textContent = state.log.join('\n') || 'Nothing yet.';
+}
+$('filter').addEventListener('input', () => state && render());
+function findToon(avId) { for (const d of state.districts) for (const t of d.toons) if (t.avId == avId) return Object.assign({ district: d.district }, t); return null }
+const ACTS = {
+  message: { title: (t) => 'Message ' + t.name, go: 'Send message', ph: 'Shown to this toon only, as a message from Toontown', need: true },
+  kick: { title: (t) => 'Kick ' + t.name, go: 'Kick', ph: 'Optional: why (shown to them before they are logged out)', danger: true },
+  ban: { title: (t) => 'Ban account ' + t.account, go: 'Ban account', ph: 'Reason (shown to them). Logs out every toon on this account and blocks sign-in.', danger: true },
+};
+document.addEventListener('click', async (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.a) {
+    const t = findToon(b.dataset.id); if (!t) return;
+    act = { kind: b.dataset.a, toon: t }; const A = ACTS[act.kind];
+    $('actTitle').textContent = A.title(t); $('actInfo').textContent = t.district + ' · ' + t.where + ' · account ' + (t.account || 'unknown');
+    $('actText').value = ''; $('actText').placeholder = A.ph; $('actGo').textContent = A.go;
+    $('actGo').className = A.danger ? 'danger solid' : 'primary'; $('actMsg').textContent = ''; $('actCard').hidden = false;
+    $('actCard').scrollIntoView({ behavior: 'smooth', block: 'center' }); $('actText').focus();
+  } else if (b.dataset.unban) {
+    b.disabled = true; try { await api('action', { action: 'unban', account: b.dataset.unban }); refresh() } catch (err) { alertMsg($('banMsg'), err.message, true); b.disabled = false }
+  }
+});
+$('actCancel').onclick = () => { $('actCard').hidden = true; act = null };
+function alertMsg(el, text, bad) { el.textContent = text; el.className = bad ? 'err' : 'ok' }
+async function waitDone(id, el, label) {
+  for (let i = 0; i < 12; i++) {
+    await new Promise((r) => setTimeout(r, 1000));
+    try { const j = await api('result?id=' + encodeURIComponent(id)); if (j.ok) { alertMsg(el, label + ': ' + j.result + ' (' + j.district + ')'); return } } catch (e) { return }
+  }
+  alertMsg(el, label + ": no district picked it up. The toon may have just left.", true);
+}
+$('actGo').onclick = async () => {
+  if (!act) return; const A = ACTS[act.kind], text = $('actText').value.trim(), t = act.toon;
+  if (A.need && !text) return alertMsg($('actMsg'), 'Write a message first.', true);
+  $('actGo').disabled = true;
+  try {
+    if (act.kind === 'ban') { const j = await api('action', { action: 'ban', account: t.account, text });
+      alertMsg($('actMsg'), 'Banned ' + t.account + (j.ids.length ? ', logging out ' + j.ids.length + ' toon(s).' : '.')); refresh(); }
+    else { const j = await api('action', { action: act.kind, avId: t.avId, name: t.name, text }); alertMsg($('actMsg'), 'Sent, waiting for the district...'); await waitDone(j.id, $('actMsg'), A.go); refresh(); }
+  } catch (err) { alertMsg($('actMsg'), err.message, true) }
+  $('actGo').disabled = false;
+};
+$('bcGo').onclick = async () => {
+  const text = $('bcText').value.trim(); if (!text) return alertMsg($('bcMsg'), 'Write a message first.', true);
+  if ($('bcGo').dataset.sure !== '1') { $('bcGo').dataset.sure = '1'; $('bcGo').textContent = 'Tap again to send'; setTimeout(() => { $('bcGo').dataset.sure = ''; $('bcGo').textContent = 'Send to everyone' }, 4000); return }
+  $('bcGo').dataset.sure = ''; $('bcGo').textContent = 'Send to everyone';
+  try { await api('action', { action: 'broadcast', text }); $('bcText').value = ''; alertMsg($('bcMsg'), 'Sent to everyone online.'); refresh() } catch (err) { alertMsg($('bcMsg'), err.message, true) }
+};
+$('banGo').onclick = async () => {
+  const name = $('banName').value.trim().toLowerCase(); if (!name) return alertMsg($('banMsg'), 'Enter an account name.', true);
+  try { const j = await api('action', { action: 'ban', account: name, text: $('banReason').value.trim() }); $('banName').value = $('banReason').value = '';
+        alertMsg($('banMsg'), 'Banned ' + name + (j.ids.length ? ', logging out ' + j.ids.length + ' toon(s).' : '.')); refresh() } catch (err) { alertMsg($('banMsg'), err.message, true) }
+};
+token ? start() : showLogin();
+</script>
+</body>
+</html>

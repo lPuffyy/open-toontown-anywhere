@@ -216,6 +216,9 @@ class ToontownAIRepository(ToontownInternalRepository):
         # the Codes tab of the Options page (every district listens; the one the toon is in answers)
         self.codeRedemptionMgr = self.generateGlobalObject(OTP_DO_ID_TOONTOWN_CODE_REDEMPTION_MANAGER, 'TTCodeRedemptionMgr')
         taskMgr.doMethodLater(60.0, self.__refreshPresence, 'refreshPresence')
+        # the moderator panel (a web page outside the game) reads who is playing here and leaves commands for this district
+        from toontown.ai.ModToolsAI import ModToolsAI
+        self.modTools = ModToolsAI(self)
         """
         Creates "global" (distributed) objects.
         """

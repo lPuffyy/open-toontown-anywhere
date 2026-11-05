@@ -26,6 +26,38 @@ from toontown.makeatoon.NameGenerator import NameGenerator
 from toontown.toon.ToonDNA import ToonDNA
 from toontown.toonbase import TTLocalizer
 
+# the moderator panel (docker/auth_service.py): the sign-in list marks banned accounts, and the panel shows each toon's account
+USERS_FILE = '/ot/data/users.json'
+MOD_DIR = '/ot/data/mod'
+
+
+def isBanned(playToken):
+    try:
+        with open(USERS_FILE) as f:
+            user = json.load(f).get('users', {}).get(str(playToken).strip().lower())
+        return bool(user and user.get('banned'))
+    except Exception:
+        return False                    # no sign-in list (a local test server): nobody is banned
+
+
+def noteToonAccount(avId, account):
+    try:
+        os.makedirs(MOD_DIR, exist_ok=True)
+        path = os.path.join(MOD_DIR, 'accounts.json')
+        try:
+            with open(path) as f:
+                known = json.load(f)
+        except (OSError, ValueError):
+            known = {}
+        if known.get(str(avId)) == account:
+            return
+        known[str(avId)] = account
+        with open(path + '.tmp', 'w') as f:
+            json.dump(known, f)
+        os.replace(path + '.tmp', path)
+    except Exception:
+        pass
+
 
 class AccountDB:
     """
@@ -146,6 +178,10 @@ class LoginOperation(GameOperation):
 
     def start(self, playToken):
         self.playToken = playToken
+        if isBanned(playToken):
+            self.loginManager.air.writeServerEvent('banned-login', self.sender, self.playToken)
+            self._handleCloseConnection('This account has been banned.')
+            return
         self.loginManager.accountDb.lookup(playToken, self.__handleLookup)
 
     def __handleLookup(self, result):
@@ -885,6 +921,7 @@ class LoadAvatarOperation(AvatarOperation):
         self.loginManager.air.send(datagram)
 
         self.loginManager.air.setOwner(self.avId, channel)
+        noteToonAccount(self.avId, self.account.get('ACCOUNT_ID', ''))
 
         self._handleDone()
 
