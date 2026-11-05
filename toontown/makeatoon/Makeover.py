@@ -18,6 +18,36 @@ def cost():
     return int(GameConfig.get('makeover_beans', DEFAULT_COST))
 
 
+def canAfford(av):
+    """The jar and the bank together cover the price (the server checks again when the makeover is saved)."""
+    try:
+        return av.getTotalMoney() >= cost()
+    except Exception:
+        return False
+
+
+def leaveForMakeover():
+    """From the clothing shop: teleport out of the world to Pick-a-Toon, which starts the makeover for this toon right away and brings
+    it back into the game when it is done (ToontownClientRepository.enterChooseAvatar)."""
+    from toontown.toonbase import ToontownGlobals
+    base.cr.pendingMakeover = base.localAvatar.doId
+    place = base.cr.playGame.getPlace()
+    if place:
+        try:
+            place.fsm.request('stopped')
+        except Exception:
+            pass
+    base.localAvatar.collisionsOff()
+
+    def go(*args):
+        if base.cr.timeManager:
+            base.cr.timeManager.setDisconnectReason(ToontownGlobals.DisconnectBookExit)
+        base.transitions.fadeScreen(1.0)
+        base.cr.gameFSM.request('closeShard')
+
+    base.localAvatar.b_setAnimState('TeleportOut', 1, go, [0])
+
+
 def problem(oldNet, newNet):
     """Why the look in newNet can't replace oldNet, or '' when it can."""
     new = ToonDNA.ToonDNA()

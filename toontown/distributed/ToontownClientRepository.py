@@ -223,7 +223,23 @@ class ToontownClientRepository(OTPClientRepository.OTPClientRepository):
         self.accept(self.avChoiceDoneEvent, self.__handleAvatarChooserDone, [avList])
         if ConfigVariableBool('want-gib-loader', 1).value:
             self.loadingBlocker = ToontownLoadingBlocker.ToontownLoadingBlocker(avList)
+        self.__continueMakeover(avList)
         return
+
+    def __continueMakeover(self, avList):
+        # a makeover started at the clothing shop: go straight into it for that toon, and afterwards straight back into the game
+        # (unless the toon now waits for a name, which Pick-a-Toon handles as usual)
+        pending, returning = getattr(self, 'pendingMakeover', None), getattr(self, 'returnAfterMakeover', None)
+        self.pendingMakeover = self.returnAfterMakeover = None
+        if pending:
+            for av in avList:
+                if av.id == pending:
+                    self.returnAfterMakeover = pending
+                    taskMgr.doMethodLater(0, lambda task, av=av: self.loginFSM.request('createAvatar', [avList, av.position, None, True]), 'startMakeover')
+        elif returning:
+            for av in avList:
+                if av.id == returning and av.wantName == '' and av.approvedName == '' and av.rejectedName == '' and av.allowedName != 1:
+                    taskMgr.doMethodLater(0, lambda task, av=av: self.loginFSM.request('waitForSetAvatarResponse', [av]), 'returnFromMakeover')
 
     def __handleAvatarChooserDone(self, avList, doneStatus):
         done = doneStatus['mode']

@@ -24,6 +24,9 @@ class DistributedNPCTailor(DistributedNPCToonBase):
         self.button = None
         self.popupInfo = None
         self.lerpCameraSeq = None
+        self.makeoverButton = None
+        self.makeoverDialog = None
+        self.leaveForMakeover = False
         return
 
     def disable(self):
@@ -41,6 +44,10 @@ class DistributedNPCTailor(DistributedNPCToonBase):
                 del self.button
             self.cancelButton.destroy()
             del self.cancelButton
+            self.__clearMakeoverDialog()
+            if getattr(self, 'makeoverButton', None):
+                self.makeoverButton.destroy()
+                self.makeoverButton = None
             del self.gui
             self.counter.show()
             del self.counter
@@ -79,6 +86,10 @@ class DistributedNPCTailor(DistributedNPCToonBase):
                 del self.button
             self.cancelButton.destroy()
             del self.cancelButton
+            self.__clearMakeoverDialog()
+            if getattr(self, 'makeoverButton', None):
+                self.makeoverButton.destroy()
+                self.makeoverButton = None
             del self.gui
             self.counter.show()
             del self.counter
@@ -98,6 +109,7 @@ class DistributedNPCTailor(DistributedNPCToonBase):
         if mode == NPCToons.PURCHASE_MOVIE_CLEAR:
             return
         if mode == NPCToons.PURCHASE_MOVIE_TIMEOUT:
+            self.leaveForMakeover = False
             if self.lerpCameraSeq:
                 self.lerpCameraSeq.finish()
                 self.lerpCameraSeq = None
@@ -157,6 +169,10 @@ class DistributedNPCTailor(DistributedNPCToonBase):
                 print('-------------------------------------------------')
         elif mode == NPCToons.PURCHASE_MOVIE_COMPLETE:
             self.setChatAbsolute(TTLocalizer.STOREOWNER_GOODBYE, CFSpeech | CFTimeout)
+            if self.isLocalToon and getattr(self, 'leaveForMakeover', False):
+                self.leaveForMakeover = False
+                from toontown.makeatoon import Makeover
+                taskMgr.doMethodLater(0.5, lambda task: Makeover.leaveForMakeover(), self.uniqueName('leaveForMakeover'))
             if self.av and self.isLocalToon:
                 print('-----------ending tailor interaction-----------')
                 print('avid: %s, gender: %s' % (self.av.doId, self.av.style.gender))
@@ -191,11 +207,46 @@ class DistributedNPCTailor(DistributedNPCToonBase):
         else:
             self.button = None
         self.cancelButton = DirectButton(relief=None, image=(self.gui.find('**/CrtAtoon_Btn2_UP'), self.gui.find('**/CrtAtoon_Btn2_DOWN'), self.gui.find('**/CrtAtoon_Btn2_RLLVR')), pos=(0.15, 0, -0.85), command=self.__handleCancel, text=('', TTLocalizer.MakeAToonCancel, TTLocalizer.MakeAToonCancel), text_font=ToontownGlobals.getInterfaceFont(), text_scale=0.08, text_pos=(0, -0.03), text_fg=(1, 1, 1, 1), text_shadow=(0, 0, 0, 1))
+        # Makeover (species, body, colours, clothes, name) for jellybeans: under the clothes arrows on the right
+        quitGui = loader.loadModel('phase_3/models/gui/quit_button')
+        self.makeoverButton = DirectButton(relief=None, image=(quitGui.find('**/QuitBtn_UP'), quitGui.find('**/QuitBtn_DN'), quitGui.find('**/QuitBtn_RLVR')), image_scale=(0.75, 1, 1), pos=(0.98, 0, -0.45), command=self.__handleMakeover, text=TTLocalizer.AvatarChoiceMakeover, text_font=ToontownGlobals.getInterfaceFont(), text_scale=0.06, text_pos=(0, -0.015), text_fg=(1, 1, 1, 1), text_shadow=(0, 0, 0, 1))
+        quitGui.removeNode()
+        self.makeoverDialog = None
         camera.setPosHpr(base.localAvatar, -4.16, 8.25, 2.47, -152.89, 0.0, 0.0)
         self.counter = render.find('**/*mo1_TI_counter')
         self.counter.hide()
         self.hide()
         return Task.done
+
+    def __handleMakeover(self):
+        from toontown.makeatoon import Makeover
+        from toontown.toontowngui import TTDialog
+        self.__clearMakeoverDialog()
+        if not Makeover.canAfford(self.av):
+            # not enough beans: say so and stay at the counter (nothing leaves the game)
+            text = TTLocalizer.MakeoverClerkNotEnough % {'cost': Makeover.cost(), 'have': self.av.getTotalMoney()}
+            self.makeoverDialog = TTDialog.TTGlobalDialog(doneEvent='tailorMakeoverDone', message=text, style=TTDialog.Acknowledge)
+        else:
+            text = TTLocalizer.AvatarChoiceMakeoverConfirm % {'name': self.av.getName(), 'cost': Makeover.cost()}
+            self.makeoverDialog = TTDialog.TTGlobalDialog(doneEvent='tailorMakeoverDone', message=text, style=TTDialog.TwoChoice)
+        self.makeoverDialog.show()
+        self.acceptOnce('tailorMakeoverDone', self.__handleMakeoverDialog)
+
+    def __handleMakeoverDialog(self):
+        status = self.makeoverDialog.doneStatus if self.makeoverDialog else None
+        self.__clearMakeoverDialog()
+        if status == 'ok' and self.clothesGUI:
+            from toontown.makeatoon import Makeover
+            if Makeover.canAfford(self.av):
+                # end the visit with the old clothes, then leave once the clerk lets the toon go (PURCHASE_MOVIE_COMPLETE)
+                self.leaveForMakeover = True
+                self.__handleCancel()
+
+    def __clearMakeoverDialog(self):
+        self.ignore('tailorMakeoverDone')
+        if getattr(self, 'makeoverDialog', None):
+            self.makeoverDialog.cleanup()
+            self.makeoverDialog = None
 
     def __handleButton(self):
         messenger.send('next')
