@@ -25,7 +25,8 @@ def auth(text):
             if not db.get("open_registration",True): return "Unknown user. Ask a parent to add you.",None
             salt=os.urandom(16).hex(); u=db["users"][name]={"salt":salt,"hash":pbk(pw,salt),"dbkey":"user:"+name}
             save(db); return None,u
-        if not hmac.compare_digest(u["hash"],pbk(pw,u["salt"])): return "Wrong password.",None
+        # (the name exists: a new player picking a taken name gets here too, so say both)
+        if not hmac.compare_digest(u["hash"],pbk(pw,u["salt"])): return "That name is taken, or the password is wrong. New here? Try another name.",None
         return None,u
 def throttled(keys):
     now=time.time()
