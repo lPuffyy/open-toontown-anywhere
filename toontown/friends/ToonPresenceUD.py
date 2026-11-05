@@ -17,8 +17,8 @@ class ToonPresenceUD(DistributedObjectGlobalUD):
 
     def __init__(self, air):
         DistributedObjectGlobalUD.__init__(self, air)
-        self.online = {}                    # avId -> set of that toon's friends' avIds
-        self.district = {}                  # avId -> name of the district the toon is in
+        self.online = {}                    # avId -> set of that toon's friends' avIds (kept a moment after it leaves, see LEFT_GRACE)
+        self.district = {}                  # avId -> name of the district the toon is in: the toons playing right now
         self.detailsAsked = {}              # avId of a client -> when it last asked for a toon's details
         taskMgr.doMethodLater(self.STATUS_EVERY, self.__writeStatus, 'toonPresenceStatus')
 
@@ -26,10 +26,10 @@ class ToonPresenceUD(DistributedObjectGlobalUD):
         """Write how many toons are playing (in total and in each district) for the Discord status script. Counts only, no names."""
         try:
             counts = {}
-            for avId in self.online:
-                name = self.district.get(avId, '') or 'Unknown'
+            for avId in self.district:
+                name = self.district[avId] or 'Unknown'
                 counts[name] = counts.get(name, 0) + 1
-            data = {'updated': int(time.time()), 'total': len(self.online), 'districts': counts}
+            data = {'updated': int(time.time()), 'total': len(self.district), 'districts': counts}
             tmp = self.STATUS_FILE + '.tmp'
             with open(tmp, 'w') as f:
                 json.dump(data, f)
@@ -39,14 +39,21 @@ class ToonPresenceUD(DistributedObjectGlobalUD):
         return task.again
 
     # ---- from the districts
+    # A toon changing district (or going through Go To) leaves its old district a moment before the new one reports it,
+    # so its friends are told it left only if it has not turned up again by then.
+    LEFT_GRACE = 15.0
+
     def avatarOnline(self, avId, friends, districtName):
         if self.online.get(avId) == set(friends) and self.district.get(avId) == districtName:
             return                       # already known (the districts repeat this every minute to keep the list true)
         self.notify.info('toon %s is playing in %s' % (avId, districtName))
+        returning = taskMgr.hasTaskNamed(self.__leftTask(avId))
+        taskMgr.remove(self.__leftTask(avId))
+        known = self.online.get(avId, set())
         self.online[avId] = set(friends)
         self.district[avId] = districtName
         for friendId in friends:
-            if friendId in self.online:
+            if friendId in self.district and not (returning and friendId in known):
                 self.sendUpdateToAvatarId(friendId, 'friendOnline', [avId, 1])
                 self.sendUpdateToAvatarId(avId, 'friendOnline', [friendId, 1])
 
@@ -54,10 +61,20 @@ class ToonPresenceUD(DistributedObjectGlobalUD):
         if avId not in self.online or self.district.get(avId) != districtName:
             return                       # the toon already arrived in another district: this is the old district catching up
         self.notify.info('toon %s left %s' % (avId, districtName))
-        friends = self.online.pop(avId, set())
         self.district.pop(avId, None)
+        # keep its friends (for when it turns up again) but stop Go To and the counts until then
+        taskMgr.doMethodLater(self.LEFT_GRACE, self.__toldLeft, self.__leftTask(avId), extraArgs=[avId])
+
+    @staticmethod
+    def __leftTask(avId):
+        return 'toonPresenceLeft-%d' % avId
+
+    def __toldLeft(self, avId):
+        if avId in self.district:
+            return                       # it came back
+        friends = self.online.pop(avId, set())
         for friendId in friends:
-            if friendId in self.online:
+            if friendId in self.district:
                 self.sendUpdateToAvatarId(friendId, 'friendOnline', [avId, 0])
 
     def districtSweep(self, districtName, avIds):
@@ -70,7 +87,7 @@ class ToonPresenceUD(DistributedObjectGlobalUD):
         for me, other in ((avIdA, avIdB), (avIdB, avIdA)):
             if me in self.online:
                 self.online[me].add(other)
-        if avIdA in self.online and avIdB in self.online:
+        if avIdA in self.district and avIdB in self.district:
             self.sendUpdateToAvatarId(avIdA, 'friendOnline', [avIdB, 1])
             self.sendUpdateToAvatarId(avIdB, 'friendOnline', [avIdA, 1])
 
@@ -86,7 +103,7 @@ class ToonPresenceUD(DistributedObjectGlobalUD):
     # ---- Go To: a toon asks a friend (in any district) if it can come to them
     def __friends(self, a, b):
         """True when a and b are both playing and b has a as a friend."""
-        return a in self.online and b in self.online and a in self.online[b]
+        return a in self.district and b in self.district and a in self.online.get(b, ())
 
     # ---- another toon's details, for the toon details panel: read from the database, whether or not that toon is playing
     DETAILS_COOLDOWN = 0.5               # seconds a client must wait between two requests
