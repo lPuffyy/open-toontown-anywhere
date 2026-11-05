@@ -47,3 +47,5 @@ class ToontownUDRepository(ToontownInternalRepository):
             self.astronLoginManager = self.generateGlobalObject(OTP_DO_ID_ASTRON_LOGIN_MANAGER, 'AstronLoginManager')
             # ...and the service that knows who is playing, in any district, and carries Go To messages
             self.toonPresence = self.generateGlobalObject(OTP_DO_ID_TOON_PRESENCE, 'ToonPresence')
+            # ...and the Report button on a toon's panel (the reports go to the moderator panel)
+            self.centralLogger = self.generateGlobalObject(OTP_DO_ID_CENTRAL_LOGGER, 'CentralLogger')

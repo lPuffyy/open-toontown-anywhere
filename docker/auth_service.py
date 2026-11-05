@@ -110,22 +110,88 @@ def mod_user(token):
 def mod_audit(by,what):
     os.makedirs(MOD,exist_ok=True)
     with LOCK, open(MOD_LOG,"a",encoding="utf8") as f: f.write("%s %s %s\n"%(time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime()),by,what.replace("\n"," ")))
-def mod_state():
-    try: accounts=json.load(open(os.path.join(MOD,"accounts.json")))
-    except Exception: accounts={}
+# the game's database (Astron's YAML files): accounts, their toons, and which account each toon belongs to
+GAMEDB="/ot/src/astron/databases"; GAMEDB_CACHE={"t":0,"v":None}
+def yaml_value(v):
+    v=v.strip()
+    if v.startswith("(") and v.endswith(")"): v=v[1:-1]
+    if v.startswith('"') and v.endswith('"'): v=v[1:-1].replace('\\"','"')
+    if v.startswith('"') and v.endswith('"'): v=v[1:-1]
+    return v
+def yaml_fields(path):
+    out={}
+    try:
+        for line in open(path,encoding="utf8",errors="replace"):
+            if line.startswith("class:"): out["class"]=line.split(":",1)[1].strip()
+            elif line.startswith("  ") and ":" in line:
+                k,v=line.strip().split(":",1)
+                if k in ("ACCOUNT_AV_SET","ACCOUNT_ID","CREATED","LAST_LOGIN","ACCESS_LEVEL","setName","setMaxHp","setHp","setMoney","setBankMoney","setLastHood"): out[k]=yaml_value(v)
+    except OSError: pass
+    return out
+def game_db():
+    """{"accounts": {name: {created, lastLogin, toons:[{avId,name,maxHp,beans}]}}, "owner": {avId: name}}, read at most every 30 s"""
+    if GAMEDB_CACHE["v"] is not None and time.time()-GAMEDB_CACHE["t"]<30: return GAMEDB_CACHE["v"]
+    accounts={}; owner={}
+    try: ids=json.load(open(os.path.join(GAMEDB,"accounts.json")))
+    except Exception: ids={}
+    for name,accId in ids.items():
+        a=yaml_fields(os.path.join(GAMEDB,"astrondb","%s.yaml"%accId))
+        toons=[]
+        for avId in re.findall(r"\d+",a.get("ACCOUNT_AV_SET","")):
+            if avId=="0": continue
+            t=yaml_fields(os.path.join(GAMEDB,"astrondb","%s.yaml"%avId))
+            if not t: continue
+            owner[int(avId)]=name
+            num=lambda k: int(t[k]) if t.get(k,"").lstrip("-").isdigit() else 0
+            toons.append({"avId":int(avId),"name":t.get("setName",""),"maxHp":num("setMaxHp"),"beans":num("setMoney")+num("setBankMoney")})
+        accounts[name]={"created":a.get("CREATED",""),"lastLogin":a.get("LAST_LOGIN",""),"toons":toons}
+    GAMEDB_CACHE.update(t=time.time(),v={"accounts":accounts,"owner":owner})
+    return GAMEDB_CACHE["v"]
+def mod_accounts():
+    db=game_db(); online={t["avId"]:d["district"] for d in mod_state(False)["districts"] for t in d.get("toons",[])}
+    out=[]
+    for name,u in load()["users"].items():
+        g=db["accounts"].get(name,{})
+        toons=[dict(t,online=online.get(t["avId"],"")) for t in g.get("toons",[])]
+        out.append({"name":name,"admin":bool(u.get("admin")),"banned":u.get("banned") or None,"recovery":bool(u.get("rec")),
+                    "created":g.get("created",""),"lastLogin":g.get("lastLogin",""),"toons":toons,"online":any(t["online"] for t in toons)})
+    return {"accounts":out}
+REPORTS=os.path.join(MOD,"reports.jsonl"); REPORT_STATE=os.path.join(MOD,"reports-state.json")
+def mod_reports():
+    owner=game_db()["owner"]
+    try: st=json.load(open(REPORT_STATE))
+    except Exception: st={}
+    online={t["avId"]:(d["district"],t["where"]) for d in mod_state(False)["districts"] for t in d.get("toons",[])}
+    out=[]
+    try: lines=open(REPORTS,encoding="utf8").read().splitlines()[-500:]
+    except OSError: lines=[]
+    for line in lines:
+        try: r=json.loads(line)
+        except ValueError: continue
+        r["reporterAccount"]=owner.get(r.get("reporter"),""); r["targetAccount"]=owner.get(r.get("target"),"")
+        r["targetOnline"]=online.get(r.get("target"))
+        r.update(st.get(r["id"],{}))
+        out.append(r)
+    out.reverse()
+    return {"reports":out,"open":sum(1 for r in out if r.get("status")!="resolved")}
+def mod_state(withLog=True):
+    accounts=game_db()["owner"]
     districts=[]
     for f in sorted(os.listdir(MOD)) if os.path.isdir(MOD) else []:
         if not (f.startswith("online-") and f.endswith(".json")): continue
         try: d=json.load(open(os.path.join(MOD,f)))
         except Exception: continue
         d["stale"]=time.time()-d.get("updated",0)>30
-        for t in d.get("toons",[]): t["account"]=accounts.get(str(t["avId"]),"")
+        for t in d.get("toons",[]): t["account"]=accounts.get(t["avId"],"")
         districts.append(d)
+    if not withLog: return {"districts":districts}
     users=load()["users"]
     banned=[dict(name=k,**v["banned"]) if isinstance(v.get("banned"),dict) else {"name":k} for k,v in users.items() if v.get("banned")]
     try: log=open(MOD_LOG,encoding="utf8").read().splitlines()[-40:][::-1]
     except Exception: log=[]
-    return {"now":int(time.time()),"districts":districts,"banned":banned,"log":log,"accountCount":len(users)}
+    try: openReports=mod_reports()["open"]
+    except Exception: openReports=0
+    return {"now":int(time.time()),"districts":districts,"banned":banned,"log":log,"accountCount":len(users),"openReports":openReports}
 def mod_command(action,avId,text,by):
     os.makedirs(os.path.join(MOD,"cmd"),exist_ok=True); os.makedirs(os.path.join(MOD,"done"),exist_ok=True)
     now=time.time()
@@ -166,6 +232,15 @@ def mod_action(req,by):
                 for t in d.get("toons",[]):
                     if t.get("account")==name: ids.append(mod_command("ban",t["avId"],"This account has been banned."+(" Reason: "+text if text else ""),by))
         return None,{"ids":ids}
+    if action in ("resolve","reopen"):
+        rid=str(req.get("id",""))
+        with LOCK:
+            try: st=json.load(open(REPORT_STATE))
+            except Exception: st={}
+            if action=="resolve": st[rid]={"status":"resolved","resolvedBy":by,"resolvedAt":int(time.time()),"note":text}
+            else: st.pop(rid,None)
+            json.dump(st,open(REPORT_STATE+".tmp","w")); os.replace(REPORT_STATE+".tmp",REPORT_STATE)
+        mod_audit(by,"%s report %s %s"%(action,rid,text)); return None,{}
     return "Unknown action.",None
 def mod_result(cid):
     try: return json.load(open(os.path.join(MOD,"done",os.path.basename(cid))))
@@ -190,6 +265,9 @@ class H(http.server.BaseHTTPRequestHandler):
             by=self.mod_session()
             if not by: return self.reply_json(401,{"error":"Sign in again."})
             return self.reply_json(200,dict(mod_state(),you=by))
+        if path in ("/mod/api/accounts","/mod/api/reports"):
+            if not self.mod_session(): return self.reply_json(401,{"error":"Sign in again."})
+            return self.reply_json(200,mod_accounts() if path.endswith("accounts") else mod_reports())
         if path=="/mod/api/result":
             if not self.mod_session(): return self.reply_json(401,{"error":"Sign in again."})
             q=dict(x.split("=",1) for x in self.path.split("?",1)[-1].split("&") if "=" in x)
