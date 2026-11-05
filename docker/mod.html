@@ -43,6 +43,7 @@ tr:last-child td { border-bottom: 0 }
 .empty { color: var(--mute); padding: 6px 0 }
 .panel { border: 2px solid var(--accent); }
 .log { font: 12.5px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; color: var(--mute); max-height: 260px; overflow: auto; white-space: pre-wrap; word-break: break-word }
+.cols { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)) }
 .tabs { display: flex; gap: 6px; flex-wrap: wrap }
 .tabs button { background: transparent; border-color: transparent } .tabs button.on { background: var(--accent); color: var(--accent-ink) }
 .badge { display: inline-block; min-width: 1.4em; padding: 0 5px; border-radius: 999px; background: var(--bad); color: #fff; font-size: .75rem; text-align: center }
@@ -50,6 +51,18 @@ tr:last-child td { border-bottom: 0 }
 .report .top { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline }
 .cat { font-weight: 700; color: var(--bad) } .toonlist { display: flex; flex-wrap: wrap; gap: 4px }
 .toonchip { background: var(--chip); border-radius: 6px; padding: 1px 7px; font-size: .85rem } .toonchip.on { outline: 2px solid var(--ok) }
+.link { background: none; border: 0; padding: 0; color: var(--accent); font-weight: 650; cursor: pointer; text-align: left }
+button.toonchip { border: 0; font-weight: 500; color: var(--ink) } button.toonchip:hover { outline: 2px solid var(--accent) }
+.tiles { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)) }
+.tile { background: var(--chip); border-radius: 10px; padding: 8px 10px } .tile .k { font-size: .75rem; color: var(--mute); text-transform: uppercase; letter-spacing: .05em }
+.tile .v { font-size: 1.15rem; font-weight: 700; font-variant-numeric: tabular-nums }
+.toonhead h2 { font-size: 1.4rem; margin: 0 } .tools { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) }
+.tool { display: grid; gap: 6px; align-content: start } .tool h3 { margin: 0; font-size: .95rem }
+.tool input { width: auto; flex: 1 1 90px; min-width: 0 } select { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 7px }
+.picker { max-height: 220px; overflow: auto; border: 1px solid var(--line); border-radius: 8px }
+.picker button { display: block; width: 100%; text-align: left; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; font-weight: 500 }
+.picker button.sel { background: var(--accent); color: var(--accent-ink) } .picker .sub { font-size: .78rem }
+.mute { color: var(--mute) } .liveonly[disabled] { opacity: .45 }
 @media (max-width: 620px) {
   thead { display: none } table, tbody, tr, td { display: block } tr { padding: 8px 0; border-bottom: 1px solid var(--line) }
   td { border: 0; padding: 2px 0 } .acts { text-align: left; padding-top: 6px }
@@ -111,6 +124,11 @@ tr:last-child td { border-bottom: 0 }
       <section class="card"><div class="tablewrap" id="accounts"></div></section>
     </div>
 
+    <div data-pane="toon" hidden style="display:grid;gap:14px">
+      <div class="row"><button id="toonBack">&larr; Back</button><button id="toonReload">Refresh</button><span class="sub" id="toonMsg"></span></div>
+      <div id="toonView"></div>
+    </div>
+
     <div data-pane="bans" hidden style="display:grid;gap:14px">
       <section class="card">
         <h2>Bans</h2>
@@ -164,7 +182,7 @@ function render() {
   $('districts').innerHTML = state.districts.map((d) => {
     const toons = d.toons.filter((t) => !q || [t.name, t.account, t.where].some((v) => String(v).toLowerCase().includes(q)))
                          .sort((a, b) => a.name.localeCompare(b.name));
-    const rows = toons.map((t) => '<tr><td><span class="name">' + esc(t.name) + '</span>' + (t.access > 0 ? '<span class="tag staff">staff</span>' : '') +
+    const rows = toons.map((t) => '<tr><td>' + toonLink(t.avId, t.name) + (t.access > 0 ? '<span class="tag staff">staff</span>' : '') +
       (t.battle ? '<span class="tag battle">in battle</span>' : '') + '<div class="sub">' + esc(t.account || 'account unknown') + ' · id ' + t.avId + '</div></td>' +
       '<td>' + esc(t.where) + '<div class="sub">zone ' + t.zone + '</div></td><td>' + t.hp + '/' + t.maxHp + '</td><td>' + ago(t.since) + '</td>' +
       '<td class="acts"><button data-a="message" data-id="' + t.avId + '">Message</button> <button class="danger" data-a="kick" data-id="' + t.avId + '">Kick</button> ' +
@@ -183,7 +201,7 @@ function setTab(name) {
   tab = name;
   document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === name));
   document.querySelectorAll('[data-pane]').forEach((p) => { p.hidden = p.dataset.pane !== name });
-  $('filter').placeholder = { online: 'Search toon, account or place', reports: 'Search toon, account or reason', accounts: 'Search account or toon', bans: 'Search' }[name];
+  $('filter').placeholder = { online: 'Search toon, account or place', reports: 'Search toon, account or reason', accounts: 'Search account or toon', bans: 'Search', toon: 'Search' }[name];
   refreshTab();
 }
 document.querySelectorAll('#tabs button').forEach((b) => b.addEventListener('click', () => setTab(b.dataset.tab)));
@@ -203,9 +221,9 @@ function renderReports() {
     const on = r.targetOnline;
     return '<section class="card report' + (r.status === 'resolved' ? ' resolved' : '') + '"><div class="top"><span class="cat">' + esc(r.category) + '</span>' +
       '<span class="sub">' + when(r.time) + (r.district ? ' · ' + esc(r.district) : '') + '</span>' + (r.status === 'resolved' ? '<span class="tag">resolved by ' + esc(r.resolvedBy) + '</span>' : '') + '</div>' +
-      '<div><b>' + esc(r.targetName || 'toon ' + r.target) + '</b> <span class="sub">(' + esc(r.targetAccount || 'account unknown') + ', id ' + r.target + ')</span>' +
+      '<div>' + toonLink(r.target, r.targetName) + ' <span class="sub">(' + esc(r.targetAccount || 'account unknown') + ', id ' + r.target + ')</span>' +
       (on ? ' <span class="tag staff">online: ' + esc(on[0]) + ', ' + esc(on[1]) + '</span>' : ' <span class="tag">offline</span>') + '</div>' +
-      '<div class="sub">Reported by ' + esc(r.reporterName || 'toon ' + r.reporter) + ' (' + esc(r.reporterAccount || '?') + ')</div>' +
+      '<div class="sub">Reported by ' + toonLink(r.reporter, r.reporterName) + ' (' + esc(r.reporterAccount || '?') + ')</div>' +
       (r.note ? '<div class="sub">Note: ' + esc(r.note) + '</div>' : '') +
       '<div class="row">' + (on ? '<button data-a="message" data-id="' + r.target + '">Message</button><button class="danger" data-a="kick" data-id="' + r.target + '">Kick</button>' : '') +
       (r.targetAccount ? '<button class="danger" data-banacct="' + esc(r.targetAccount) + '">Ban account</button>' : '') +
@@ -214,6 +232,87 @@ function renderReports() {
   }).join('') || '<section class="card empty">' + (reports.reports.length ? 'No open reports.' : 'No reports yet. Players send them with the Report button on a toon\'s panel.') + '</section>';
 }
 $('showResolved').addEventListener('change', renderReports);
+
+// ---- a toon's page ------------------------------------------------------------------------------------------------
+let toon = null, toonId = 0, backTo = 'online', items = null, pick = null;
+const toonLink = (avId, name) => '<button class="link" data-toon="' + avId + '">' + esc(name || 'toon ' + avId) + '</button>';
+async function openToon(avId) {
+  if (tab !== 'toon') backTo = tab;
+  toonId = +avId; toon = null; setTab('toon'); $('toonView').innerHTML = '<section class="card empty">Reading the toon from the game...</section>';
+  await loadToon();
+  if (!items) api('items').then((j) => { items = j.items; renderPicker() }).catch(() => {});
+}
+async function loadToon() {
+  $('toonMsg').textContent = '';
+  try { toon = await api('toon?avId=' + toonId); renderToon() }
+  catch (e) { $('toonView').innerHTML = '<section class="card err">' + esc(e.message) + '</section>' }
+}
+$('toonBack').onclick = () => setTab(backTo);
+$('toonReload').onclick = loadToon;
+const CHEESY = ['Normal', 'Big head', 'Small head', 'Big legs', 'Small legs', 'Big toon', 'Small toon', 'Flat portrait', 'Flat profile', 'Transparent', 'No color', 'Invisible', 'Pumpkin head', 'Big white', 'Snowman'];
+function tile(k, v) { return '<div class="tile"><div class="k">' + k + '</div><div class="v">' + v + '</div></div>' }
+function renderToon() {
+  const t = toon, on = t.online, live = !!on;
+  const where = on ? '<span class="tag staff">online</span> ' + esc(on.district) + ' · ' + esc(on.where) + (on.battle ? ' <span class="tag battle">in battle</span>' : '')
+                   : '<span class="tag">offline</span> last in ' + esc(t.lastHood || '?');
+  const tracks = t.tracks.map((g) => '<tr><td>' + esc(g.name) + '</td><td>' + (g.has ? 'Level ' + g.level : '<span class="mute">not trained</span>') + '</td><td class="sub">' + g.exp + ' exp</td></tr>').join('');
+  const suits = t.cogSuits.map((s) => '<tr><td>' + s.dept + '</td><td>' + (s.hasSuit ? 'Level ' + s.level + ' · cog ' + s.type : '<span class="mute">no suit</span>') + '</td><td class="sub">' + s.merits + ' merits</td></tr>').join('');
+  const list = (a) => a.length ? a.map((n) => '<span class="toonchip">' + esc(n) + '</span>').join(' ') : '<span class="mute">empty</span>';
+  $('toonView').innerHTML =
+    '<section class="card toonhead"><div class="row" style="justify-content:space-between"><div><h2>' + esc(t.name) + '</h2>' +
+      '<div class="sub">' + esc([t.species, t.gender].filter(Boolean).join(', ')) + ' · id ' + t.avId + ' · account ' +
+      (t.account ? '<button class="link" data-acct="' + esc(t.account) + '">' + esc(t.account) + '</button>' : 'unknown') + (t.access > 0 ? ' <span class="tag staff">staff</span>' : '') + '</div>' +
+      '<div style="margin-top:4px">' + where + '</div></div>' +
+      '<div class="row">' + (live ? '<button data-a="message" data-id="' + t.avId + '">Message</button><button class="danger" data-a="kick" data-id="' + t.avId + '">Kick</button>' : '') +
+      (t.account ? '<button class="danger" data-banacct="' + esc(t.account) + '">Ban account</button>' : '') + '</div></div></section>' +
+    '<section class="card"><div class="tiles">' + tile('Laff', t.hp + ' / ' + t.maxHp) + tile('Pocket', t.money + ' / ' + t.maxMoney) + tile('Bank', t.bank + ' / ' + t.maxBank) +
+      tile('Gag pouch', t.maxCarry) + tile('Toontasks', t.quests + ' <span class="sub">tier ' + t.questTier + '</span>') + tile('Pink slips', t.pinkSlips) +
+      tile('Fish', t.fish) + tile('Flowers', t.flowers) + tile('Emotes', t.emotes) + tile('SOS cards', t.sos) + tile('Teleports', t.teleport) +
+      tile('Cheesy', esc(CHEESY[t.cheesy] || t.cheesy)) + '</div></section>' +
+    '<section class="card"><h2>Change ' + esc(t.name) + '</h2>' + (live ? '' : '<p class="sub" style="margin:0 0 8px">Not playing: changes go straight to the saved toon. Gags and Max toon need them online.</p>') +
+      '<div class="tools">' +
+      '<div class="tool"><h3>Jellybeans</h3><div class="row"><input id="beanAmt" type="number" inputmode="numeric" placeholder="Amount (−50 to take away)"></div>' +
+        '<div class="row"><button data-edit="money" data-add="1" data-from="beanAmt">Add to pocket</button><button data-edit="money" data-from="beanAmt">Set pocket</button></div>' +
+        '<div class="row"><button data-edit="bank" data-add="1" data-from="beanAmt">Add to bank</button><button data-edit="bank" data-from="beanAmt">Set bank</button></div></div>' +
+      '<div class="tool"><h3>Laff</h3><div class="row"><input id="laffAmt" type="number" inputmode="numeric" min="15" max="137" placeholder="Max laff (15-137)" value="' + t.maxHp + '"><button data-edit="maxHp" data-from="laffAmt">Set max laff</button></div>' +
+        '<div class="row"><button data-edit="heal">Heal to full</button></div></div>' +
+      '<div class="tool"><h3>Name</h3><div class="row"><input id="newName" maxlength="30" value="' + esc(t.name) + '"><button data-edit="name" data-from="newName" data-text="1">Rename</button></div></div>' +
+      '<div class="tool"><h3>Gags</h3><div class="row"><button class="liveonly" data-edit="gags" data-value="restock"' + (live ? '' : ' disabled') + '>Restock gags</button>' +
+        '<button class="liveonly danger" data-edit="gags" data-value="empty"' + (live ? '' : ' disabled') + '>Empty gags</button></div></div>' +
+      '<div class="tool"><h3>Give an item (goes to the mailbox)</h3><div class="row"><select id="itemKind"><option value="">All types</option></select>' +
+        '<input id="itemSearch" placeholder="Search"></div>' +
+        '<div class="picker" id="picker"></div><div class="row"><button class="primary" id="giveItem" disabled>Give item</button><span class="sub" id="pickName"></span></div></div>' +
+      '<div class="tool"><h3>Extras</h3><div class="row"><button data-edit="emotes">Unlock all emotes</button><button data-edit="teleport">Teleport everywhere</button></div>' +
+        '<div class="row"><input id="slipAmt" type="number" inputmode="numeric" placeholder="Pink slips" value="' + t.pinkSlips + '"><button data-edit="pinkSlips" data-from="slipAmt">Set pink slips</button></div>' +
+        '<div class="row"><select id="cheesyPick">' + CHEESY.map((c, i) => '<option value="' + i + '">' + c + '</option>').join('') + '</select><input id="cheesyMin" type="number" value="60" style="flex:0 1 70px"><span class="sub">min</span><button data-edit="cheesy">Set</button></div>' +
+        '<div class="row"><button class="liveonly danger" data-edit="maxtoon" data-sure="1"' + (live ? '' : ' disabled') + '>Max toon</button></div></div>' +
+      '</div><p id="editMsg" class="sub" style="margin:10px 0 0"></p></section>' +
+    '<div class="cols"><section class="card"><h2>Gag tracks</h2><table><tbody>' + tracks + '</tbody></table></section>' +
+      '<section class="card"><h2>Cog suits</h2><table><tbody>' + suits + '</tbody></table></section></div>' +
+    '<div class="cols"><section class="card"><h2>Mailbox</h2>' + list(t.mailbox) + (t.onOrder.length ? '<h2 style="margin-top:10px">On order</h2>' + list(t.onOrder) : '') + '</section>' +
+      '<section class="card"><h2>Friends <span class="sub">' + t.friends.length + '</span></h2><div class="toonlist">' +
+      (t.friends.map((f) => '<button class="toonchip' + (f.online ? ' on' : '') + '" data-toon="' + f.avId + '">' + esc(f.name || 'toon ' + f.avId) + '</button>').join('') || '<span class="mute">none</span>') + '</div></section></div>';
+  pick = null; $('itemSearch').addEventListener('input', renderPicker); $('itemKind').addEventListener('change', renderPicker); $('giveItem').onclick = () => pick && edit('gift', pick.code, false, $('giveItem')); renderPicker();
+}
+function renderPicker() {
+  const box = $('picker'); if (!box) return;
+  if (!items) { box.innerHTML = '<div class="empty" style="padding:8px">Loading items...</div>'; return }
+  if (!items.length) { box.innerHTML = '<div class="empty" style="padding:8px">The item list is not ready yet (the districts write it a little after starting).</div>'; return }
+  const kinds = [...new Set(items.map((i) => i.kind))], sel = $('itemKind');
+  if (sel.options.length === 1) sel.innerHTML += kinds.map((k) => '<option>' + esc(k) + ' (' + items.filter((i) => i.kind === k).length + ')</option>').join('');
+  const kind = sel.value.replace(/ \(\d+\)$/, '');
+  const q = $('itemSearch').value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if (!kind && !q.length) { box.innerHTML = '<div class="empty" style="padding:8px">Pick a type or search (' + items.length + ' items).</div>'; return }
+  const found = items.filter((i) => (!kind || i.kind === kind) && q.every((w) => (i.name + ' ' + i.kind).toLowerCase().includes(w))).slice(0, 200);
+  box.innerHTML = found.map((i) => '<button data-item="' + esc(i.code) + '"' + (pick && pick.code === i.code ? ' class="sel"' : '') + '>' + esc(i.name) + ' <span class="sub">' + esc(i.kind) + '</span></button>').join('') ||
+    '<div class="empty" style="padding:8px">No item matches.</div>';
+}
+async function edit(op, value, add, btn) {
+  const msg = $('editMsg'); msg.className = 'sub'; msg.textContent = 'Working...'; if (btn) btn.disabled = true;
+  try { const j = await api('action', { action: 'edit', avId: toon.avId, name: toon.name, op, value, add });
+        await loadToon(); alertMsg($('editMsg'), (j.live ? 'Done live: ' : 'Saved: ') + j.result) }
+  catch (e) { alertMsg(msg, e.message, true); if (btn) btn.disabled = false }
+}
 function renderAccounts() {
   if (!accounts) return;
   const q = $('filter').value.trim().toLowerCase();
@@ -223,8 +322,8 @@ function renderAccounts() {
     list.map((a) => '<tr><td><span class="name">' + esc(a.name) + '</span>' + (a.admin ? '<span class="tag staff">admin</span>' : '') + (a.banned ? '<span class="tag battle">banned</span>' : '') +
       (a.online ? '<span class="tag staff">online</span>' : '') + '<div class="sub">' + (a.created ? 'joined ' + esc(a.created.replace(/ \d\d:\d\d:\d\d/, '')) : 'never entered the game') +
       (a.recovery ? '' : ' · no recovery answers') + '</div></td>' +
-      '<td><div class="toonlist">' + (a.toons.map((t) => '<span class="toonchip' + (t.online ? ' on' : '') + '" title="id ' + t.avId + (t.online ? ', online in ' + esc(t.online) : '') + '">' +
-        esc(t.name) + ' · ' + t.maxHp + ' laff · ' + t.beans + ' beans</span>').join('') || '<span class="sub">no toons</span>') + '</div></td>' +
+      '<td><div class="toonlist">' + (a.toons.map((t) => '<button class="toonchip' + (t.online ? ' on' : '') + '" data-toon="' + t.avId + '" title="id ' + t.avId + (t.online ? ', online in ' + esc(t.online) : '') + '">' +
+        esc(t.name) + ' · ' + t.maxHp + ' laff · ' + t.beans + ' beans</button>').join('') || '<span class="sub">no toons</span>') + '</div></td>' +
       '<td class="sub">' + esc(a.lastLogin || '') + '</td><td class="acts">' + (a.admin ? '' : a.banned ? '<button data-unban="' + esc(a.name) + '">Unban</button>'
         : '<button class="danger" data-banacct="' + esc(a.name) + '">Ban</button>') + '</td></tr>').join('') + '</tbody></table>';
 }
@@ -238,6 +337,16 @@ const ACTS = {
 };
 document.addEventListener('click', async (e) => {
   const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.toon) return openToon(b.dataset.toon);
+  if (b.dataset.acct) { $('filter').value = b.dataset.acct; return setTab('accounts') }
+  if (b.dataset.item) { pick = items.find((i) => i.code === b.dataset.item); $('giveItem').disabled = !pick; $('pickName').textContent = pick ? pick.name : ''; return renderPicker() }
+  if (b.dataset.edit) {
+    const op = b.dataset.edit; let value = b.dataset.value || null;
+    if (b.dataset.from) { const v = $(b.dataset.from).value.trim(); if (!v) return alertMsg($('editMsg'), 'Fill in the box first.', true); value = b.dataset.text ? v : +v }
+    if (op === 'cheesy') value = [+$('cheesyPick').value, +$('cheesyMin').value || 60];
+    if (b.dataset.sure && b.dataset.armed !== '1') { b.dataset.armed = '1'; const was = b.textContent; b.textContent = 'Tap again'; setTimeout(() => { b.dataset.armed = ''; b.textContent = was }, 4000); return }
+    return edit(op, value, !!b.dataset.add, b);
+  }
   if (b.dataset.resolve || b.dataset.reopen) {
     const id = b.dataset.resolve || b.dataset.reopen, note = document.querySelector('[data-note="' + CSS.escape(id) + '"]');
     b.disabled = true; try { await api('action', { action: b.dataset.resolve ? 'resolve' : 'reopen', id, text: note ? note.value.trim() : '' }); refresh(); refreshTab() } catch (err) { b.disabled = false }

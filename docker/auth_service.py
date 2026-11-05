@@ -131,7 +131,7 @@ def yaml_fields(path):
 def game_db():
     """{"accounts": {name: {created, lastLogin, toons:[{avId,name,maxHp,beans}]}}, "owner": {avId: name}}, read at most every 30 s"""
     if GAMEDB_CACHE["v"] is not None and time.time()-GAMEDB_CACHE["t"]<30: return GAMEDB_CACHE["v"]
-    accounts={}; owner={}
+    accounts={}; owner={}; names={}
     try: ids=json.load(open(os.path.join(GAMEDB,"accounts.json")))
     except Exception: ids={}
     for name,accId in ids.items():
@@ -141,11 +141,11 @@ def game_db():
             if avId=="0": continue
             t=yaml_fields(os.path.join(GAMEDB,"astrondb","%s.yaml"%avId))
             if not t: continue
-            owner[int(avId)]=name
+            owner[int(avId)]=name; names[int(avId)]=t.get("setName","")
             num=lambda k: int(t[k]) if t.get(k,"").lstrip("-").isdigit() else 0
             toons.append({"avId":int(avId),"name":t.get("setName",""),"maxHp":num("setMaxHp"),"beans":num("setMoney")+num("setBankMoney")})
         accounts[name]={"created":a.get("CREATED",""),"lastLogin":a.get("LAST_LOGIN",""),"toons":toons}
-    GAMEDB_CACHE.update(t=time.time(),v={"accounts":accounts,"owner":owner})
+    GAMEDB_CACHE.update(t=time.time(),v={"accounts":accounts,"owner":owner,"names":names})
     return GAMEDB_CACHE["v"]
 def mod_accounts():
     db=game_db(); online={t["avId"]:d["district"] for d in mod_state(False)["districts"] for t in d.get("toons",[])}
@@ -192,7 +192,7 @@ def mod_state(withLog=True):
     try: openReports=mod_reports()["open"]
     except Exception: openReports=0
     return {"now":int(time.time()),"districts":districts,"banned":banned,"log":log,"accountCount":len(users),"openReports":openReports}
-def mod_command(action,avId,text,by):
+def mod_command(action,avId,text,by,**extra):
     os.makedirs(os.path.join(MOD,"cmd"),exist_ok=True); os.makedirs(os.path.join(MOD,"done"),exist_ok=True)
     now=time.time()
     for sub in ("cmd","done"):                           # tidy up: the districts ignore commands older than a minute
@@ -202,7 +202,7 @@ def mod_command(action,avId,text,by):
                 if now-os.path.getmtime(p)>180: os.remove(p)
             except OSError: pass
     cid="%d-%s.json"%(int(now*1000),os.urandom(3).hex()); p=os.path.join(MOD,"cmd",cid)
-    json.dump({"action":action,"avId":int(avId),"text":text,"by":by,"time":now},open(p+".tmp","w")); os.replace(p+".tmp",p)
+    json.dump(dict(extra,action=action,avId=int(avId),text=text,by=by,time=now),open(p+".tmp","w")); os.replace(p+".tmp",p)
     return cid
 def mod_action(req,by):
     """returns (error or None, result dict)"""
@@ -232,6 +232,7 @@ def mod_action(req,by):
                 for t in d.get("toons",[]):
                     if t.get("account")==name: ids.append(mod_command("ban",t["avId"],"This account has been banned."+(" Reason: "+text if text else ""),by))
         return None,{"ids":ids}
+    if action=="edit": return mod_edit(req,by)
     if action in ("resolve","reopen"):
         rid=str(req.get("id",""))
         with LOCK:
@@ -245,6 +246,45 @@ def mod_action(req,by):
 def mod_result(cid):
     try: return json.load(open(os.path.join(MOD,"done",os.path.basename(cid))))
     except Exception: return {"ok":False,"pending":True}
+def mod_wait(cid,seconds=8):
+    end=time.time()+seconds
+    while time.time()<end:
+        r=mod_result(cid)
+        if not r.get("pending"): return r
+        time.sleep(0.25)
+    return {"ok":False,"result":"No district answered. The game server may be restarting."}
+def online_toon(avId):
+    for d in mod_state(False)["districts"]:
+        if d.get("stale"): continue
+        for t in d.get("toons",[]):
+            if t["avId"]==avId: return dict(t,district=d["district"])
+    return None
+EDIT_OPS=("money","bank","maxHp","heal","name","pinkSlips","emotes","teleport","gags","cheesy","maxtoon","gift")
+def mod_toon(avId,by):
+    """everything the panel shows on a toon's page: read from the database by a district, plus where it is now"""
+    cid=mod_command("inspect",avId,"",by,anyDistrict=True); r=mod_wait(cid)
+    if not r.get("ok"): return r.get("result") or "Could not read that toon.",None
+    toon=r["result"]; db=game_db()
+    toon["account"]=db["owner"].get(avId,""); toon["online"]=online_toon(avId)
+    toon["friends"]=[{"avId":f,"name":db["names"].get(f,""),"online":bool(online_toon(f))} for f in toon.get("friends",[])]
+    return None,toon
+def mod_edit(req,by):
+    avId=int(req.get("avId",0)); op=req.get("op")
+    if not avId or op not in EDIT_OPS: return "Unknown change.",None
+    value=req.get("value")
+    if isinstance(value,str): value=value[:60]
+    elif isinstance(value,list): value=[int(v) for v in value[:2]]
+    elif value is not None: value=int(value)
+    playing=online_toon(avId)
+    cid=mod_command("edit",avId,"",by,anyDistrict=not playing,op=op,value=value,add=bool(req.get("add")))
+    r=mod_wait(cid)
+    mod_audit(by,"edit toon %s (%s) %s %s%s -> %s"%(avId,req.get("name",""),op,"+" if req.get("add") else "",value,r.get("result")))
+    GAMEDB_CACHE["t"]=0                                   # names and beans may have changed
+    if not r.get("ok"): return r.get("result") or "That didn't work.",None
+    return None,{"result":r["result"],"live":bool(playing)}
+def mod_items():
+    try: return {"items":json.load(open(os.path.join(MOD,"items.json")))}
+    except Exception: return {"items":[]}
 class H(http.server.BaseHTTPRequestHandler):
     def reply(self,code,msg):
         self.send_response(code); self.end_headers(); self.wfile.write(msg.encode())
@@ -265,9 +305,17 @@ class H(http.server.BaseHTTPRequestHandler):
             by=self.mod_session()
             if not by: return self.reply_json(401,{"error":"Sign in again."})
             return self.reply_json(200,dict(mod_state(),you=by))
-        if path in ("/mod/api/accounts","/mod/api/reports"):
+        if path in ("/mod/api/accounts","/mod/api/reports","/mod/api/items"):
             if not self.mod_session(): return self.reply_json(401,{"error":"Sign in again."})
-            return self.reply_json(200,mod_accounts() if path.endswith("accounts") else mod_reports())
+            return self.reply_json(200,{"accounts":mod_accounts,"reports":mod_reports,"items":mod_items}[path.rsplit("/",1)[1]]())
+        if path=="/mod/api/toon":
+            by=self.mod_session()
+            if not by: return self.reply_json(401,{"error":"Sign in again."})
+            q=dict(x.split("=",1) for x in self.path.split("?",1)[-1].split("&") if "=" in x)
+            try: avId=int(q.get("avId","0"))
+            except ValueError: avId=0
+            err,toon=mod_toon(avId,by) if avId else ("Pick a toon.",None)
+            return self.reply_json(400 if err else 200,{"error":err} if err else toon)
         if path=="/mod/api/result":
             if not self.mod_session(): return self.reply_json(401,{"error":"Sign in again."})
             q=dict(x.split("=",1) for x in self.path.split("?",1)[-1].split("&") if "=" in x)
