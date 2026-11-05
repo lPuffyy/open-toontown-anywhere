@@ -328,9 +328,10 @@ class CatalogItem:
             dg.putArg(self.posHpr[0], STInt16, 10)
             dg.putArg(self.posHpr[1], STInt16, 10)
             dg.putArg(self.posHpr[2], STInt16, 100)
-            dg.putArg(self.posHpr[3], STInt8, 256.0 / 360.0)
-            dg.putArg(self.posHpr[4], STInt8, 256.0 / 360.0)
-            dg.putArg(self.posHpr[5], STInt8, 256.0 / 360.0)
+            # angles are one signed byte each; the old engine wrapped anything past 180 degrees, today's raises (which made every
+            # house with a piece turned that far fail to save), so wrap them here
+            for angle in self.posHpr[3:6]:
+                dg.addInt8((int(round(angle * 256.0 / 360.0)) + 128) % 256 - 128)
         if store & GiftTag:
             dg.addString(self.giftTag)
         dg.addUint8(self.specialEventId)

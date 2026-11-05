@@ -241,8 +241,8 @@ class DistributedHouseAI(DistributedObjectAI):
                 data['placedWindows'] = self.interior.windowBlob()
             with open(self.__savePath(), 'wb') as f:
                 pickle.dump(data, f)
-        except Exception:
-            self.notify.warning('could not save the interior of house %s' % self.doId)
+        except Exception as e:
+            self.notify.warning('could not save the interior of house %s: %r' % (self.doId, e))
 
     def destroy_all(self):
         if self.furnitureMgr is not None:
