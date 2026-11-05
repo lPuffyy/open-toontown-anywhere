@@ -1,5 +1,7 @@
 # Open Toontown: Anywhere
 
+**Play it: <https://toontown.puffsco.com/>** (Toontown on iPhone, iPad, Android and PC, free, in your web browser)
+
 A fork of [Open Toontown](https://github.com/open-toontown/open-toontown), the code of Disney's Toontown Online (sv1.0.47.38), made to
 run the game for [Toontown: Anywhere](https://github.com/lPuffyy/toontown-anywhere): the whole server in one Docker image, and a
 client that runs in a web browser.
