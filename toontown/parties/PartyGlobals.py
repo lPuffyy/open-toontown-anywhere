@@ -157,8 +157,6 @@ DecorationIds = IntEnum('DecorationIds', ('BalloonAnvil',
  'snowman',
  'snowDoodle',
  'BalloonAnvilValentine'), start=0)
-# (the old Enum class had getString(id) -> name; the planner, party signs and events page still call it)
-ActivityIds.getString = DecorationIds.getString = classmethod(lambda cls, i: cls(i).name)
 DECORATION_VOLUME = 1.0
 DECORATION_CUTOFF = 45
 VictoryPartyDecorationIds = frozenset([DecorationIds.Hydra,
@@ -882,3 +880,7 @@ def getCostOfParty(partyInfo):
         newCost += DecorationInformationDict[decorBase.decorId]['cost']
 
     return newCost
+
+# (the old Enum class had getString(id) -> name; the planner, activities, invites and events page still call it on every enum here)
+for _enum in [v for v in list(globals().values()) if isinstance(v, IntEnum.__class__) and issubclass(v, IntEnum) and v is not IntEnum]:
+    _enum.getString = classmethod(lambda cls, i: cls(i).name)

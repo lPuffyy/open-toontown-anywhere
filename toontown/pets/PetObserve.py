@@ -54,7 +54,7 @@ class PetActionObserve(PetObserve):
         petBrain._handleActionObserve(self)
 
     def __repr__(self):
-        return '%s(%s,%s)' % (self.__class__.__name__, Actions.getString(self.action), self.avId)
+        return '%s(%s,%s)' % (self.__class__.__name__, Actions(self.action).name, self.avId)
 
 
 class PetPhraseObserve(PetObserve):
