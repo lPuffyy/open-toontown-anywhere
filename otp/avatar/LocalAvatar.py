@@ -639,7 +639,7 @@ class LocalAvatar(DistributedAvatar.DistributedAvatar, DistributedSmoothNode.Dis
         height = self.getClampedAvatarHeight()
         point = Point3(height * (7 / 3.0), height * (-7 / 3.0), height)
         # (garden and pet movies can overlap, e.g. picking a flower while chatting: keep the first saved camera, and a restore with
-        # nothing saved leaves the camera alone instead of crashing)
+        # nothing saved goes back to the player's chosen camera view instead of crashing)
         if not hasattr(self, 'prevIdealPos'):
             self.prevIdealPos = self.getIdealCameraPos()
         self.setIdealCameraPos(point)
@@ -649,6 +649,8 @@ class LocalAvatar(DistributedAvatar.DistributedAvatar, DistributedSmoothNode.Dis
         if hasattr(self, 'prevIdealPos'):
             self.setIdealCameraPos(self.prevIdealPos)
             del self.prevIdealPos
+        elif getattr(self, 'cameraPositions', None):
+            self.setCameraPositionByIndex(self.cameraIndex)
         self.posCamera(1, 0.7)
 
     def setCameraSettings(self, camSettings):
