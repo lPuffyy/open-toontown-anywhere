@@ -303,8 +303,10 @@ class EventsPage(ShtikerPage.ShtikerPage):
         self.cancelPartyResultGui.doneStatus = ''
         self.cancelPartyResultGui.hide()
         if base.localAvatar.hostedParties is not None and len(base.localAvatar.hostedParties) > 0:
-            for partyInfo in base.localAvatar.hostedParties:
-                if partyInfo.status == PartyGlobals.PartyStatus.Pending or partyInfo.status == PartyGlobals.PartyStatus.CanStart or partyInfo.status == PartyGlobals.PartyStatus.NeverStarted or partyInfo.status == PartyGlobals.PartyStatus.Started:
+            # (a host can have a party that never started and a newer one: show the one going on, then one that can start, then the next planned)
+            order = [PartyGlobals.PartyStatus.Started, PartyGlobals.PartyStatus.CanStart, PartyGlobals.PartyStatus.Pending, PartyGlobals.PartyStatus.NeverStarted]
+            for partyInfo in sorted(base.localAvatar.hostedParties, key=lambda p: (order.index(p.status) if p.status in order else len(order), p.startTime)):
+                if partyInfo.status in order:
                     self.hostedPartyInfo = partyInfo
                     self.loadGuests()
                     self.loadActivities()
