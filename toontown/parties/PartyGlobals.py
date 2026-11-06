@@ -881,6 +881,8 @@ def getCostOfParty(partyInfo):
 
     return newCost
 
-# (the old Enum class had getString(id) -> name; the planner, activities, invites and events page still call it on every enum here)
+# (the old Enum class had getString(id) -> name and fromString(name) -> id; the planner, activities, invites, decorations and
+# events page still call them on every enum here)
 for _enum in [v for v in list(globals().values()) if isinstance(v, IntEnum.__class__) and issubclass(v, IntEnum) and v is not IntEnum]:
     _enum.getString = classmethod(lambda cls, i: cls(i).name)
+    _enum.fromString = classmethod(lambda cls, name: cls[name])
