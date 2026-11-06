@@ -50,5 +50,5 @@ for development; see the [upstream README](https://github.com/open-toontown/open
 
 ## License and credits
 
-Open Toontown is the work of its contributors; this fork adds our own changes on top. See [LICENSE](LICENSE). Panda3D files in
+Open Toontown is the work of its contributors; this fork adds Toontown: Anywhere's changes on top. See [LICENSE](LICENSE). Panda3D files in
 `docker/overlay` keep their own license (`docker/overlay/LICENSE-Panda3D.txt`).
