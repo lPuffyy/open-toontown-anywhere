@@ -2,6 +2,10 @@ import math
 from direct.gui.DirectGui import DirectFrame
 from panda3d.core import Point3
 
+
+def cmp(a, b):          # (Python 2's built-in, gone in Python 3)
+    return (a > b) - (a < b)
+
 class StretchingArrow(DirectFrame):
     notify = directNotify.newCategory('StretchingArrow')
     arrowMoving = 0
