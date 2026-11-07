@@ -89,7 +89,7 @@ def client_log(ip,text):
     return True
 # ---- the moderator panel (/mod/): for accounts marked "admin" in users.json. The districts write who is playing to
 # MOD/online-<district>.json and carry out the commands left in MOD/cmd/ (toontown/ai/ModToolsAI.py).
-MOD="/ot/data/mod"; MOD_PAGE="/ot/mod.html"; MOD_LOG=os.path.join(MOD,"audit.log"); SESSION_HOURS=12
+MOD="/ot/data/mod"; MOD_PAGE="/ot/mod.html"; MOD_LOG=os.path.join(MOD,"audit.log"); SESSION_HOURS=24*30
 def mod_secret():
     p=os.path.join(MOD,"secret")
     try: return bytes.fromhex(open(p).read().strip())

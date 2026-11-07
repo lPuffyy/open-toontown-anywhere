@@ -63,6 +63,18 @@ button.toonchip { border: 0; font-weight: 500; color: var(--ink) } button.toonch
 .picker button { display: block; width: 100%; text-align: left; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; font-weight: 500 }
 .picker button.sel { background: var(--accent); color: var(--accent-ink) } .picker .sub { font-size: .78rem }
 .mute { color: var(--mute) } .liveonly[disabled] { opacity: .45 }
+#loginCard { max-width: 400px; width: 100%; margin: 6vh auto 0; padding: 22px 20px; display: grid; gap: 14px }
+#loginCard h2 { font-size: 1.3rem; margin: 0 } #loginCard p { margin: 0 }
+#loginForm { display: grid; gap: 14px } #loginForm label { display: grid; gap: 5px; font-size: .82rem; font-weight: 650; color: var(--mute) }
+#loginForm input { padding: 11px 12px; font-size: 16px; color: var(--ink) } #loginForm input:focus { outline: 2px solid var(--accent); outline-offset: 1px }
+.pw { position: relative } .pw input { padding-right: 64px }
+.pw button { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 4px 9px; font-size: .8rem; background: transparent; border: 0; color: var(--accent) }
+button.big { padding: 11px 14px; font-size: 1rem; width: 100% }
+#lmsg:empty { display: none } #lmsg { background: color-mix(in srgb, var(--bad) 12%, transparent); border-radius: 8px; padding: 8px 10px; font-size: .9rem }
+.live { display: inline-flex; align-items: center; gap: 6px; font-size: .82rem; color: var(--mute) }
+.live i { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); animation: pulse 2s infinite }
+.live.off i { background: var(--bad); animation: none } .live.off { color: var(--bad) }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--ok) 55%, transparent) } 70%, 100% { box-shadow: 0 0 0 7px transparent } }
 @media (max-width: 620px) {
   thead { display: none } table, tbody, tr, td { display: block } tr { padding: 8px 0; border-bottom: 1px solid var(--line) }
   td { border: 0; padding: 2px 0 } .acts { text-align: left; padding-top: 6px }
@@ -73,17 +85,18 @@ button.toonchip { border: 0; font-weight: 500; color: var(--ink) } button.toonch
 <div class="wrap">
   <header>
     <div><h1>Mod Panel</h1><div class="sub">Toontown: Anywhere</div></div>
-    <div class="row" id="who" hidden><span class="sub" id="whoName"></span><button id="signOut">Sign out</button></div>
+    <div class="row" id="who" hidden><span class="live" id="live"><i></i><span id="liveTxt">Live</span></span><span class="sub" id="whoName"></span><button id="signOut">Sign out</button></div>
   </header>
 
   <section class="card" id="loginCard" hidden>
-    <h2>Sign in</h2>
-    <form id="loginForm" class="row">
-      <input class="grow" id="lu" autocomplete="username" placeholder="Account name" autocapitalize="off">
-      <input class="grow" id="lp" type="password" autocomplete="current-password" placeholder="Password">
-      <button class="primary" type="submit">Sign in</button>
+    <div><h2>Sign in</h2><p class="sub">Moderators only</p></div>
+    <form id="loginForm">
+      <label>Account name<input id="lu" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="next" required></label>
+      <label>Password<span class="pw"><input id="lp" type="password" autocomplete="current-password" enterkeyhint="go" required><button type="button" id="pwShow">Show</button></span></label>
+      <button class="primary big" type="submit" id="loginGo">Sign in</button>
+      <p id="lmsg" class="err" role="alert"></p>
     </form>
-    <p class="sub">Only accounts marked admin can sign in. <span id="lmsg" class="err"></span></p>
+    <p class="sub">Only accounts marked admin can sign in. You stay signed in on this device for 30 days.</p>
   </section>
 
   <div id="main" hidden style="display:grid;gap:14px">
@@ -142,8 +155,8 @@ button.toonchip { border: 0; font-weight: 500; color: var(--ink) } button.toonch
 </div>
 <script>
 const $ = (id) => document.getElementById(id);
-const store = { get(k) { try { return sessionStorage.getItem(k) } catch (e) { return null } },
-                set(k, v) { try { v == null ? sessionStorage.removeItem(k) : sessionStorage.setItem(k, v) } catch (e) {} } };
+const store = { get(k) { try { return localStorage.getItem(k) || sessionStorage.getItem(k) } catch (e) { return null } },
+                set(k, v) { for (const s of ['localStorage', 'sessionStorage']) { try { v == null ? window[s].removeItem(k) : window[s].setItem(k, v) } catch (e) {} } } };
 let token = store.get('modToken'), state = null, timer = null, act = null;
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 function ago(t) { const s = Math.max(0, (state ? state.now : Date.now() / 1000) - t);
@@ -156,20 +169,44 @@ async function api(path, body) {
   if (!r.ok) throw new Error(j.error || 'Something went wrong (' + r.status + ').');
   return j;
 }
-function showLogin(msg) { $('loginCard').hidden = false; $('main').hidden = true; $('who').hidden = true; $('lmsg').textContent = msg || ''; }
+function showLogin(msg) { $('loginCard').hidden = false; $('main').hidden = true; $('who').hidden = true; $('lmsg').textContent = msg || ''; setTimeout(() => $('lu').value ? $('lp').focus() : $('lu').focus(), 50); }
 function signOut() { token = null; store.set('modToken', null); clearInterval(timer); timer = null; showLogin(); }
 $('signOut').onclick = signOut;
 $('loginForm').addEventListener('submit', async (e) => {
-  e.preventDefault(); $('lmsg').textContent = '';
+  e.preventDefault(); $('lmsg').textContent = ''; $('loginGo').disabled = true; $('loginGo').textContent = 'Signing in...';
   try { const j = await api('login', $('lu').value.trim().toLowerCase() + ':' + $('lp').value); token = j.token; store.set('modToken', token); $('lp').value = ''; start(); }
   catch (err) { $('lmsg').textContent = err.message }
+  $('loginGo').disabled = false; $('loginGo').textContent = 'Sign in';
 });
-function start() { $('loginCard').hidden = true; $('main').hidden = false; $('who').hidden = false; refresh(); clearInterval(timer); timer = setInterval(refresh, 5000); }
+$('pwShow').onclick = () => { const on = $('lp').type === 'password'; $('lp').type = on ? 'text' : 'password'; $('pwShow').textContent = on ? 'Hide' : 'Show' };
+// live: the page asks for fresh numbers every 2 seconds while it is on screen (and straight away when you come back to it)
+let lastOk = 0, fails = 0, busy = false, slow = 0;
+function setLive() {
+  const off = fails >= 2; $('live').classList.toggle('off', off);
+  $('liveTxt').textContent = off ? 'Connection lost, retrying' : lastOk ? 'Live' : 'Connecting';
+}
+function start() {
+  $('loginCard').hidden = true; $('main').hidden = false; $('who').hidden = false; refresh(); clearInterval(timer); timer = setInterval(() => { if (!document.hidden) refresh() }, 2000);
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden && token) refresh() });
+addEventListener('online', () => { if (token) refresh() });
+addEventListener('focus', () => { if (token) refresh() });
 async function refresh() {
-  try { state = await api('state'); render() } catch (e) { if (token) $('stats').innerHTML = '<span class="err">' + esc(e.message) + '</span>'; return }
-  // keep the open tab current, but never redraw the reports under a note being typed
+  if (busy || !token) return; busy = true;
+  try { state = await api('state'); lastOk = Date.now(); fails = 0; setLive(); render() }
+  catch (e) { if (token) { fails++; setLive(); if (fails >= 2) $('stats').innerHTML = '<span class="err">' + esc(e.message) + '</span>' } busy = false; return }
+  busy = false;
+  // the other tabs and the open toon refresh every other beat (4 s), and only when nothing is half-typed, so a refresh never eats what you are doing
+  if (++slow % 2) return;
   const typing = document.activeElement && document.activeElement.dataset && document.activeElement.dataset.note !== undefined;
   if (tab === 'accounts' || (tab === 'reports' && !typing && ![...document.querySelectorAll('[data-note]')].some((i) => i.value))) refreshTab();
+  if (tab === 'toon' && toonId && toonQuiet()) loadToon(true);
+}
+// nothing in the toon's page is focused, changed, or picked: safe to redraw it with fresh numbers
+function toonQuiet() {
+  const v = $('toonView'); if (!v || act || pick) return false;
+  if (v.contains(document.activeElement) && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) return false;
+  return ![...v.querySelectorAll('input')].some((i) => i.value !== i.defaultValue);
 }
 function render() {
   $('whoName').textContent = 'Signed in as ' + state.you;
@@ -242,13 +279,14 @@ async function openToon(avId) {
   await loadToon();
   if (!items) api('items').then((j) => { items = j.items; renderPicker() }).catch(() => {});
 }
-async function loadToon() {
-  $('toonMsg').textContent = '';
-  try { toon = await api('toon?avId=' + toonId); renderToon() }
-  catch (e) { $('toonView').innerHTML = '<section class="card err">' + esc(e.message) + '</section>' }
+async function loadToon(quiet) {
+  if (!quiet) $('toonMsg').textContent = '';
+  const was = window.scrollY;
+  try { const t = await api('toon?avId=' + toonId); if (quiet && (tab !== 'toon' || !toonQuiet())) return; toon = t; renderToon(); if (quiet) scrollTo(0, was) }
+  catch (e) { if (!quiet) $('toonView').innerHTML = '<section class="card err">' + esc(e.message) + '</section>' }
 }
 $('toonBack').onclick = () => setTab(backTo);
-$('toonReload').onclick = loadToon;
+$('toonReload').onclick = () => loadToon();
 const CHEESY = ['Normal', 'Big head', 'Small head', 'Big legs', 'Small legs', 'Big toon', 'Small toon', 'Flat portrait', 'Flat profile', 'Transparent', 'No color', 'Invisible', 'Pumpkin head', 'Big white', 'Snowman'];
 function tile(k, v) { return '<div class="tile"><div class="k">' + k + '</div><div class="v">' + v + '</div></div>' }
 function renderToon() {
