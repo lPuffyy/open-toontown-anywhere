@@ -285,6 +285,105 @@ def mod_edit(req,by):
 def mod_items():
     try: return {"items":json.load(open(os.path.join(MOD,"items.json")))}
     except Exception: return {"items":[]}
+# ---- push notifications for players who installed the game (Web Push). A player turns them on in the game's settings; the page
+# sends its subscription here, and a moderator writes a message in the panel's Events tab that goes to every subscription.
+# Needs the pywebpush package (in the Docker image); without it everything else still works and the panel says so.
+PUSH=os.path.join("/ot/data","push"); PUSH_SUBS=os.path.join(PUSH,"subs.json"); PUSH_SENT=os.path.join(PUSH,"sent.json"); PUSH_KEY=os.path.join(PUSH,"vapid_private.pem")
+PUSH_SITE="https://toontown.puffsco.com"; PUSH_RATE={}; PUSH_BUSY=[False]
+# the kinds of message a player can choose; the game's settings list the same keys
+PUSH_TOPICS={"invasions":"Cog invasions","bingo":"Bingo night","beans":"Extra beans","events":"Events","players":"Player count"}
+def push_wants(rec,topic): return topic in rec.get("topics",list(PUSH_TOPICS))
+def push_hosts_ok(url):
+    """only the browsers' own push services: the server posts to this address, so it must never be an address the player chose"""
+    m=re.match(r"^https://([a-z0-9.-]+)(?::443)?/[A-Za-z0-9_./~%=+-]{8,1500}$",url or "")
+    if not m: return False
+    h=m.group(1)
+    return h in ("web.push.apple.com","fcm.googleapis.com","updates.push.services.mozilla.com") or h.endswith(".notify.windows.com") or h.endswith(".push.apple.com")
+def push_read(path,default):
+    try: return json.load(open(path,encoding="utf8"))
+    except Exception: return default
+def push_write(path,obj):
+    os.makedirs(PUSH,exist_ok=True); tmp=path+".tmp"
+    with open(tmp,"w",encoding="utf8") as f: json.dump(obj,f)
+    os.replace(tmp,path)
+def push_public_key():
+    """the server's public push key (base64url), made once and kept in /ot/data/push; None when pywebpush is missing"""
+    try:
+        import base64
+        from py_vapid import Vapid
+        from cryptography.hazmat.primitives import serialization
+        os.makedirs(PUSH,exist_ok=True)
+        v=Vapid()
+        if os.path.exists(PUSH_KEY): v=Vapid.from_file(PUSH_KEY)
+        else: v.generate_keys(); v.save_key(PUSH_KEY); os.chmod(PUSH_KEY,0o600)
+        raw=v.public_key.public_bytes(serialization.Encoding.X962,serialization.PublicFormat.UncompressedPoint)
+        return base64.urlsafe_b64encode(raw).rstrip(b"=").decode()
+    except Exception: return None
+def push_subscribe(body,ip):
+    now=time.time(); PUSH_RATE[ip]=[x for x in PUSH_RATE.get(ip,[]) if now-x<3600]
+    if len(PUSH_RATE[ip])>=20: return "Too many tries. Try again later."
+    PUSH_RATE[ip].append(now)
+    try:
+        j=json.loads(body); s=j.get("subscription") or {}; ep=s.get("endpoint"); k=s.get("keys") or {}
+        topics=[x for x in (j.get("topics") if isinstance(j.get("topics"),list) else list(PUSH_TOPICS)) if x in PUSH_TOPICS]
+        if not push_hosts_ok(ep) or not isinstance(k.get("p256dh"),str) or not isinstance(k.get("auth"),str) or len(k["p256dh"])>200 or len(k["auth"])>60: return "Not a valid subscription."
+    except Exception: return "Not a valid subscription."
+    with LOCK:
+        subs=push_read(PUSH_SUBS,{})
+        if len(subs)>=5000 and ep not in subs: return "Full."
+        subs[ep]={"sub":{"endpoint":ep,"keys":{"p256dh":k["p256dh"],"auth":k["auth"]}},"t":subs.get(ep,{}).get("t",int(now)),"topics":topics}
+        push_write(PUSH_SUBS,subs)
+    return None
+def push_unsubscribe(body):
+    try: ep=json.loads(body).get("endpoint")
+    except Exception: return
+    with LOCK:
+        subs=push_read(PUSH_SUBS,{})
+        if subs.pop(ep,None) is not None: push_write(PUSH_SUBS,subs)
+def push_state():
+    sent=push_read(PUSH_SENT,[])
+    subs=push_read(PUSH_SUBS,{})
+    return {"ready":push_public_key() is not None,"subscribers":len(subs),"busy":PUSH_BUSY[0],"history":sent[-15:][::-1],
+            "topics":[{"key":k,"name":n,"count":sum(1 for r in subs.values() if push_wants(r,k))} for k,n in PUSH_TOPICS.items()]}
+def push_deliver(rec,title,text,url,by,topic):
+    ok=gone=failed=0
+    try:
+        from pywebpush import webpush, WebPushException
+        data=json.dumps({"title":title,"body":text,"url":url})
+        for ep,r in list(push_read(PUSH_SUBS,{}).items()):
+            if not push_wants(r,topic): continue
+            try: webpush(subscription_info=r["sub"],data=data,vapid_private_key=PUSH_KEY,vapid_claims={"sub":PUSH_SITE},ttl=86400,timeout=10); ok+=1
+            except WebPushException as e:
+                code=getattr(getattr(e,"response",None),"status_code",0)
+                if code in (404,410): gone+=1; rec.setdefault("dead",[]).append(ep)
+                else: failed+=1
+            except Exception: failed+=1
+    except Exception as e: failed+=1; rec["error"]=str(e)[:120]
+    dead=rec.pop("dead",[])
+    with LOCK:
+        if dead:
+            subs=push_read(PUSH_SUBS,{})
+            for ep in dead: subs.pop(ep,None)
+            push_write(PUSH_SUBS,subs)
+        rec.update(ok=ok,gone=gone,failed=failed,done=True)
+        hist=push_read(PUSH_SENT,[]); hist=[h for h in hist if h.get("t")!=rec["t"]]+[rec]; push_write(PUSH_SENT,hist[-100:])
+    PUSH_BUSY[0]=False; mod_audit(by,"push finished: %d delivered, %d expired, %d failed"%(ok,gone,failed))
+def push_send(req,by):
+    topic=req.get("topic")
+    if topic not in PUSH_TOPICS: return "Pick what kind of message this is.",None
+    title=str(req.get("title") or "").strip()[:60]; text=str(req.get("text") or "").strip()[:200]; url=str(req.get("url") or "/play/").strip()[:200]
+    if not title or not text: return "Write a title and a message.",None
+    if not re.match(r"^/[A-Za-z0-9_./?=&#%-]*$",url) or url.startswith("//"): return "The link must be a path on this site, such as /play/.",None
+    if push_public_key() is None: return "Push is not installed on this server yet.",None
+    if PUSH_BUSY[0]: return "A message is still being sent. Wait a moment.",None
+    n=sum(1 for r in push_read(PUSH_SUBS,{}).values() if push_wants(r,topic))
+    if not n: return "Nobody has turned on %s notifications yet."%PUSH_TOPICS[topic],None
+    PUSH_BUSY[0]=True; rec={"t":int(time.time()),"by":by,"topic":topic,"title":title,"text":text,"url":url,"to":n}
+    with LOCK:
+        hist=push_read(PUSH_SENT,[]); hist.append(rec); push_write(PUSH_SENT,hist[-100:])
+    mod_audit(by,"push (%s) to %d: %s"%(topic,n,title))
+    threading.Thread(target=push_deliver,args=(rec,title,text,url,by,topic),daemon=True).start()
+    return None,{"to":n}
 class H(http.server.BaseHTTPRequestHandler):
     def reply(self,code,msg):
         self.send_response(code); self.end_headers(); self.wfile.write(msg.encode())
@@ -308,6 +407,12 @@ class H(http.server.BaseHTTPRequestHandler):
         if path in ("/mod/api/accounts","/mod/api/reports","/mod/api/items"):
             if not self.mod_session(): return self.reply_json(401,{"error":"Sign in again."})
             return self.reply_json(200,{"accounts":mod_accounts,"reports":mod_reports,"items":mod_items}[path.rsplit("/",1)[1]]())
+        if path=="/push/key":
+            k=push_public_key()
+            return self.reply_json(200 if k else 503,{"key":k} if k else {"error":"Push is not installed on this server yet."})
+        if path=="/mod/api/push":
+            if not self.mod_session(): return self.reply_json(401,{"error":"Sign in again."})
+            return self.reply_json(200,push_state())
         if path=="/mod/api/toon":
             by=self.mod_session()
             if not by: return self.reply_json(401,{"error":"Sign in again."})
@@ -332,6 +437,17 @@ class H(http.server.BaseHTTPRequestHandler):
                 note_fail(keys); return self.reply_json(403,{"error":"That account can't use the moderator panel."})
             name=body.split(":",1)[0].strip().lower(); mod_audit(name,"signed in from "+ip)
             return self.reply_json(200,{"token":mod_token(name),"name":name})
+        if self.path=="/push/subscribe":
+            err=push_subscribe(body,ip); return self.reply_json(400 if err else 200,{"error":err} if err else {"ok":True})
+        if self.path=="/push/unsubscribe":
+            push_unsubscribe(body); return self.reply_json(200,{"ok":True})
+        if self.path=="/mod/api/push":
+            by=self.mod_session()
+            if not by: return self.reply_json(401,{"error":"Sign in again."})
+            try: req=json.loads(body)
+            except ValueError: return self.reply_json(400,{"error":"Bad request."})
+            err,res=push_send(req,by)
+            return self.reply_json(400 if err else 200,{"error":err} if err else res)
         if self.path=="/mod/api/action":
             by=self.mod_session()
             if not by: return self.reply_json(401,{"error":"Sign in again."})

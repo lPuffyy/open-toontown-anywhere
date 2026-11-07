@@ -19,7 +19,7 @@ FROM python:3.9-slim-bookworm
 RUN apt-get update \
  && apt-get install -y --no-install-recommends nginx libgl1 libglib2.0-0 tini libyaml-cpp0.7 libuv1 libboost-system1.74.0 libboost-filesystem1.74.0 libboost-regex1.74.0 libboost-thread1.74.0 libboost-date-time1.74.0 libboost-program-options1.74.0 libssl3 \
  && rm -rf /var/lib/apt/lists/* \
- && pip install --no-cache-dir pytz websockets \
+ && pip install --no-cache-dir pytz websockets pywebpush \
  && pip install --no-cache-dir --pre --index-url https://archive.panda3d.org/simple/ panda3d==1.11.0.dev4085+shaderpipeline.388
 
 # the Python side of Panda3D 1.11 (Astron support and tasks) on top of the wheel: the wheel's own copy lacks the Astron classes

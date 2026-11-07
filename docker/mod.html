@@ -102,7 +102,7 @@ button.big { padding: 11px 14px; font-size: 1rem; width: 100% }
   <div id="main" hidden style="display:grid;gap:14px">
     <nav class="tabs" id="tabs">
       <button data-tab="online" class="on">Online</button><button data-tab="reports">Reports <span class="badge" id="repBadge" hidden></span></button>
-      <button data-tab="accounts">Accounts</button><button data-tab="bans">Bans &amp; activity</button>
+      <button data-tab="accounts">Accounts</button><button data-tab="push">Events</button><button data-tab="bans">Bans &amp; activity</button>
     </nav>
     <div class="row">
       <div class="stats" id="stats"></div>
@@ -131,6 +131,20 @@ button.big { padding: 11px 14px; font-size: 1rem; width: 100% }
     <div data-pane="reports" hidden style="display:grid;gap:14px">
       <div class="row"><label class="sub"><input type="checkbox" id="showResolved" style="width:auto"> Show resolved</label></div>
       <div id="reports"></div>
+    </div>
+
+    <div data-pane="push" hidden style="display:grid;gap:14px">
+      <section class="card">
+        <h2>Send a notification</h2>
+        <p class="sub" style="margin:0 0 8px" id="pushInfo">Goes to every player who turned notifications on in the game's settings.</p>
+        <div style="display:grid;gap:8px">
+          <select id="pushTopic"></select>
+          <input id="pushTitle" maxlength="60" placeholder="Title, e.g. Silly Surge starts now">
+          <textarea id="pushText" maxlength="200" placeholder="Message (200 characters)"></textarea>
+          <div class="row"><button class="primary" id="pushGo">Send to everyone</button><span id="pushMsg" class="sub"></span></div>
+        </div>
+      </section>
+      <section class="card"><h2>Sent</h2><div id="pushHist"></div></section>
     </div>
 
     <div data-pane="accounts" hidden>
@@ -199,7 +213,7 @@ async function refresh() {
   // the other tabs and the open toon refresh every other beat (4 s), and only when nothing is half-typed, so a refresh never eats what you are doing
   if (++slow % 2) return;
   const typing = document.activeElement && document.activeElement.dataset && document.activeElement.dataset.note !== undefined;
-  if (tab === 'accounts' || (tab === 'reports' && !typing && ![...document.querySelectorAll('[data-note]')].some((i) => i.value))) refreshTab();
+  if (tab === 'accounts' || tab === 'push' || (tab === 'reports' && !typing && ![...document.querySelectorAll('[data-note]')].some((i) => i.value))) refreshTab();
   if (tab === 'toon' && toonId && toonQuiet()) loadToon(true);
 }
 // nothing in the toon's page is focused, changed, or picked: safe to redraw it with fresh numbers
@@ -233,12 +247,12 @@ function render() {
       '</div></td><td class="acts"><button data-unban="' + esc(b.name) + '">Unban</button></td></tr>').join('') + '</tbody></table>' : '<div class="empty">No banned accounts.</div>';
   $('log').textContent = state.log.join('\n') || 'Nothing yet.';
 }
-let tab = 'online', reports = null, accounts = null;
+let tab = 'online', reports = null, accounts = null, pushInfo = null;
 function setTab(name) {
   tab = name;
   document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === name));
   document.querySelectorAll('[data-pane]').forEach((p) => { p.hidden = p.dataset.pane !== name });
-  $('filter').placeholder = { online: 'Search toon, account or place', reports: 'Search toon, account or reason', accounts: 'Search account or toon', bans: 'Search', toon: 'Search' }[name];
+  $('filter').placeholder = { online: 'Search toon, account or place', reports: 'Search toon, account or reason', accounts: 'Search account or toon', push: 'Search', bans: 'Search', toon: 'Search' }[name];
   refreshTab();
 }
 document.querySelectorAll('#tabs button').forEach((b) => b.addEventListener('click', () => setTab(b.dataset.tab)));
@@ -246,6 +260,7 @@ async function refreshTab() {
   try {
     if (tab === 'reports') { reports = await api('reports'); renderReports() }
     if (tab === 'accounts') { accounts = await api('accounts'); renderAccounts() }
+    if (tab === 'push') { pushInfo = await api('push'); renderPush() }
   } catch (e) {}
 }
 const when = (t) => t ? new Date(t * 1000).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
@@ -269,6 +284,30 @@ function renderReports() {
   }).join('') || '<section class="card empty">' + (reports.reports.length ? 'No open reports.' : 'No reports yet. Players send them with the Report button on a toon\'s panel.') + '</section>';
 }
 $('showResolved').addEventListener('change', renderReports);
+
+// ---- notifications to players ---------------------------------------------------------------------------------------
+function renderPush() {
+  const p = pushInfo; if (!p) return;
+  $('pushInfo').textContent = !p.ready ? 'Push is not installed on this server yet (it arrives with the next image update).' :
+    p.subscribers + ' player' + (p.subscribers === 1 ? ' has' : 's have') + ' notifications turned on. Each player chooses which kinds they want, so a message only goes to those who picked its kind.';
+  const sel = $('pushTopic'), cur = sel.value;
+  sel.innerHTML = '<option value="">What kind of message?</option>' + p.topics.map((t) => '<option value="' + t.key + '">' + esc(t.name) + ' (' + t.count + ' subscribed)</option>').join('');
+  sel.value = cur; $('pushGo').disabled = !p.ready || p.busy;
+  $('pushHist').innerHTML = p.history.length ? p.history.map((h) => '<div class="report"><div class="top"><span class="name">' + esc(h.title) + '</span><span class="tag">' + esc(h.topic || '') + '</span><span class="sub">' + when(h.t) + ' · ' + esc(h.by) + '</span>' +
+    (h.done ? '<span class="tag' + (h.failed ? ' battle' : ' staff') + '">' + h.ok + ' delivered' + (h.failed ? ', ' + h.failed + ' failed' : '') + (h.gone ? ', ' + h.gone + ' no longer subscribed' : '') + '</span>' : '<span class="tag">sending to ' + h.to + '...</span>') +
+    '</div><div class="sub">' + esc(h.text) + '</div></div>').join('') : '<div class="empty">Nothing sent yet.</div>';
+}
+$('pushGo').onclick = async () => {
+  const title = $('pushTitle').value.trim(), text = $('pushText').value.trim(), b = $('pushGo');
+  const topic = $('pushTopic').value;
+  if (!topic) return alertMsg($('pushMsg'), 'Pick what kind of message this is.', true);
+  if (!title || !text) return alertMsg($('pushMsg'), 'Write a title and a message first.', true);
+  if (b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = 'Tap again to send'; setTimeout(() => { b.dataset.sure = ''; b.textContent = 'Send to everyone' }, 4000); return }
+  b.dataset.sure = ''; b.textContent = 'Send to everyone'; b.disabled = true;
+  try { const j = await api('push', { topic, title, text }); $('pushTitle').value = $('pushText').value = ''; alertMsg($('pushMsg'), 'Sending to ' + j.to + ' players...'); refreshTab() }
+  catch (e) { alertMsg($('pushMsg'), e.message, true) }
+  b.disabled = false;
+};
 
 // ---- a toon's page ------------------------------------------------------------------------------------------------
 let toon = null, toonId = 0, backTo = 'online', items = null, pick = null;
