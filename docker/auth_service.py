@@ -293,6 +293,35 @@ PUSH_SITE="https://toontown.puffsco.com"; PUSH_RATE={}; PUSH_BUSY=[False]
 # the kinds of message a player can choose; the game's settings list the same keys
 PUSH_TOPICS={"invasions":"Cog invasions","bingo":"Bingo night","beans":"Extra beans","events":"Events","players":"Player count"}
 def push_wants(rec,topic): return topic in rec.get("topics",list(PUSH_TOPICS))
+# ready-made messages for the panel's Events tab, so a moderator can send one with a tap instead of typing it out. {players} in a
+# message becomes the number of toons online when it is sent.
+PUSH_PRESETS=os.path.join(PUSH,"presets.json")
+PUSH_PRESETS_STARTER=[
+    {"id":"invasion","label":"Cog invasion","topic":"invasions","title":"Cog invasion!","text":"A Cog invasion is taking over Toontown. Join the fight!"},
+    {"id":"bingo","label":"Bingo night","topic":"bingo","title":"Bingo night","text":"Bingo night starts in 10 minutes in Toon Valley. Grab a card!"},
+    {"id":"beans","label":"Extra beans","topic":"beans","title":"Double jellybeans!","text":"Double jellybeans for the next hour. Jump in!"},
+    {"id":"event","label":"Event starting","topic":"events","title":"Event starting","text":"A special event is starting in Toontown. Come join in!"},
+    {"id":"players","label":"Player count","topic":"players","title":"Toons are online","text":"{players} toons are playing right now. Come say hi!"},
+]
+def push_presets():
+    v=push_read(PUSH_PRESETS,None)
+    return v if isinstance(v,list) else [dict(p) for p in PUSH_PRESETS_STARTER]
+def push_preset_save(p,by):
+    topic=p.get("topic"); label=str(p.get("label") or p.get("title") or "").strip()[:30]
+    title=str(p.get("title") or "").strip()[:60]; text=str(p.get("text") or "").strip()[:200]
+    if topic not in PUSH_TOPICS or not label or not title or not text: return "A preset needs a kind, a name, a title and a message."
+    pid=re.sub(r"[^a-z0-9]+","-",label.lower()).strip("-") or "preset"
+    with LOCK:
+        lst=[x for x in push_presets() if x.get("id")!=pid]
+        if len(lst)>=20: return "That is plenty of presets. Delete one first."
+        lst.append({"id":pid,"label":label,"topic":topic,"title":title,"text":text}); push_write(PUSH_PRESETS,lst)
+    mod_audit(by,"push preset saved: "+label); return None
+def push_preset_delete(pid,by):
+    with LOCK: push_write(PUSH_PRESETS,[x for x in push_presets() if x.get("id")!=pid])
+    mod_audit(by,"push preset deleted: "+str(pid)[:30])
+def push_online_count():
+    try: return sum(len(d["toons"]) for d in mod_state(False)["districts"])
+    except Exception: return 0
 def push_hosts_ok(url):
     """only the browsers' own push services: the server posts to this address, so it must never be an address the player chose"""
     m=re.match(r"^https://([a-z0-9.-]+)(?::443)?/[A-Za-z0-9_./~%=+-]{8,1500}$",url or "")
@@ -343,7 +372,7 @@ def push_unsubscribe(body):
 def push_state():
     sent=push_read(PUSH_SENT,[])
     subs=push_read(PUSH_SUBS,{})
-    return {"ready":push_public_key() is not None,"subscribers":len(subs),"busy":PUSH_BUSY[0],"history":sent[-15:][::-1],
+    return {"ready":push_public_key() is not None,"subscribers":len(subs),"busy":PUSH_BUSY[0],"history":sent[-15:][::-1],"presets":push_presets(),
             "topics":[{"key":k,"name":n,"count":sum(1 for r in subs.values() if push_wants(r,k))} for k,n in PUSH_TOPICS.items()]}
 def push_deliver(rec,title,text,url,by,topic):
     ok=gone=failed=0
@@ -369,9 +398,14 @@ def push_deliver(rec,title,text,url,by,topic):
         hist=push_read(PUSH_SENT,[]); hist=[h for h in hist if h.get("t")!=rec["t"]]+[rec]; push_write(PUSH_SENT,hist[-100:])
     PUSH_BUSY[0]=False; mod_audit(by,"push finished: %d delivered, %d expired, %d failed"%(ok,gone,failed))
 def push_send(req,by):
+    if isinstance(req.get("savePreset"),dict):
+        err=push_preset_save(req["savePreset"],by); return err,None if err else {"presets":push_presets()}
+    if req.get("deletePreset"):
+        push_preset_delete(req["deletePreset"],by); return None,{"presets":push_presets()}
     topic=req.get("topic")
     if topic not in PUSH_TOPICS: return "Pick what kind of message this is.",None
     title=str(req.get("title") or "").strip()[:60]; text=str(req.get("text") or "").strip()[:200]; url=str(req.get("url") or "/play/").strip()[:200]
+    if "{players}" in title+text: n=str(push_online_count()); title=title.replace("{players}",n)[:60]; text=text.replace("{players}",n)[:200]
     if not title or not text: return "Write a title and a message.",None
     if not re.match(r"^/[A-Za-z0-9_./?=&#%-]*$",url) or url.startswith("//"): return "The link must be a path on this site, such as /play/.",None
     if push_public_key() is None: return "Push is not installed on this server yet.",None
