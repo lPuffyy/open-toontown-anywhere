@@ -11,6 +11,8 @@ class FishManagerAI:
         """Sell everything in the tank. Returns True when the toon earned a new collection trophy."""
         numFish = len(av.fishTank)
         value = av.fishTank.getTotalValue()
+        if numFish > 0:
+            self.notify.info('payout fish sale: toon %s sold %s fish for %s (jellybean event %s)' % (av.doId, numFish, value, FishGlobals.JELLYBEAN_FISHING_HOLIDAY in simbase.air.holidayManager.currentHolidays))
         av.fishTank.makeFromNetLists([], [], [])
         av.d_setFishTank(*av.fishTank.getNetLists())
         if value > 0:

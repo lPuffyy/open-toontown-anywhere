@@ -3,6 +3,8 @@ wss://<site>/ws (nginx passes that here) and this copies the bytes both ways to 
 Runs on the Zima next to the game server:  python wsbridge.py"""
 import asyncio
 import collections
+import ipaddress
+import json
 import os
 import time
 
@@ -26,6 +28,30 @@ def client_ip(ws):
     return ip.split(",")[0].strip()
 
 
+IPBANS = "/ot/data/mod/ipbans.json"      # written by the moderator panel (auth_service.py); IPv6 addresses count as their /64
+_bans = {"mtime": None, "keys": set()}
+
+
+def banned(ip):
+    try:
+        mtime = os.stat(IPBANS).st_mtime
+    except OSError:
+        return False
+    if mtime != _bans["mtime"]:
+        try:
+            _bans["keys"] = set(json.load(open(IPBANS)))
+            _bans["mtime"] = mtime
+        except (OSError, ValueError):
+            pass
+    try:
+        a = ipaddress.ip_address(ip)
+        if a.version == 6:
+            a = a.ipv4_mapped or ipaddress.ip_network(str(a) + "/64", strict=False)
+        return str(a) in _bans["keys"]
+    except ValueError:
+        return False
+
+
 async def pump_ws_to_tcp(ws, writer):
     async for msg in ws:
         if isinstance(msg, str):
@@ -44,6 +70,10 @@ async def pump_tcp_to_ws(reader, ws):
 
 async def handler(ws):
     ip = client_ip(ws)
+    if banned(ip):
+        print("refused banned", ip, flush=True)
+        await ws.close(1008, "This connection has been banned.")
+        return
     now = time.time()
     q = _recent[ip]
     while q and now - q[0] > 60:

@@ -334,6 +334,7 @@ class EstateGarden:
             b.generateWithRequired(zoneId)
             self.boxes.append(b)
         taskMgr.doMethodLater(GROWTH_TICK, self.__tick, self.taskName)
+        self.updateOrganic()
 
     def ownerAv(self):
         return self.air.doId2do.get(self.ownerId)
@@ -344,6 +345,40 @@ class EstateGarden:
     def hasTree(self, track, level):
         treeType = GardenGlobals.getTreeTypeIndex(track, level)
         return any(getattr(o, 'data', {}).get('kind') == TREE and o.data.get('type') == treeType for o in self.objects.values())
+
+    def organicLevels(self):
+        """Per gag track, the highest gag level that is organic (-1: none). A gag is organic once its tree is one growth step short of
+        fully grown (as the original game: a day before it is fully grown), as long as that tree is not wilted and every lower tree of the
+        track still stands (chop down a lower tree and the higher gags lose the bonus)."""
+        trees = {}
+        for o in self.objects.values():
+            d = getattr(o, 'data', None)
+            if d and d.get('kind') == TREE:
+                trees[GardenGlobals.getTreeTrackAndLevel(d['type'])] = d
+        levels = []
+        for track in range(7):
+            best = -1
+            for level in range(7):
+                d = trees.get((track, level))
+                if d is None:
+                    break
+                top = GardenGlobals.PlantAttributes[d['type']]['growthThresholds'][2]
+                if d['water'] >= 0 and d['growth'] >= top - 1:
+                    best = level
+            levels.append(best)
+        return levels
+
+    def updateOrganic(self):
+        """Give the owner the organic levels their trees now earn (only sent when something changed)."""
+        av = self.ownerAv()
+        if av is None:
+            return
+        try:
+            levels = self.organicLevels()
+            if list(av.getTrackBonusLevel()) != levels:
+                av.b_setTrackBonusLevel(levels)
+        except Exception:
+            self.notify.warning(traceback.format_exc())
 
     def spotPlace(self, index):
         """(x, y, heading) of a planting spot. Tree and statue spots are written as x, y, heading; a flower spot is written as
@@ -425,6 +460,7 @@ class EstateGarden:
             old.requestDelete()
         obj = self.__make(index, data)
         self.save()
+        self.updateOrganic()
         return obj
 
     def plant(self, index, data, avId):
@@ -446,6 +482,7 @@ class EstateGarden:
                 changed = obj.tick(decay, boost) or changed
         if changed:
             self.save()
+            self.updateOrganic()
         return task.again
 
     def destroy(self):

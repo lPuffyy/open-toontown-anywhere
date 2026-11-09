@@ -160,7 +160,7 @@ class DistributedPartyTugOfWarActivityAI(DistributedPartyTeamActivityAI):
         
         # This seems like the easiest way to get this bean multiplier in for all these different jelly bean cases
         beanMultiplier = 1
-        if self.air.holidayManager.isHolidayRunning(ToontownGlobals.JELLYBEAN_DAY):
+        if PartyGlobals.isJellybeanDouble(self.air):
             beanMultiplier = PartyGlobals.JellyBeanDayMultiplier
         
         

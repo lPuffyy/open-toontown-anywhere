@@ -76,7 +76,8 @@ Settings the person running the server may want to change live in one small file
 
 | Setting | Default | What it does |
 |---|---|---|
-| `gag_xp_boost` | `4` | Multiplies the gag training points credited for each hit. The per-battle cap per track grows with it (200 times the boost). `1` is the original rate. |
+| `gag_xp_boost` | `2` | Multiplies the gag training points credited for each hit, Monday to Friday. The per-battle cap per track grows with it (200 times the boost). `1` is the original rate. |
+| `gag_xp_boost_weekend` | `4` | The same multiplier on Saturday and Sunday (the server's date). |
 | `typed_names` | `"auto"` | `"auto"`: the server approves typed toon names that pass its checks. `"off"`: players must pick a name from the lists. |
 | `halloween` | `"auto"` | Street decorations, the spooky sky and the Halloween Speed Chat phrases. `"auto"`: on from October 20 to November 1 (the server's date). `"on"` or `"off"` forces it. |
 | `winter` | `"auto"` | Winter street decorations, the winter Speed Chat menu and the carol menu. `"auto"`: December 1 to January 3. `"on"` or `"off"` forces it. |

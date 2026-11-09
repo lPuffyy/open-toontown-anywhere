@@ -1,4 +1,4 @@
-import http.server, os, re, json, hashlib, hmac, threading, time
+import http.server, os, re, json, hashlib, hmac, threading, time, ipaddress
 D="/ot/data/phone_logs"; U="/ot/data/users.json"
 LOCK=threading.Lock()
 FAILS={}   # key -> [timestamps] of failed recovery attempts
@@ -110,6 +110,36 @@ def mod_user(token):
 def mod_audit(by,what):
     os.makedirs(MOD,exist_ok=True)
     with LOCK, open(MOD_LOG,"a",encoding="utf8") as f: f.write("%s %s %s\n"%(time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime()),by,what.replace("\n"," ")))
+# ---- IP bans. A banned address cannot sign in or open a game connection (wsbridge.py reads the same file). Addresses are kept as written
+# for IPv4 and as the /64 network for IPv6 (one home gets a whole /64, so banning one address of it would change nothing). The addresses
+# each account signed in from are remembered on the account ("ips") so a moderator can ban them from the Accounts tab.
+IPBANS=os.path.join(MOD,"ipbans.json")
+def ip_key(ip):
+    try: a=ipaddress.ip_address(str(ip or "").split(",")[0].strip())
+    except ValueError: return None
+    if a.version==6:
+        if a.ipv4_mapped: return str(a.ipv4_mapped)
+        return str(ipaddress.ip_network(str(a)+"/64",strict=False))
+    return str(a)
+def ipbans():
+    try:
+        v=json.load(open(IPBANS)); return v if isinstance(v,dict) else {}
+    except Exception: return {}
+def ip_banned(ip):
+    k=ip_key(ip); return bool(k) and k in ipbans()
+def ipbans_write(bans):
+    os.makedirs(MOD,exist_ok=True); json.dump(bans,open(IPBANS+".tmp","w")); os.replace(IPBANS+".tmp",IPBANS)
+def note_ip(name,ip):
+    k=ip_key(ip)
+    if not k: return
+    with LOCK:
+        db=load(); u=db["users"].get(name)
+        if not u: return
+        ips=u.setdefault("ips",{}); now=int(time.time())
+        if now-ips.get(k,0)<86400: return
+        ips[k]=now
+        for old in sorted(ips,key=ips.get)[:-6]: del ips[old]
+        save(db)
 # the game's database (Astron's YAML files): accounts, their toons, and which account each toon belongs to
 GAMEDB="/ot/src/astron/databases"; GAMEDB_CACHE={"t":0,"v":None}
 def yaml_value(v):
@@ -149,11 +179,12 @@ def game_db():
     return GAMEDB_CACHE["v"]
 def mod_accounts():
     db=game_db(); online={t["avId"]:d["district"] for d in mod_state(False)["districts"] for t in d.get("toons",[])}
-    out=[]
+    out=[]; bans=ipbans()
     for name,u in load()["users"].items():
         g=db["accounts"].get(name,{})
         toons=[dict(t,online=online.get(t["avId"],"")) for t in g.get("toons",[])]
         out.append({"name":name,"admin":bool(u.get("admin")),"banned":u.get("banned") or None,"recovery":bool(u.get("rec")),
+                    "ips":sorted(u.get("ips",{}),key=lambda k:-u["ips"][k]),"ipBanned":any(k in bans for k in u.get("ips",{})),
                     "created":g.get("created",""),"lastLogin":g.get("lastLogin",""),"toons":toons,"online":any(t["online"] for t in toons)})
     return {"accounts":out}
 REPORTS=os.path.join(MOD,"reports.jsonl"); REPORT_STATE=os.path.join(MOD,"reports-state.json")
@@ -191,7 +222,8 @@ def mod_state(withLog=True):
     except Exception: log=[]
     try: openReports=mod_reports()["open"]
     except Exception: openReports=0
-    return {"now":int(time.time()),"districts":districts,"banned":banned,"log":log,"accountCount":len(users),"openReports":openReports}
+    return {"now":int(time.time()),"districts":districts,"banned":banned,"log":log,"accountCount":len(users),"openReports":openReports,
+            "ipBans":sorted(({"ip":k,**v} for k,v in ipbans().items()),key=lambda b:-b.get("time",0))}
 def mod_command(action,avId,text,by,**extra):
     os.makedirs(os.path.join(MOD,"cmd"),exist_ok=True); os.makedirs(os.path.join(MOD,"done"),exist_ok=True)
     now=time.time()
@@ -232,6 +264,43 @@ def mod_action(req,by):
                 for t in d.get("toons",[]):
                     if t.get("account")==name: ids.append(mod_command("ban",t["avId"],"This account has been banned."+(" Reason: "+text if text else ""),by))
         return None,{"ids":ids}
+    if action=="ipban":
+        name=str(req.get("account","")).strip().lower(); now=int(time.time())
+        with LOCK:
+            db=load(); u=None
+            if name:
+                u=db["users"].get(name)
+                if u is None: return "No account called %s."%name,None
+                if u.get("admin"): return "Admin accounts can't be banned here.",None
+                keys=list(u.get("ips",{}))
+                if not keys: return "No IP address is on record for that account yet (it has not signed in since this was added).",None
+            else:
+                k=ip_key(req.get("ip"))
+                if not k: return "That is not an IP address.",None
+                keys=[k]
+            adminIps={k for v in db["users"].values() if v.get("admin") for k in v.get("ips",{})}
+            keys=[k for k in keys if k not in adminIps]
+            if not keys: return "That address is shared with an admin account, so it can't be banned.",None
+            bans=ipbans()
+            for k in keys: bans[k]={"reason":text,"by":by,"time":now,"account":name}
+            ipbans_write(bans)
+            if u is not None and not u.get("banned"):
+                u["banned"]={"reason":text,"by":by,"time":now}; save(db)
+        mod_audit(by,"ipban %s %s %s"%(name or "-",",".join(keys),text))
+        ids=[]
+        if name:                                         # log out every toon of that account that is playing now
+            for d in mod_state()["districts"]:
+                for t in d.get("toons",[]):
+                    if t.get("account")==name: ids.append(mod_command("ban",t["avId"],"This account has been banned."+(" Reason: "+text if text else ""),by))
+        return None,{"ips":keys,"ids":ids}
+    if action=="ipunban":
+        k=ip_key(req.get("ip"))
+        if not k: return "That is not an IP address.",None
+        with LOCK:
+            bans=ipbans()
+            if k not in bans: return "That address is not banned.",None
+            del bans[k]; ipbans_write(bans)
+        mod_audit(by,"ipunban "+k); return None,{}
     if action=="edit": return mod_edit(req,by)
     if action in ("resolve","reopen"):
         rid=str(req.get("id",""))
@@ -324,7 +393,7 @@ def push_online_count():
     except Exception: return 0
 def push_hosts_ok(url):
     """only the browsers' own push services: the server posts to this address, so it must never be an address the player chose"""
-    m=re.match(r"^https://([a-z0-9.-]+)(?::443)?/[A-Za-z0-9_./~%=+-]{8,1500}$",url or "")
+    m=re.match(r"^https://([a-z0-9.-]+)(?::443)?/[A-Za-z0-9_./~%=+:-]{8,1500}$",url or "")
     if not m: return False
     h=m.group(1)
     return h in ("web.push.apple.com","fcm.googleapis.com","updates.push.services.mozilla.com") or h.endswith(".notify.windows.com") or h.endswith(".push.apple.com")
@@ -490,8 +559,11 @@ class H(http.server.BaseHTTPRequestHandler):
             err,res=mod_action(req,by)
             return self.reply_json(400 if err else 200,{"error":err} if err else res)
         if self.path=="/auth":
+            who=body.split(":",1)[0].strip().lower()
+            if ip_banned(ip) and not (load()["users"].get(who) or {}).get("admin"): return self.reply(403,"This connection has been banned.")
             err,u=auth(body)
             if err: return self.reply(403,err)
+            note_ip(who,ip)
             return self.reply(200,"ok" if u.get("rec") else "setup")
         if self.path=="/setrecovery":
             err=set_recovery(body); return self.reply(403 if err else 200,err or "ok")

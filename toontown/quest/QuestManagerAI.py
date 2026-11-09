@@ -593,6 +593,7 @@ class QuestManagerAI:
         avQuests = av.quests
         avId = av.getDoId()
         changed = 0
+        self.notify.info("toonKilledBuilding: %s (%s) track %s, %s floors, zone %s, building quests: %s" % (av.getName(), avId, track, numFloors, zoneId, [q[:5] for q in avQuests if Quests.getQuestClass(q[0]) in (Quests.BuildingQuest, Quests.BuildingNewbieQuest)]))
 
         #self.notify.debug("toonKilledBuilding: avId: %s, track: %s, diff: %s, numFloors: %s, zoneId: %s" %
         #                  (avId, track, difficulty, numFloors, zoneId))

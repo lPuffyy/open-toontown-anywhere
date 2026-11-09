@@ -104,8 +104,13 @@ UnpaidMaxSkills = [Levels[0][1] - 1,
 # Gag training points are multiplied by this. It is a setting (gameconfig.json, see GameConfig.py), so it can change without a rebuild; the
 # server credits the points and the client shows the same numbers on the gag buttons, both reading it from here. The cap on points per
 # track in one battle grows with it, so a big battle is still a true multiple.
+# Weekdays use gag_xp_boost (default 2); Saturday and Sunday use gag_xp_boost_weekend (default 4), by the date of the machine asking (the
+# server for credit, the player's device for the numbers on the buttons), the same way the weekend jellybean days go by date.
 def getGagXpBoost():
-    return GameConfig.get('gag_xp_boost', 4)
+    import time
+    if time.localtime().tm_wday in (5, 6):
+        return GameConfig.get('gag_xp_boost_weekend', 4)
+    return GameConfig.get('gag_xp_boost', 2)
 
 
 def getExperienceCap():

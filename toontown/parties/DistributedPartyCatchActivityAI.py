@@ -187,7 +187,7 @@ class DistributedPartyCatchActivityAI(DistributedPartyActivityAI, DistributedPar
             reward = self.toonIdsToScores[toonId]
             
             # if it's jelly bean day give us more jelly beans!
-            if self.air.holidayManager.isHolidayRunning(ToontownGlobals.JELLYBEAN_DAY):
+            if PartyGlobals.isJellybeanDouble(self.air):
                 reward *= PartyGlobals.JellyBeanDayMultiplier
             
             if reward > PartyGlobals.CatchMaxTotalReward:

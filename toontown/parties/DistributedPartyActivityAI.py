@@ -225,6 +225,7 @@ class DistributedPartyActivityAI(DistributedObjectAI.DistributedObjectAI):
             if now is None:
                 now = globalClock.getFrameTime()
             reward = self.toonIdsToJellybeanRewards[toonId]
+            print('payout party game %s: toon %s reward %s (jellybean event %s)' % (self.__class__.__name__, toonId, reward, PartyGlobals.isJellybeanDouble(self.air)))
             timePlayed = now - self.toonId2joinTime[toonId]
             # reset 'joined' time to now, in case we give this toon another reward
             self.toonId2joinTime[toonId] = now

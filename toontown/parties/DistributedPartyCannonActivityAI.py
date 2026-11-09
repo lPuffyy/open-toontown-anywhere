@@ -151,7 +151,7 @@ class DistributedPartyCannonActivityAI(DistributedPartyActivityAI):
         if senderId in self.flyingToonCloudsHit:
             self.flyingToonCloudsHit[senderId] += 1
             addedJellyBeans = PartyGlobals.CannonJellyBeanReward
-            if self.air.holidayManager.isHolidayRunning(ToontownGlobals.JELLYBEAN_DAY):
+            if PartyGlobals.isJellybeanDouble(self.air):
                 addedJellyBeans *= 2
             self.toonIdsToJellybeanRewards[senderId] += addedJellyBeans
             if self.toonIdsToJellybeanRewards[senderId] > PartyGlobals.CannonMaxTotalReward:

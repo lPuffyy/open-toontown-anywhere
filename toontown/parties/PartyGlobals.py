@@ -10,6 +10,14 @@ MaxPlannedYear = 2030
 MinPlannedYear = 1975
 JellybeanMultiplier = 1.5
 JellyBeanDayMultiplier = 2
+
+
+def isJellybeanDouble(air):
+    """Party games pay double on Jellybean Day and during Jellybean Week (the weekend event the server schedules)."""
+    from toontown.toonbase import ToontownGlobals as G
+    h = air.holidayManager
+    return h.isHolidayRunning(G.JELLYBEAN_DAY) or h.isHolidayRunning(G.JELLYBEAN_PARTIES_HOLIDAY) or h.isHolidayRunning(G.JELLYBEAN_PARTIES_HOLIDAY_MONTH)
+
 PARTY_DURATION = 1800.0
 EventsPageGuestNameMaxWidth = 0.42
 EventsPageGuestNameMaxLetters = 18

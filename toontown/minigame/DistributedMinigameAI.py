@@ -307,8 +307,10 @@ class DistributedMinigameAI(DistributedObjectAI.DistributedObjectAI):
                 score = int(self.scoreDict[avId] + 0.5)
             else:
                 score = randReward
+            baseScore = score
             if ToontownGlobals.JELLYBEAN_TROLLEY_HOLIDAY in simbase.air.holidayManager.currentHolidays or ToontownGlobals.JELLYBEAN_TROLLEY_HOLIDAY_MONTH in simbase.air.holidayManager.currentHolidays:
                 score *= MinigameGlobals.JellybeanTrolleyHolidayScoreMultiplier
+            self.notify.info('payout trolley game %s: toon %s base %s, final %s (jellybean event %s)' % (self.minigameId, avId, baseScore, score, score != baseScore))
             logEvent = False
             if score > 255:
                 score = 255
