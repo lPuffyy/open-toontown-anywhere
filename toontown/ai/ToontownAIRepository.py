@@ -215,6 +215,8 @@ class ToontownAIRepository(ToontownInternalRepository):
         self.toonPresence = self.generateGlobalObject(OTP_DO_ID_TOON_PRESENCE, 'ToonPresence')
         # the Codes tab of the Options page (every district listens; the one the toon is in answers)
         self.codeRedemptionMgr = self.generateGlobalObject(OTP_DO_ID_TOONTOWN_CODE_REDEMPTION_MANAGER, 'TTCodeRedemptionMgr')
+        # gifts for friends playing in another district (the district the friend is in answers)
+        self.deliveryManager = self.generateGlobalObject(OTP_DO_ID_TOONTOWN_DELIVERY_MANAGER, 'DistributedDeliveryManager')
         taskMgr.doMethodLater(60.0, self.__refreshPresence, 'refreshPresence')
         # the moderator panel (a web page outside the game) reads who is playing here and leaves commands for this district
         from toontown.ai.ModToolsAI import ModToolsAI

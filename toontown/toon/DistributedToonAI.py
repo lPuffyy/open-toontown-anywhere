@@ -2418,7 +2418,7 @@ class DistributedToonAI(DistributedPlayerAI.DistributedPlayerAI, DistributedSmoo
         if self.houseId and hasattr(self, 'air'):
             if self.air:
                 house = self.air.doId2do.get(self.houseId)
-                if house and house.mailbox:
+                if house and getattr(house, 'mailbox', None):     # (a house for sale, a viewing block, has no mailbox)
                     try:
                         invites = self.getNumInvitesToShowInMailbox()
                     except Exception:

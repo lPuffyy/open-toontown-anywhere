@@ -155,7 +155,23 @@ class DistributedPhoneAI(DistributedFurnitureItemAI):
                 target.onGiftOrder.append(item)
                 target.sendUpdate('setGiftSchedule', [target.onGiftOrder.getBlob(CatalogItem.Customization | CatalogItem.DeliveryDate)])
                 return respond(ToontownGlobals.P_ItemAvailable)
-            self.__giftToOffline(av, targetId, item, price, respond)
+            mgr = getattr(self.air, 'deliveryManager', None)
+            if mgr is None:
+                return self.__giftToOffline(av, targetId, item, price, respond)
+
+            def answered(code):
+                # another district answered (the friend is playing there), or nobody did (the friend is offline)
+                try:
+                    if code is None:
+                        return self.__giftToOffline(av, targetId, item, price, respond)
+                    if code != ToontownGlobals.P_ItemAvailable:
+                        return respond(code)
+                    av.takeMoney(price)          # (the price was checked above; the gift is already on their order)
+                    respond(ToontownGlobals.P_ItemAvailable)
+                except Exception:
+                    self.notify.warning('gift answer failed: %s' % traceback.format_exc())
+                    respond(ToontownGlobals.P_NotInCatalog)
+            mgr.askToGift(targetId, item, avId, price, answered)
         except Exception:
             self.notify.warning('gift purchase failed: %s' % traceback.format_exc())
             respond(ToontownGlobals.P_NotInCatalog)

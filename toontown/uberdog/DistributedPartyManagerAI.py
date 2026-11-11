@@ -8,6 +8,7 @@ Running: once its start time comes a party can start; the host goes to it from t
 party (DistributedPartyAI and its activities) in a new zone of this district. Friends find it with requestShardIdZoneIdForHostId,
 everyone with public parties at a party gate. At its end time the guests are sent to the playground and the party is taken down."""
 import datetime
+import decimal
 import time
 import traceback
 from direct.directnotify import DirectNotifyGlobal
@@ -187,7 +188,7 @@ class DistributedPartyManagerAI(DistributedObjectAI):
         host = self.air.doId2do.get(senderId)
         if host is None or hostId != senderId:
             return
-        error, cost = self.__validate(host, startTime, endTime, activities, decorations, inviteeIds)
+        error, cost = self.__validate(host, startTime, endTime, activities, decorations, inviteeIds, isPrivate, inviteTheme)
         if error == PartyGlobals.AddPartyErrorCode.AllOk:
             if not host.takeMoney(cost):
                 error = PartyGlobals.AddPartyErrorCode.ValidationError
@@ -213,30 +214,116 @@ class DistributedPartyManagerAI(DistributedObjectAI):
         if error == PartyGlobals.AddPartyErrorCode.AllOk:
             self.__pushAll()
 
-    def __validate(self, host, startTime, endTime, activities, decorations, inviteeIds):
+    @staticmethod
+    def __gridRange(center, size):
+        """The grid squares an item of this size covers around its centre (rounding halves up, as the original game did)."""
+        if size == 1:
+            return [center]
+        D = decimal.Decimal
+        rounded = int(D(str(size / 2)).quantize(D('1.'), rounding=decimal.ROUND_HALF_UP))
+        return list(range(int(center + size / 2), int(center - rounded), -1))
+
+    def __holidayOn(self, holidayId):
+        mgr = getattr(self.air, 'holidayManager', None)
+        return bool(mgr is not None and mgr.isHolidayRunning(holidayId))
+
+    def __validate(self, host, startTime, endTime, activities, decorations, inviteeIds, isPrivate=0, inviteTheme=0):
+        """Checks a party the way the original game did: only one party at a time, sane dates, the invitation theme, every activity and
+        decoration (known, released, allowed by the holiday, inside the editor's grid, not overlapping, not over its limit, no
+        mutually exclusive pairs) and that the host can pay. Returns (error code, cost)."""
         Err = PartyGlobals.AddPartyErrorCode
+        bad = lambda why: self.__reject(host, why)
         if not host.canPlanParty():
             return Err.TooManyHostedParties, 0
         try:
             start, end = self.parseTime(startTime), self.parseTime(endTime)
         except Exception:
-            return Err.ValidationError, 0
+            return bad('unreadable times')
+        if not (PartyGlobals.MinPlannedYear <= start.year <= PartyGlobals.MaxPlannedYear and
+                PartyGlobals.MinPlannedYear <= end.year <= PartyGlobals.MaxPlannedYear):
+            return bad('year out of range')
         if end <= start or end < self.now() or (end - start) > datetime.timedelta(hours=24):
-            return Err.ValidationError, 0
+            return bad('bad length')
+        if isPrivate not in (0, 1):
+            return bad('bad isPrivate %r' % (isPrivate,))
+        if inviteTheme not in [int(x) for x in PartyGlobals.InviteTheme]:
+            return bad('bad theme %r' % (inviteTheme,))
+        if inviteTheme == PartyGlobals.InviteTheme.Valentoons and not self.__holidayOn(ToontownGlobals.VALENTINES_DAY):
+            return bad('Valentoons theme out of season')
+        if inviteTheme == PartyGlobals.InviteTheme.VictoryParty and not self.__holidayOn(ToontownGlobals.VICTORY_PARTY_HOLIDAY):
+            return bad('Victory Party theme out of season')
+
         cost = 0
+        used = {}                               # grid square -> what covers it
+        gridW, gridH = PartyGlobals.PartyEditorGridSize
+        victory = self.__holidayOn(ToontownGlobals.VICTORY_PARTY_HOLIDAY)
+        valentine = self.__holidayOn(ToontownGlobals.VALENTINES_DAY)
+        counts, actIds = {}, set()
         for a in activities:
-            info = PartyGlobals.ActivityInformationDict.get(a[0])
+            aid = a[0]
+            info = PartyGlobals.ActivityInformationDict.get(aid)
             if info is None:
-                return Err.ValidationError, 0
+                return bad('unknown activity %r' % (aid,))
+            if aid in PartyGlobals.VictoryPartyActivityIds and not victory:
+                return bad('Victory Party activity out of season')
+            if aid in PartyGlobals.VictoryPartyReplacementActivityIds and victory:
+                return bad('activity replaced during the Victory Party')
+            if aid in PartyGlobals.UnreleasedActivityIds:
+                return bad('activity not released')
+            if not (0 <= a[1] < gridW and 0 <= a[2] < gridH and 0 <= a[3] <= 255):
+                return bad('activity placed outside the editor')
+            counts[aid] = counts.get(aid, 0) + 1
+            actIds.add(aid)
             cost += info['cost']
+            for gy in self.__gridRange(a[2], info['gridsize'][1]):
+                for gx in self.__gridRange(a[1], info['gridsize'][0]):
+                    if (gx, gy) in used:
+                        return bad('activity overlaps at %s' % ((gx, gy),))
+                    used[(gx, gy)] = 'activity-%d' % aid
+        for aid, n in counts.items():
+            if n > PartyGlobals.ActivityInformationDict[aid]['limitPerParty']:
+                return bad('too many of activity %r' % (aid,))
+        for pair in PartyGlobals.MutuallyExclusiveActivities:
+            if len(set(pair) & actIds) > 1:
+                return bad('mutually exclusive activities')
+
+        dcounts = {}
+        heart = ('HeartTarget', 'HeartBanner', 'FlyingHeart')
         for d in decorations:
-            info = PartyGlobals.DecorationInformationDict.get(d[0])
+            did = d[0]
+            info = PartyGlobals.DecorationInformationDict.get(did)
             if info is None:
-                return Err.ValidationError, 0
+                return bad('unknown decoration %r' % (did,))
+            if PartyGlobals.DecorationIds(did).name in heart and not valentine:
+                return bad('Valentoons decoration out of season')
+            if did in PartyGlobals.VictoryPartyDecorationIds and not victory:
+                return bad('Victory Party decoration out of season')
+            if did in PartyGlobals.VictoryPartyReplacementDecorationIds and victory:
+                return bad('decoration replaced during the Victory Party')
+            if did in PartyGlobals.UnreleasedDecorationIds:
+                return bad('decoration not released')
+            if not (0 <= d[1] < gridW and 0 <= d[2] < gridH and 0 <= d[3] <= 255):
+                return bad('decoration placed outside the editor')
+            dcounts[did] = dcounts.get(did, 0) + 1
             cost += info['cost']
+            for gy in self.__gridRange(d[2], info['gridsize'][1]):
+                for gx in self.__gridRange(d[1], info['gridsize'][0]):
+                    if (gx, gy) in used:
+                        return bad('decoration overlaps at %s' % ((gx, gy),))
+                    used[(gx, gy)] = 'decor-%d' % did
+        for did, n in dcounts.items():
+            if n > PartyGlobals.DecorationInformationDict[did]['limitPerParty']:
+                return bad('too many of decoration %r' % (did,))
+        if len(used) >= PartyGlobals.AvailableGridSquares:
+            return bad('no free grid square left')
         if len(inviteeIds) > 200 or cost > host.getTotalMoney():
-            return Err.ValidationError, 0
+            return bad('too many invitees or too expensive (%d)' % cost)
         return Err.AllOk, cost
+
+    def __reject(self, host, why):
+        self.notify.warning('party from %s refused: %s' % (host.doId, why))
+        self.air.writeServerEvent('partyRefused', host.doId, why)
+        return PartyGlobals.AddPartyErrorCode.ValidationError, 0
 
     def changePrivateRequest(self, partyId, newPrivateStatus):
         senderId = self.air.getAvatarIdFromSender()

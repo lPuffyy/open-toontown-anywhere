@@ -485,6 +485,21 @@ class EstateGarden:
             self.updateOrganic()
         return task.again
 
+    def growNow(self):
+        """Fertilizer: every watered plant that is still growing jumps to its next growth stage at once."""
+        changed = False
+        for obj in list(self.objects.values()):
+            if not isinstance(obj, DistributedPlantBaseAI) or obj.data['water'] <= 0:
+                continue
+            steps = [s for s in obj.attrs['growthThresholds'] if s > obj.data['growth']]
+            if steps:
+                obj.tick(False, steps[0] - obj.data['growth'])
+                changed = True
+        if changed:
+            self.save()
+            self.updateOrganic()
+        return changed
+
     def destroy(self):
         taskMgr.remove(self.taskName)
         self.save()

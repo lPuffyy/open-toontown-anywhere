@@ -26,6 +26,7 @@ class DistributedEstateAI(DistributedObjectAI):
         self.slotToonId = [0] * NUM_SLOTS
         self.slotItems = [[] for _ in range(NUM_SLOTS)]
         self.slotToonId[0] = ownerId
+        self.avIdList = [ownerId]       # the toons with a house here (only the owner for now); fertilizer looks the owner up in it
         self.clouds = 0
         self.idList = []
         self.treasureIds = []
@@ -40,6 +41,13 @@ class DistributedEstateAI(DistributedObjectAI):
             setattr(self, 'setSlot%dToonId' % i, lambda v, i=i: self.slotToonId.__setitem__(i, v))
             setattr(self, 'getSlot%dItems' % i, lambda i=i: self.slotItems[i])
             setattr(self, 'setSlot%dItems' % i, lambda v, i=i: self.slotItems.__setitem__(i, v))
+
+    def doEpochNow(self, onlyForThisToonIndex = None):
+        """Called when a toon uses fertilizer: grow this estate's garden one stage now (the owner is the only toon with a garden here)."""
+        mgr = getattr(self.air, 'estateMgr', None)
+        garden = mgr.gardens.get(self.ownerId) if mgr is not None else None
+        if garden is not None:
+            garden.growNow()
 
     # required fields
     def getEstateType(self):
