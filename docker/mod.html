@@ -113,6 +113,7 @@ button.big { padding: 11px 14px; font-size: 1rem; width: 100% }
       <h2 id="actTitle"></h2>
       <p class="sub" id="actInfo" style="margin:0 0 8px"></p>
       <textarea id="actText" maxlength="250"></textarea>
+      <select id="actDur" hidden style="margin-top:8px"><option value="0">Until lifted</option><option value="1">1 hour</option><option value="24">1 day</option><option value="72">3 days</option><option value="168">7 days</option><option value="720">30 days</option></select>
       <div class="row" style="margin-top:8px">
         <button class="primary" id="actGo"></button><button id="actCancel">Cancel</button>
         <span id="actMsg" class="sub"></span>
@@ -150,6 +151,7 @@ button.big { padding: 11px 14px; font-size: 1rem; width: 100% }
     </div>
 
     <div data-pane="accounts" hidden>
+      <section class="card" id="pwBox" hidden></section>
       <section class="card"><div class="tablewrap" id="accounts"></div></section>
     </div>
 
@@ -253,7 +255,7 @@ function render() {
   }).join('') || '<section class="card empty">No district has reported yet. The game server may be starting.</section>';
   $('bans').innerHTML = state.banned.length ? '<table><tbody>' + state.banned.map((b) => '<tr><td><span class="name">' + esc(b.name) + '</span><div class="sub">' +
       esc(b.reason || 'no reason given') + (b.by ? ' · by ' + esc(b.by) : '') + (b.time ? ' · ' + new Date(b.time * 1000).toLocaleString() : '') +
-      '</div></td><td class="acts"><button data-unban="' + esc(b.name) + '">Unban</button></td></tr>').join('') + '</tbody></table>' : '<div class="empty">No banned accounts.</div>';
+      (b.until ? ' · until ' + new Date(b.until * 1000).toLocaleString() : '') + '</div></td><td class="acts"><button data-unban="' + esc(b.name) + '">Unban</button></td></tr>').join('') + '</tbody></table>' : '<div class="empty">No banned accounts.</div>';
   $('ipbans').innerHTML = (state.ipBans || []).length ? '<table><tbody>' + state.ipBans.map((b) => '<tr><td><span class="name">' + esc(b.ip) + '</span><div class="sub">' +
       esc(b.reason || 'no reason given') + (b.account ? ' · account ' + esc(b.account) : '') + (b.by ? ' · by ' + esc(b.by) : '') + (b.time ? ' · ' + new Date(b.time * 1000).toLocaleString() : '') +
       '</div></td><td class="acts"><button data-unbanip="' + esc(b.ip) + '">Unban IP</button></td></tr>').join('') + '</tbody></table>' : '<div class="empty">No banned addresses.</div>';
@@ -431,11 +433,13 @@ function renderAccounts() {
   $('accounts').innerHTML = '<p class="sub" style="margin:0 0 8px">' + list.length + ' of ' + accounts.accounts.length + ' accounts</p><table><thead><tr><th>Account</th><th>Toons</th><th>Last played</th><th></th></tr></thead><tbody>' +
     list.map((a) => '<tr><td><span class="name">' + esc(a.name) + '</span>' + (a.admin ? '<span class="tag staff">admin</span>' : '') + (a.banned ? '<span class="tag battle">banned</span>' : '') +
       (a.online ? '<span class="tag staff">online</span>' : '') + '<div class="sub">' + (a.created ? 'joined ' + esc(a.created.replace(/ \d\d:\d\d:\d\d/, '')) : 'never entered the game') +
-      (a.recovery ? '' : ' · no recovery answers') + '</div>' + (a.ips && a.ips.length ? '<div class="sub">IP ' + a.ips.map(esc).join(' · ') + (a.ipBanned ? ' <span class="tag battle">IP banned</span>' : '') + '</div>' : '') + '</td>' +
+      (a.recovery ? '' : ' · no recovery answers') + '</div>' + (a.ips && a.ips.length ? '<div class="sub">IP ' + a.ips.map(esc).join(' · ') + (a.ipBanned ? ' <span class="tag battle">IP banned</span>' : '') + '</div>' : '') +
+      (a.notes && a.notes.length ? a.notes.slice(-2).map((n) => '<div class="sub">Note: ' + esc(n.text) + ' (' + esc(n.by) + ', ' + new Date(n.time * 1000).toLocaleDateString() + ')</div>').join('') : '') + '</td>' +
       '<td><div class="toonlist">' + (a.toons.map((t) => '<button class="toonchip' + (t.online ? ' on' : '') + '" data-toon="' + t.avId + '" title="id ' + t.avId + (t.online ? ', online in ' + esc(t.online) : '') + '">' +
         esc(t.name) + ' · ' + t.maxHp + ' laff · ' + t.beans + ' beans</button>').join('') || '<span class="sub">no toons</span>') + '</div></td>' +
       '<td class="sub">' + esc(a.lastLogin || '') + '</td><td class="acts">' + (a.admin ? '' : a.banned ? '<button data-unban="' + esc(a.name) + '">Unban</button>'
-        : '<button class="danger" data-banacct="' + esc(a.name) + '">Ban</button>') + (!a.admin && !a.ipBanned && a.ips && a.ips.length ? '<button class="danger" data-banip="' + esc(a.name) + '">Ban + IP</button>' : '') + '</td></tr>').join('') + '</tbody></table>';
+        : '<button class="danger" data-banacct="' + esc(a.name) + '">Ban</button>') + (!a.admin && !a.ipBanned && a.ips && a.ips.length ? '<button class="danger" data-banip="' + esc(a.name) + '">Ban + IP</button>' : '') +
+      (a.admin ? '' : '<button data-resetpw="' + esc(a.name) + '">Reset password</button>') + '<button data-notefor="' + esc(a.name) + '">Note</button></td></tr>').join('') + '</tbody></table>';
 }
 $('filter').addEventListener('input', () => { if (tab === 'online' && state) render(); if (tab === 'reports') renderReports(); if (tab === 'accounts') renderAccounts() });
 function findToonOfAccount(name) { for (const d of state.districts) for (const t of d.toons) if (t.account === name) return Object.assign({ district: d.district }, t); return {} }
@@ -444,6 +448,7 @@ const ACTS = {
   message: { title: (t) => 'Message ' + t.name, go: 'Send message', ph: 'Shown to this toon only, as a message from Toontown', need: true },
   kick: { title: (t) => 'Kick ' + t.name, go: 'Kick', ph: 'Optional: why (shown to them before they are logged out)', danger: true },
   ban: { title: (t) => 'Ban account ' + t.account, go: 'Ban account', ph: 'Reason (shown to them). Logs out every toon on this account and blocks sign-in.', danger: true },
+  note: { title: (t) => 'Note on account ' + t.account, go: 'Save note', ph: 'Only moderators see this', need: true },
   ipban: { title: (t) => 'Ban account ' + t.account + ' and its IP addresses', go: 'Ban account + IP', ph: 'Reason (shown to them). Also blocks every address this account signed in from, for everyone using it.', danger: true },
 };
 document.addEventListener('click', async (e) => {
@@ -463,18 +468,29 @@ document.addEventListener('click', async (e) => {
     b.disabled = true; try { await api('action', { action: b.dataset.resolve ? 'resolve' : 'reopen', id, text: note ? note.value.trim() : '' }); refresh(); refreshTab() } catch (err) { b.disabled = false }
     return;
   }
+  if (b.id === 'pwCopy') { const v = $('pwVal').textContent; try { await navigator.clipboard.writeText(v); b.textContent = 'Copied' } catch (err) { const r = document.createRange(); r.selectNodeContents($('pwVal')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = 'Press copy' } return }
+  if (b.dataset.resetpw) {
+    if (b.dataset.armed !== '1') { b.dataset.armed = '1'; const was = b.textContent; b.textContent = 'Tap again'; setTimeout(() => { b.dataset.armed = ''; b.textContent = was }, 4000); return }
+    b.dataset.armed = ''; b.disabled = true; const name = b.dataset.resetpw, box = $('pwBox');
+    try { const j = await api('action', { action: 'resetpw', account: name });
+      box.innerHTML = '<h2>New password for ' + esc(name) + '</h2><p class="sub" style="margin:0 0 8px">Shown once. Give it to the player privately. After signing in they can set recovery answers so they can reset it themselves next time.</p><div class="row"><code id="pwVal" style="font-size:1.4rem;user-select:all">' + esc(j.password) + '</code><button id="pwCopy">Copy</button></div>';
+      box.hidden = false; box.scrollIntoView({ behavior: 'smooth', block: 'center' }); b.textContent = 'Reset password' }
+    catch (err) { box.innerHTML = '<p class="err" style="margin:0">' + esc(err.message) + '</p>'; box.hidden = false; b.textContent = 'Reset password' }
+    b.disabled = false; return;
+  }
   if (b.dataset.unbanip) {
     b.disabled = true; try { await api('action', { action: 'ipunban', ip: b.dataset.unbanip }); refresh() } catch (err) { alertMsg($('ipMsg'), err.message, true); b.disabled = false }
     return;
   }
-  if (b.dataset.a || b.dataset.banacct || b.dataset.banip) {
-    const acct = b.dataset.banacct || b.dataset.banip;
+  if (b.dataset.a || b.dataset.banacct || b.dataset.banip || b.dataset.notefor) {
+    const acct = b.dataset.banacct || b.dataset.banip || b.dataset.notefor;
     const t = acct ? Object.assign({ name: acct, district: 'Account', where: 'any toon' }, findToonOfAccount(acct), { account: acct })
                    : findToon(b.dataset.id);
     if (!t) return;
-    const kind = b.dataset.banip ? 'ipban' : b.dataset.banacct ? 'ban' : b.dataset.a;
+    const kind = b.dataset.notefor ? 'note' : b.dataset.banip ? 'ipban' : b.dataset.banacct ? 'ban' : b.dataset.a;
     act = { kind, toon: t }; const A = ACTS[act.kind];
     $('actTitle').textContent = A.title(t); $('actInfo').textContent = t.district + ' · ' + t.where + ' · account ' + (t.account || 'unknown');
+    $('actDur').hidden = !(kind === 'ban' || kind === 'ipban'); $('actDur').value = '0';
     $('actText').value = ''; $('actText').placeholder = A.ph; $('actGo').textContent = A.go;
     $('actGo').className = A.danger ? 'danger solid' : 'primary'; $('actMsg').textContent = ''; $('actCard').hidden = false;
     $('actCard').scrollIntoView({ behavior: 'smooth', block: 'center' }); $('actText').focus();
@@ -496,7 +512,8 @@ $('actGo').onclick = async () => {
   if (A.need && !text) return alertMsg($('actMsg'), 'Write a message first.', true);
   $('actGo').disabled = true;
   try {
-    if (act.kind === 'ban' || act.kind === 'ipban') { const j = await api('action', { action: act.kind, account: t.account, text });
+    if (act.kind === 'note') { await api('action', { action: 'note', account: t.account, text }); alertMsg($('actMsg'), 'Saved.'); if (accounts) { try { accounts = await api('accounts'); renderAccounts() } catch (e) {} } }
+    else if (act.kind === 'ban' || act.kind === 'ipban') { const j = await api('action', { action: act.kind, account: t.account, text, hours: +$('actDur').value || 0 });
       alertMsg($('actMsg'), 'Banned ' + t.account + (j.ips ? ' and ' + j.ips.length + ' address(es)' : '') + (j.ids.length ? ', logging out ' + j.ids.length + ' toon(s).' : '.')); refresh(); if (accounts) { try { accounts = await api('accounts'); renderAccounts() } catch (e) {} } }
     else { const j = await api('action', { action: act.kind, avId: t.avId, name: t.name, text }); alertMsg($('actMsg'), 'Sent, waiting for the district...'); await waitDone(j.id, $('actMsg'), A.go); refresh(); }
   } catch (err) { alertMsg($('actMsg'), err.message, true) }

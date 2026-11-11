@@ -184,7 +184,7 @@ def mod_accounts():
         g=db["accounts"].get(name,{})
         toons=[dict(t,online=online.get(t["avId"],"")) for t in g.get("toons",[])]
         out.append({"name":name,"admin":bool(u.get("admin")),"banned":u.get("banned") or None,"recovery":bool(u.get("rec")),
-                    "ips":sorted(u.get("ips",{}),key=lambda k:-u["ips"][k]),"ipBanned":any(k in bans for k in u.get("ips",{})),
+                    "notes":u.get("notes",[]),"ips":sorted(u.get("ips",{}),key=lambda k:-u["ips"][k]),"ipBanned":any(k in bans for k in u.get("ips",{})),
                     "created":g.get("created",""),"lastLogin":g.get("lastLogin",""),"toons":toons,"online":any(t["online"] for t in toons)})
     return {"accounts":out}
 REPORTS=os.path.join(MOD,"reports.jsonl"); REPORT_STATE=os.path.join(MOD,"reports-state.json")
@@ -236,6 +236,27 @@ def mod_command(action,avId,text,by,**extra):
     cid="%d-%s.json"%(int(now*1000),os.urandom(3).hex()); p=os.path.join(MOD,"cmd",cid)
     json.dump(dict(extra,action=action,avId=int(avId),text=text,by=by,time=now),open(p+".tmp","w")); os.replace(p+".tmp",p)
     return cid
+def ban_until(req):
+    """the time a ban ends when the moderator chose a length in hours (0 or missing: until someone lifts it), else None"""
+    try: hours=float(req.get("hours") or 0)
+    except (TypeError, ValueError): return None
+    return int(time.time()+min(hours,24*365)*3600) if hours>0 else None
+def sweep_bans():
+    """lift bans whose time is up (the game's sign-in check only looks at whether an account is marked banned)"""
+    while True:
+        time.sleep(60)
+        try:
+            now=time.time()
+            with LOCK:
+                db=load(); changed=False
+                for u in db["users"].values():
+                    b=u.get("banned")
+                    if isinstance(b,dict) and b.get("until") and b["until"]<=now: u.pop("banned",None); changed=True
+                if changed: save(db)
+                bans=ipbans(); gone=[k for k,v in bans.items() if v.get("until") and v["until"]<=now]
+                for k in gone: del bans[k]
+                if gone: ipbans_write(bans)
+        except Exception: pass
 def mod_action(req,by):
     """returns (error or None, result dict)"""
     action=req.get("action"); text=str(req.get("text",""))[:250].strip()
@@ -255,6 +276,8 @@ def mod_action(req,by):
             if action=="ban":
                 if u.get("admin"): return "Admin accounts can't be banned here.",None
                 u["banned"]={"reason":text,"by":by,"time":int(time.time())}
+                until=ban_until(req)
+                if until: u["banned"]["until"]=until
             else: u.pop("banned",None)
             save(db)
         mod_audit(by,"%s account %s %s"%(action,name,text))
@@ -282,10 +305,15 @@ def mod_action(req,by):
             keys=[k for k in keys if k not in adminIps]
             if not keys: return "That address is shared with an admin account, so it can't be banned.",None
             bans=ipbans()
-            for k in keys: bans[k]={"reason":text,"by":by,"time":now,"account":name}
+            until=ban_until(req)
+            for k in keys:
+                bans[k]={"reason":text,"by":by,"time":now,"account":name}
+                if until: bans[k]["until"]=until
             ipbans_write(bans)
             if u is not None and not u.get("banned"):
-                u["banned"]={"reason":text,"by":by,"time":now}; save(db)
+                u["banned"]={"reason":text,"by":by,"time":now}
+                if until: u["banned"]["until"]=until
+                save(db)
         mod_audit(by,"ipban %s %s %s"%(name or "-",",".join(keys),text))
         ids=[]
         if name:                                         # log out every toon of that account that is playing now
@@ -301,6 +329,24 @@ def mod_action(req,by):
             if k not in bans: return "That address is not banned.",None
             del bans[k]; ipbans_write(bans)
         mod_audit(by,"ipunban "+k); return None,{}
+    if action=="resetpw":
+        name=str(req.get("account","")).strip().lower()
+        with LOCK:
+            db=load(); u=db["users"].get(name)
+            if u is None: return "No account called %s."%name,None
+            if u.get("admin"): return "An admin account's password can't be reset here.",None
+            alphabet="abcdefghjkmnpqrstuvwxyz23456789"; pw="".join(alphabet[b%len(alphabet)] for b in os.urandom(8))
+            salt=os.urandom(16).hex(); u["salt"]=salt; u["hash"]=pbk(pw,salt); save(db)
+        mod_audit(by,"password reset for "+name)       # (the new password is never written to the log)
+        return None,{"password":pw}
+    if action=="note":
+        name=str(req.get("account","")).strip().lower()
+        if not text: return "Write a note.",None
+        with LOCK:
+            db=load(); u=db["users"].get(name)
+            if u is None: return "No account called %s."%name,None
+            notes=u.setdefault("notes",[]); notes.append({"by":by,"time":int(time.time()),"text":text}); del notes[:-20]; save(db)
+        mod_audit(by,"note on %s: %s"%(name,text)); return None,{}
     if action=="edit": return mod_edit(req,by)
     if action in ("resolve","reopen"):
         rid=str(req.get("id",""))
@@ -576,4 +622,5 @@ class H(http.server.BaseHTTPRequestHandler):
         with open(os.path.join(D,name+(".png" if name.startswith("shot") else ".txt")),"wb") as f: f.write(raw)
         self.reply(200,"ok")
     def log_message(self,*a): pass
+threading.Thread(target=sweep_bans,daemon=True).start()
 http.server.ThreadingHTTPServer(("0.0.0.0",7381),H).serve_forever()
