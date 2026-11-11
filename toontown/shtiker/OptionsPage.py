@@ -511,13 +511,36 @@ class CodesTabPage(DirectFrame):
         self.codeInput['focus'] = 1
         self.codeInput.enterText('')
         self.__enableCodeEntry()
+        taskMgr.remove('codesTypeBtn')
+        taskMgr.doMethodLater(0.5, self.__publishTypeButton, 'codesTypeBtn')
+
+    def __publishTypeButton(self, task=None):
+        """In the browser, tell the page where the code box is (its centre, as fractions of the window), so a tap on it can open the phone's
+        keyboard in the same tap (iOS only opens the keyboard from a real tap; the game opens its text box a moment after)."""
+        try:
+            import platform
+            where = ''
+            if self.codeBox is not None and not self.codeBox.isEmpty() and not self.codeBox.isHidden():
+                p = self.codeBox.getPos(render2d)
+                where = '%.4f,%.4f' % ((p[0] + 1.0) / 2.0, (1.0 - p[2]) / 2.0)
+            platform.window.ttr.typeBtn = where
+        except Exception:
+            return None
+        return task.again if task is not None else None
 
     def exit(self):
+        taskMgr.remove('codesTypeBtn')
+        try:
+            import platform
+            platform.window.ttr.typeBtn = ''
+        except Exception:
+            pass
         self.resultPanel.hide()
         self.hide()
         localAvatar.chatMgr.fsm.request('mainMenu')
 
     def unload(self):
+        taskMgr.remove('codesTypeBtn')
         self.instructionPanel.destroy()
         self.instructionPanel = None
         self.codeBox.destroy()

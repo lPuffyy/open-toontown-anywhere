@@ -313,10 +313,33 @@ class Street(BattlePlace.BattlePlace):
     def visibilityOn(self):
         self.hideAllVisibles()
         self.accept('on-floor', self.enterZone)
+        taskMgr.remove('streetHealVisibles')
+        taskMgr.doMethodLater(2.0, self.__healVisibles, 'streetHealVisibles')
 
     def visibilityOff(self):
+        taskMgr.remove('streetHealVisibles')
         self.ignore('on-floor')
         self.showAllVisibles()
+
+    def __healVisibles(self, task):
+        """Reports say half a street sometimes stays missing (a grey void where the buildings should be). Every couple of seconds, show any part
+        of the street around the player that is still hidden and is not in the middle of fading in or out."""
+        try:
+            zoneId = self.zoneId
+            if zoneId is not None and zoneId in self.loader.nodeDict:
+                for node in self.loader.nodeDict[zoneId]:
+                    if not node.isStashed():
+                        continue
+                    fadeOut = self.loader.fadeOutDict.get(node)
+                    fadeIn = self.loader.fadeInDict.get(node)
+                    if (fadeOut is not None and fadeOut.isPlaying()) or (fadeIn is not None and fadeIn.isPlaying()):
+                        continue
+                    self.notify.warning('street part %s was hidden in zone %s: showing it' % (node.getName(), zoneId))
+                    node.unstash()
+                    self.loader.enterAnimatedProps(node)
+        except Exception:
+            pass
+        return task.again
 
     def doEnterZone(self, newZoneId):
         if self.zoneId != None:
