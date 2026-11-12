@@ -2350,12 +2350,18 @@ class DistributedToonAI(DistributedPlayerAI.DistributedPlayerAI, DistributedSmoo
                     taskMgr.doMethodLater(newDuration, self.__deliverBothPurchases, taskName)
         return
 
+    def __tellGiftsDelivered(self, now):
+        # our delivery manager has no sendDeliverGifts (the original game's did): calling it raised an AttributeError that killed the district
+        manager = getattr(simbase.air, 'deliveryManager', None)
+        sender = getattr(manager, 'sendDeliverGifts', None)
+        if sender is not None:
+            sender(self.getDoId(), now)
+
     def __deliverBothPurchases(self, task):
         now = int(time.time() / 60 + 0.5)
         delivered, remaining = self.onOrder.extractDeliveryItems(now)
         deliveredGifts, remainingGifts = self.onGiftOrder.extractDeliveryItems(now)
-        if getattr(simbase.air, 'deliveryManager', None) is not None:
-            simbase.air.deliveryManager.sendDeliverGifts(self.getDoId(), now)
+        self.__tellGiftsDelivered(now)
         giftItem = CatalogItemList.CatalogItemList(deliveredGifts, store=CatalogItem.Customization | CatalogItem.DeliveryDate)
         if len(giftItem) > 0:
             self.air.writeServerEvent('Getting Gift', self.doId, 'sender %s receiver %s gift %s' % (giftItem[0].giftTag, self.doId, giftItem[0].getName()))
@@ -2391,7 +2397,7 @@ class DistributedToonAI(DistributedPlayerAI.DistributedPlayerAI, DistributedSmoo
         delivered, remaining = self.onGiftOrder.extractDeliveryItems(now)
         self.notify.info('Gift Delivery for %s: %s.' % (self.doId, delivered))
         self.b_setMailboxContents(self.mailboxContents + delivered)
-        simbase.air.deliveryManager.sendDeliverGifts(self.getDoId(), now)
+        self.__tellGiftsDelivered(now)
         self.b_setCatalogNotify(self.catalogNotify, ToontownGlobals.NewItems)
         return Task.done
 
