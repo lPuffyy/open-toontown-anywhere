@@ -2792,6 +2792,14 @@ dclass ToonPresence : DistributedObject {
   teleportResponseFrom(uint32, int8, uint32, uint32, uint32);
   teleportGiveupFrom(uint32);
   friendRemoved(uint32);
+  groupPost(uint8, uint8, uint32, uint32, uint32) airecv clsend;
+  groupMove(uint32, uint32, uint32) airecv clsend;
+  groupDisband() airecv clsend;
+  groupLeave() airecv clsend;
+  groupJoin(uint32) airecv clsend;
+  groupListRequest() airecv clsend;
+  groupResult(uint8, uint8, uint32, uint32, uint32, uint32);
+  groupList(uint32, uint32[], uint8[], string[], uint8[], uint8[], uint32[], uint32[], uint16[]);
 };
 
 dclass TTAvatarFriendsManager : AvatarFriendsManager {

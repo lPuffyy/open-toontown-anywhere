@@ -4187,6 +4187,66 @@ ShardPageLow = 'Quiet'
 ShardPageMed = 'Ideal'
 ShardPageHigh = 'Full'
 ShardPageChoiceReject = 'Sorry, that district is full. Please try another one.'
+GroupsPageTitle = 'Groups'
+GroupsPageIntro = 'Find Toons to fight Cogs with!\n\nPick a group in the list and tap Join to go to the Toon who posted it.\n\nOr post your own group for others to join.'
+GroupsPageEmpty = 'No groups right now.\nPost one!'
+GroupsPageScrollTitle = 'Group       Toon'
+GroupsPagePost = 'Post a\nGroup'
+GroupsPagePostTitle = 'What are you doing?'
+GroupsPageBack = 'Back'
+GroupsPageJoin = 'Join!'
+GroupsPageLeave = 'Leave\nGroup'
+GroupsPageDisband = 'End\nGroup'
+GroupsPageYours = 'Your group'
+GroupsPageYouJoined = 'You joined this group'
+GroupsPageSize = '%d of %d Toons'
+GroupsPageWhere = 'Meet at: %s, %s'
+GroupsPageFull = 'This group is full.'
+GroupsPageHost = 'Posted by %s'
+GroupsPageAge = 'Posted %s ago'
+GroupsPageAgeNow = 'Posted just now'
+GroupsPageMinutes = '%d min'
+GroupsPageHours = '%d hr'
+GroupsPageEndsWithYou = 'It stays up while you are playing. End it when you are done.'
+GroupsPagePosted = 'Your group is posted! Toons can join you from the Groups page.'
+GroupsPageGone = 'That group has ended.'
+GroupsPageFullReject = 'Sorry, that group is full.'
+GroupsPageBusy = 'Slow down a little, then try again.'
+GroupsPageBad = "That didn't work. Try again in a moment."
+GroupsPageOwn = 'That is your own group!'
+GroupsPageClosed = 'The group you were in has ended.'
+GroupsPageNoPlace = 'You need to be out in Toontown to post a group.'
+GroupsPageHelpDistrict = 'District: %s'
+GroupKindNames = {1: 'Sellbot HQ: VP Fight',
+ 2: 'Cashbot HQ: CFO Fight',
+ 3: 'Lawbot HQ: Chief Justice',
+ 4: 'Bossbot HQ: CEO Fight',
+ 5: 'Sellbot Factory',
+ 6: 'Cashbot Mints',
+ 7: 'Lawbot Offices',
+ 8: 'Bossbot Golf Courses',
+ 9: 'Cog Buildings (any)',
+ 12: 'Sellbot Buildings',
+ 13: 'Cashbot Buildings',
+ 14: 'Lawbot Buildings',
+ 15: 'Bossbot Buildings',
+ 10: 'Cog Invasion',
+ 11: 'Cogdominiums'}
+GroupKindShort = {1: 'VP',
+ 2: 'CFO',
+ 3: 'CJ',
+ 4: 'CEO',
+ 5: 'Factory',
+ 6: 'Mint',
+ 7: 'Office',
+ 8: 'Golf',
+ 9: 'Bldgs',
+ 12: 'Sell Bldg',
+ 13: 'Cash Bldg',
+ 14: 'Law Bldg',
+ 15: 'Boss Bldg',
+ 10: 'Invade',
+ 11: 'Cogdo'}
 SuitPageTitle = 'Cog Gallery'
 SuitPageMystery = DialogQuestion + DialogQuestion + DialogQuestion
 SuitPageQuota = '%s of %s'

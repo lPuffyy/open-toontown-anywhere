@@ -24,6 +24,7 @@ from toontown.shtiker import InventoryPage
 from toontown.shtiker import MapPage
 from toontown.shtiker import OptionsPage
 from toontown.shtiker import ShardPage
+from toontown.shtiker import GroupsPage
 from toontown.shtiker import QuestPage
 from toontown.shtiker import TrackPage
 from toontown.shtiker import KartPage
@@ -256,6 +257,7 @@ class LocalToon(DistributedToon.DistributedToon, LocalAvatar.LocalAvatar):
         self.book.unload()
         del self.optionsPage
         del self.shardPage
+        del self.groupsPage
         del self.mapPage
         del self.invPage
         del self.questPage
@@ -334,6 +336,9 @@ class LocalToon(DistributedToon.DistributedToon, LocalAvatar.LocalAvatar):
         self.shardPage = ShardPage.ShardPage()
         self.shardPage.load()
         self.book.addPage(self.shardPage, pageName=TTLocalizer.ShardPageTitle)
+        self.groupsPage = GroupsPage.GroupsPage()
+        self.groupsPage.load()
+        self.book.addPage(self.groupsPage, pageName=TTLocalizer.GroupsPageTitle)
         self.mapPage = MapPage.MapPage()
         self.mapPage.load()
         self.book.addPage(self.mapPage, pageName=TTLocalizer.MapPageTitle)

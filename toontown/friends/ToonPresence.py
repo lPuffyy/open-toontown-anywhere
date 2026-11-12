@@ -26,6 +26,66 @@ class ToonPresence(DistributedObjectGlobal):
     def up_requestPetDetails(self, petId):
         self.sendUpdate('requestPetDetails', [petId])
 
+    # ---- the group tracker (the Groups page of the sticker book, toontown/shtiker/GroupsPage.py)
+    def up_groupPost(self, kind, maxSize):
+        where = self.groupLocation()
+        if where is None:
+            return False
+        self.sendUpdate('groupPost', [kind, maxSize] + list(where))
+        return True
+
+    def up_groupJoin(self, groupId):
+        self.sendUpdate('groupJoin', [groupId])
+
+    def up_groupLeave(self):
+        self.sendUpdate('groupLeave', [])
+
+    def up_groupDisband(self):
+        self.sendUpdate('groupDisband', [])
+
+    def up_groupListRequest(self):
+        self.sendUpdate('groupListRequest', [])
+
+    def groupLocation(self):
+        """(district, hood, zone) of where this toon is now, in the form Go To uses, or None when it is not somewhere it can be found."""
+        try:
+            place = base.cr.playGame.getPlace()
+            return (base.localAvatar.defaultShard, base.cr.playGame.getPlaceId(), place.getZoneId())
+        except Exception:
+            return None
+
+    def groupResult(self, op, code, groupId, shard, hood, zone):
+        from toontown.friends import ToonGroupsGlobals as G
+        if op == G.OP_POST and code == G.OK:
+            self.hostedGroupId = groupId
+            self.__startGroupHeartbeat()
+        elif op in (G.OP_CLOSED, G.OP_LEAVE):
+            self.hostedGroupId = None
+            self.__stopGroupHeartbeat()
+        messenger.send('toonGroupResult', [op, code, groupId, shard, hood, zone])
+
+    def groupList(self, mine, ids, kinds, names, sizes, maxes, shards, hoods, ages):
+        groups = []
+        for i in range(len(ids)):
+            groups.append({'id': ids[i], 'kind': kinds[i], 'name': names[i], 'size': sizes[i], 'max': maxes[i],
+                           'shard': shards[i], 'hood': hoods[i], 'age': ages[i]})
+        messenger.send('toonGroupList', [mine, groups])
+
+    def __startGroupHeartbeat(self):
+        from toontown.friends import ToonGroupsGlobals as G
+        taskMgr.remove('toonGroupHeartbeat')
+        taskMgr.doMethodLater(G.HEARTBEAT, self.__groupHeartbeat, 'toonGroupHeartbeat')
+
+    def __stopGroupHeartbeat(self):
+        taskMgr.remove('toonGroupHeartbeat')
+
+    def __groupHeartbeat(self, task):
+        if not hasattr(base, 'localAvatar') or base.localAvatar is None:
+            return task.done
+        # in a battle or an elevator there is no place to report: zeros keep the last place and only show the host is still here
+        self.sendUpdate('groupMove', list(self.groupLocation() or (0, 0, 0)))
+        return task.again
+
     # ---- from the server
     def avatarDetailsResponse(self, avId, code, experience, inventory, trackAccess, maxHp, hp, shard, lastHood):
         base.cr.handleAvatarDetailsResponse(avId, code, experience, inventory, trackAccess, maxHp, hp, shard, lastHood)

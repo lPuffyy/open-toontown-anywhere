@@ -34,6 +34,7 @@ class ShtikerBook(DirectFrame, StateData.StateData):
         self.setPos(0, 0, 0.1)
         self.pageOrder = [TTLocalizer.OptionsPageTitle,
          TTLocalizer.ShardPageTitle,
+         TTLocalizer.GroupsPageTitle,
          TTLocalizer.MapPageTitle,
          TTLocalizer.InventoryPageTitle,
          TTLocalizer.QuestPageToonTasks,
@@ -213,6 +214,11 @@ class ShtikerBook(DirectFrame, StateData.StateData):
         elif pageName == TTLocalizer.ShardPageTitle:
             iconModels = loader.loadModel('phase_3.5/models/gui/sos_textures')
             iconGeom = iconModels.find('**/district')
+            iconModels.detachNode()
+        elif pageName == TTLocalizer.GroupsPageTitle:
+            iconModels = loader.loadModel('phase_3.5/models/gui/friendslist_gui')
+            iconGeom = iconModels.find('**/FriendsBox_Closed')
+            iconScale = 3.2
             iconModels.detachNode()
         elif pageName == TTLocalizer.MapPageTitle:
             iconModels = loader.loadModel('phase_3.5/models/gui/sos_textures')

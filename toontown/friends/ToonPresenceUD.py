@@ -5,9 +5,10 @@ import traceback
 
 from direct.directnotify import DirectNotifyGlobal
 from direct.distributed.DistributedObjectGlobalUD import DistributedObjectGlobalUD
+from toontown.friends.ToonGroupsUD import ToonGroupsUDMixin
 
 
-class ToonPresenceUD(DistributedObjectGlobalUD):
+class ToonPresenceUD(DistributedObjectGlobalUD, ToonGroupsUDMixin):
     """Knows which toons are playing, in any district, and carries the messages that must reach a toon in another district:
     a friend coming or going, and the Go To (teleport to a friend) questions and answers. Each district's AI tells it when a
     toon arrives or leaves; a client can only ask it to pass a Go To message on to a friend."""
@@ -21,6 +22,7 @@ class ToonPresenceUD(DistributedObjectGlobalUD):
         self.district = {}                  # avId -> name of the district the toon is in: the toons playing right now
         self.detailsAsked = {}              # avId of a client -> when it last asked for a toon's details
         taskMgr.doMethodLater(self.STATUS_EVERY, self.__writeStatus, 'toonPresenceStatus')
+        self.initGroups()                   # the group tracker (ToonGroupsUD.py)
 
     def __writeStatus(self, task):
         """Write how many toons are playing (in total and in each district) for the Discord status script. Counts only, no names."""
@@ -72,6 +74,7 @@ class ToonPresenceUD(DistributedObjectGlobalUD):
     def __toldLeft(self, avId):
         if avId in self.district:
             return                       # it came back
+        self.groupsToonGone(avId)
         friends = self.online.pop(avId, set())
         for friendId in friends:
             if friendId in self.district:
