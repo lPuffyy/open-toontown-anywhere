@@ -27,6 +27,7 @@ class GroupsPage(ShtikerPage.ShtikerPage):
         self.scrollList = None
         self.confirm = None
         self.joining = None
+        self.goAfterJoin = False
 
     def load(self):
         self.title = DirectLabel(parent=self, relief=None, text=TTLocalizer.GroupsPageTitle, text_scale=0.12, textMayChange=0, pos=(0, 0, 0.6))
@@ -69,6 +70,7 @@ class GroupsPage(ShtikerPage.ShtikerPage):
         circle = model.find('**/minnieCircle')
         self.mainButton = DirectButton(parent=self.detail, relief=None, image=circle, image_scale=(1.3, 1, 1.3), image_color=(0.45, 0.9, 0.4, 1), text='', text_scale=0.055, text_pos=(0, 0.01), text_fg=(0, 0, 0, 1), textMayChange=1, pos=(0, 0, -0.5), command=self.__mainPressed)
         self.postButton = DirectButton(parent=self, relief=None, image=circle, image_scale=(1.0, 1, 1.0), image_color=(0.95, 0.85, 0.3, 1), text=TTLocalizer.GroupsPagePost, text_scale=0.045, text_pos=(0, 0.01), text_fg=(0, 0, 0, 1), pos=(0.4, 0, -0.45), command=self.__showPostMenu)
+        self.goButton = DirectButton(parent=self.detail, relief=None, image=circle, image_scale=(1.3, 1, 1.3), image_color=(0.45, 0.8, 1, 1), text=TTLocalizer.GroupsPageGo, text_scale=0.055, text_pos=(0, 0.01), text_fg=(0, 0, 0, 1), pos=(-0.19, 0, -0.4), command=self.__goPressed)
         model.removeNode()
         self.detail.hide()
 
@@ -200,6 +202,8 @@ class GroupsPage(ShtikerPage.ShtikerPage):
         self.postButton.setPos(0.4, 0, -0.62 if g is not None else -0.45)
         self.postButton.setScale(0.8 if g is not None else 1.0)
         self.mainButton.setZ(-0.4)
+        self.mainButton.setX(0)
+        self.goButton.hide()
         self.detailNote.setZ(-0.1)
         if g is None:
             self.detail.hide()
@@ -228,6 +232,10 @@ class GroupsPage(ShtikerPage.ShtikerPage):
             self.mainButton['image_color'] = Vec4(1, 0.5, 0.5, 1)
             self.detailNote['text'] = TTLocalizer.GroupsPageEndsWithYou if hosting else TTLocalizer.GroupsPageYouJoined
             self.mainButton.show()
+            if not hosting and not self.book.safeMode:
+                # a member can walk to the host whenever it likes: Go to Group on the left, Leave on the right
+                self.goButton.show()
+                self.mainButton.setX(0.19)
         elif full:
             self.detailNote['text'] = TTLocalizer.GroupsPageFull
             self.mainButton.hide()
@@ -262,7 +270,16 @@ class GroupsPage(ShtikerPage.ShtikerPage):
                 base.cr.toonPresence.up_groupLeave()
         else:
             self.joining = g['id']
+            self.goAfterJoin = False
             base.cr.toonPresence.up_groupJoin(g['id'])
+
+    def __goPressed(self):
+        """Go to the host of the group this toon is in. Asking to join again just answers where the host is now."""
+        if not self.mine:
+            return
+        self.joining = self.mine
+        self.goAfterJoin = True
+        base.cr.toonPresence.up_groupJoin(self.mine)
 
     # ---- posting
     def __hidePostMenu(self):
@@ -289,7 +306,11 @@ class GroupsPage(ShtikerPage.ShtikerPage):
             if code == G.OK and self.joining == groupId:
                 self.joining = None
                 self.__refreshNow()
-                self.__teleport(groupId, shard, hood, zone)
+                if self.goAfterJoin:
+                    self.goAfterJoin = False
+                    self.__teleport(groupId, shard, hood, zone)
+                else:
+                    self.__say(TTLocalizer.GroupsPageJoinedOk)
             elif code != G.OK:
                 self.__say(self.__codeText(code))
                 self.__refreshNow()
