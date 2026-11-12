@@ -103,6 +103,13 @@ class ToonPresenceUD(DistributedObjectGlobalUD, ToonGroupsUDMixin):
             self.online[toAvId].discard(fromAvId)
             self.sendUpdateToAvatarId(toAvId, 'friendRemoved', [fromAvId])
 
+    # ---- whispers to a friend who is not in the sender's view: a client cannot send to an object it cannot see (Astron ejects it),
+    # so the whisper goes through here. kind: 0 typed text, 1 Speed Chat, 2 custom Speed Chat, 3 emote
+    def relayWhisper(self, toAvId, kind, value, text):
+        fromAvId = self.air.getAvatarIdFromSender()
+        if kind in (0, 1, 2, 3) and self.__friends(fromAvId, toAvId):
+            self.sendUpdateToAvatarId(toAvId, 'whisperFrom', [fromAvId, kind, value, text[:256]])
+
     # ---- Go To: a toon asks a friend (in any district) if it can come to them
     def __friends(self, a, b):
         """True when a and b are both playing and b has a as a friend."""

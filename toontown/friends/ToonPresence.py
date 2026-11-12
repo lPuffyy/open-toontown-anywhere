@@ -20,6 +20,9 @@ class ToonPresence(DistributedObjectGlobal):
     def up_removeFriend(self, toAvId):
         self.sendUpdate('relayRemoveFriend', [toAvId])
 
+    def up_whisper(self, toAvId, kind, value, text=''):
+        self.sendUpdate('relayWhisper', [toAvId, kind, value, text])
+
     def up_requestAvatarDetails(self, avId):
         self.sendUpdate('requestAvatarDetails', [avId])
 
@@ -87,6 +90,20 @@ class ToonPresence(DistributedObjectGlobal):
         return task.again
 
     # ---- from the server
+    def whisperFrom(self, fromId, kind, value, text):
+        """A friend who is not in view whispered to us (see ToonPresenceUD.relayWhisper)."""
+        if not hasattr(base, 'localAvatar') or base.localAvatar is None:
+            return
+        la = base.localAvatar
+        if kind == 0:
+            la.setTalkWhisper(fromId, 0, '', text, [], 0)
+        elif kind == 1:
+            la.setWhisperSCFrom(fromId, value)
+        elif kind == 2:
+            la.setWhisperSCCustomFrom(fromId, value)
+        elif kind == 3:
+            la.setWhisperSCEmoteFrom(fromId, value)
+
     def avatarDetailsResponse(self, avId, code, experience, inventory, trackAccess, maxHp, hp, shard, lastHood):
         base.cr.handleAvatarDetailsResponse(avId, code, experience, inventory, trackAccess, maxHp, hp, shard, lastHood)
 

@@ -664,12 +664,7 @@ class TalkAssistant(DirectObject.DirectObject):
         else:
             receiver = base.cr.identifyAvatar(receiverAvId)
             if receiver:
-                base.localAvatar.sendUpdate('setTalkWhisper', [0,
-                 0,
-                 '',
-                 message,
-                 [],
-                 0], sendToId=receiverAvId)
+                base.cr.toonPresence.up_whisper(receiverAvId, 0, 0, message)
         return error
 
     def sendAccountTalk(self, message, receiverAccount):

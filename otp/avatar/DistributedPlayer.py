@@ -140,7 +140,10 @@ class DistributedPlayer(DistributedAvatar.DistributedAvatar, PlayerBase.PlayerBa
             base.cr.playerFriendsManager.sendSCWhisper(sendToId, msgIndex)
         else:
             messenger.send('wakeup')
-            self.sendUpdate('setWhisperSCFrom', [self.doId, msgIndex], sendToId)
+            if sendToId in base.cr.doId2do:
+                self.sendUpdate('setWhisperSCFrom', [self.doId, msgIndex], sendToId)
+            else:
+                base.cr.toonPresence.up_whisper(sendToId, 1, msgIndex)
 
     def setWhisperSCFrom(self, fromId, msgIndex):
         handle = base.cr.identifyAvatar(fromId)
@@ -163,7 +166,10 @@ class DistributedPlayer(DistributedAvatar.DistributedAvatar, PlayerBase.PlayerBa
             base.cr.playerFriendsManager.sendSCCustomWhisper(sendToId, msgIndex)
             return
         messenger.send('wakeup')
-        self.sendUpdate('setWhisperSCCustomFrom', [self.doId, msgIndex], sendToId)
+        if sendToId in base.cr.doId2do:
+            self.sendUpdate('setWhisperSCCustomFrom', [self.doId, msgIndex], sendToId)
+        else:
+            base.cr.toonPresence.up_whisper(sendToId, 2, msgIndex)
 
     def _isValidWhisperSource(self, source):
         return True
@@ -193,7 +199,10 @@ class DistributedPlayer(DistributedAvatar.DistributedAvatar, PlayerBase.PlayerBa
             base.cr.playerFriendsManager.sendSCEmoteWhisper(sendToId, emoteId)
             return
         messenger.send('wakeup')
-        self.sendUpdate('setWhisperSCEmoteFrom', [self.doId, emoteId], sendToId)
+        if sendToId in base.cr.doId2do:
+            self.sendUpdate('setWhisperSCEmoteFrom', [self.doId, emoteId], sendToId)
+        else:
+            base.cr.toonPresence.up_whisper(sendToId, 3, emoteId)
 
     def setWhisperSCEmoteFrom(self, fromId, emoteId):
         handle = base.cr.identifyAvatar(fromId)
