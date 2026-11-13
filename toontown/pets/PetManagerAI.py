@@ -118,6 +118,14 @@ class PetManagerAI:
             if fields is None or av is None or av.zoneId != zoneId or avId in self.pets:
                 self.notify.info('not spawning the doodle %s of %s: %s' % (petId, avId, 'the database has no record of it' if fields is None else 'the toon moved or already has it'))
                 return
+            if dclass is None or dclass.getName() != 'DistributedPet':
+                # the id now belongs to something else (a toon created later took it): never build a doodle from it, and let the owner forget it
+                self.notify.warning('the doodle %s of %s is a %s in the database, not a doodle: not spawning it, clearing it from the toon' % (petId, avId, dclass.getName() if dclass else None))
+                try:
+                    av.b_setPetId(0)
+                except Exception:
+                    pass
+                return
 
             def f(name, default=0):
                 v = fields.get(name)
