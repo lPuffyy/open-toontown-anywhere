@@ -2643,7 +2643,14 @@ class DistributedToonAI(DistributedPlayerAI.DistributedPlayerAI, DistributedSmoo
         if hpGained > self.maxHp:
             hpGained = self.maxHp
         if not quietly:
-            self.sendUpdate('toonUp', [hpGained])
+            dclass = getattr(self, 'dclass', None)
+            if dclass is None or dclass.getFieldByName('toonUp') is None:
+                # An object here whose class has no toonUp field (it was built from the wrong
+                # database record) used to raise out of the interval loop and kill the whole
+                # district process. Skip the broadcast and say what it is.
+                self.notify.warning('toonUp: %s is a %s, which has no toonUp field; heal not sent' % (self.doId, dclass.getName() if dclass is not None else None))
+            else:
+                self.sendUpdate('toonUp', [hpGained])
         if self.hp + hpGained <= 0:
             self.hp += hpGained
         else:
