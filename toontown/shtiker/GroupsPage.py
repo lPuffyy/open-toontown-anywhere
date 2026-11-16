@@ -28,6 +28,10 @@ class GroupsPage(ShtikerPage.ShtikerPage):
         self.confirm = None
         self.joining = None
         self.goAfterJoin = False
+        self.allGroups = []
+        self.filterIndex = 0
+        self.post = None
+        self.postCategory = 0
 
     def load(self):
         self.title = DirectLabel(parent=self, relief=None, text=TTLocalizer.GroupsPageTitle, text_scale=0.12, textMayChange=0, pos=(0, 0, 0.6))
@@ -41,6 +45,18 @@ class GroupsPage(ShtikerPage.ShtikerPage):
         DirectFrame(parent=self.scrollList, text=TTLocalizer.GroupsPageScrollTitle, text_scale=0.06, text_align=TextNode.ACenter, relief=None, pos=(self.buttonX, 0, self.itemZ + 0.127))
         self.__loadDetail()
         self.__loadPostMenu()
+        self.filterButton = DirectButton(parent=self, relief=DGG.RAISED, borderWidth=(0.01, 0.01), frameColor=(0.85, 0.95, 1, 1), frameSize=(-0.33, 0.33, -0.04, 0.06), text=TTLocalizer.GroupsPageFilter % TTLocalizer.GroupsPageFilterNames[0], text_scale=0.05, text_pos=(0, -0.012), textMayChange=1, pos=(-0.5, 0, -0.68), command=self.__cycleFilter)
+
+    FILTERS = [None,
+               [G.KIND_SELLBOT_BOSS, G.KIND_CASHBOT_BOSS, G.KIND_LAWBOT_BOSS, G.KIND_BOSSBOT_BOSS],
+               [G.KIND_FACTORY, G.KIND_MINT, G.KIND_OFFICE, G.KIND_GOLF],
+               [G.KIND_BUILDING, G.KIND_SELLBOT_BLDG, G.KIND_CASHBOT_BLDG, G.KIND_LAWBOT_BLDG, G.KIND_BOSSBOT_BLDG, G.KIND_INVASION],
+               [G.KIND_FIELD_OFFICE]]
+
+    def __cycleFilter(self):
+        self.filterIndex = (self.filterIndex + 1) % len(self.FILTERS)
+        self.filterButton['text'] = TTLocalizer.GroupsPageFilter % TTLocalizer.GroupsPageFilterNames[self.filterIndex]
+        self.__gotList(self.mine, self.allGroups)
 
     def __makeScrollList(self):
         selected = 0
@@ -63,19 +79,20 @@ class GroupsPage(ShtikerPage.ShtikerPage):
         self.detail = NodePath('groupDetail')
         self.detail.reparentTo(self)
         self.detail.setPos(0.4, 0, 0)
-        self.detailKind = DirectLabel(parent=self.detail, relief=None, text='', text_scale=0.075, text_fg=(0, 0, 0, 1), text_wordwrap=8, textMayChange=1, text_align=TextNode.ACenter, pos=(0, 0, 0.4))
-        self.detailInfo = DirectLabel(parent=self.detail, relief=None, text='', text_scale=0.052, text_wordwrap=12, textMayChange=1, text_align=TextNode.ACenter, pos=(0, 0, 0.2))
-        self.detailNote = DirectLabel(parent=self.detail, relief=None, text='', text_scale=0.048, text_fg=(0.55, 0.1, 0.1, 1), text_wordwrap=12, textMayChange=1, text_align=TextNode.ACenter, pos=(0, 0, -0.18))
+        self.detailKind = DirectLabel(parent=self.detail, relief=None, text='', text_scale=0.062, text_fg=(0, 0, 0, 1), text_wordwrap=10, textMayChange=1, text_align=TextNode.ACenter, pos=(0, 0, 0.44))
+        self.detailInfo = DirectLabel(parent=self.detail, relief=None, text='', text_scale=0.044, text_wordwrap=15, textMayChange=1, text_align=TextNode.ACenter, pos=(0, 0, 0.22))
+        self.detailNote = DirectLabel(parent=self.detail, relief=None, text='', text_scale=0.048, text_fg=(0.55, 0.1, 0.1, 1), text_wordwrap=14, textMayChange=1, text_align=TextNode.ACenter, pos=(0, 0, -0.26))
         model = loader.loadModel('phase_3.5/models/gui/matching_game_gui')
         circle = model.find('**/minnieCircle')
         self.mainButton = DirectButton(parent=self.detail, relief=None, image=circle, image_scale=(1.3, 1, 1.3), image_color=(0.45, 0.9, 0.4, 1), text='', text_scale=0.055, text_pos=(0, 0.01), text_fg=(0, 0, 0, 1), textMayChange=1, pos=(0, 0, -0.5), command=self.__mainPressed)
         self.postButton = DirectButton(parent=self, relief=None, image=circle, image_scale=(1.0, 1, 1.0), image_color=(0.95, 0.85, 0.3, 1), text=TTLocalizer.GroupsPagePost, text_scale=0.045, text_pos=(0, 0.01), text_fg=(0, 0, 0, 1), pos=(0.4, 0, -0.45), command=self.__showPostMenu)
-        self.goButton = DirectButton(parent=self.detail, relief=None, image=circle, image_scale=(1.3, 1, 1.3), image_color=(0.45, 0.8, 1, 1), text=TTLocalizer.GroupsPageGo, text_scale=0.055, text_pos=(0, 0.01), text_fg=(0, 0, 0, 1), pos=(-0.19, 0, -0.4), command=self.__goPressed)
+        self.goButton = DirectButton(parent=self.detail, relief=None, image=circle, image_scale=(1.3, 1, 1.3), image_color=(0.45, 0.8, 1, 1), text=TTLocalizer.GroupsPageGo, text_scale=0.055, text_pos=(0, 0.01), text_fg=(0, 0, 0, 1), pos=(-0.19, 0, -0.5), command=self.__goPressed)
         model.removeNode()
         self.detail.hide()
 
-    CATEGORIES = [('Cog HQ Bosses', [G.KIND_SELLBOT_BOSS, G.KIND_CASHBOT_BOSS, G.KIND_LAWBOT_BOSS, G.KIND_BOSSBOT_BOSS]),
-                  ('Cog Facilities', [G.KIND_FACTORY, G.KIND_MINT, G.KIND_OFFICE, G.KIND_GOLF, G.KIND_COGDO]),
+    CATEGORIES = [('Field Offices', [G.KIND_FIELD_OFFICE]),
+                  ('Cog HQ Bosses', [G.KIND_SELLBOT_BOSS, G.KIND_CASHBOT_BOSS, G.KIND_LAWBOT_BOSS, G.KIND_BOSSBOT_BOSS]),
+                  ('Cog Facilities', [G.KIND_FACTORY, G.KIND_MINT, G.KIND_OFFICE, G.KIND_GOLF]),
                   ('Buildings and Invasions', [G.KIND_BUILDING, G.KIND_SELLBOT_BLDG, G.KIND_CASHBOT_BLDG, G.KIND_LAWBOT_BLDG, G.KIND_BOSSBOT_BLDG, G.KIND_INVASION])]
 
     def __loadPostMenu(self):
@@ -86,6 +103,12 @@ class GroupsPage(ShtikerPage.ShtikerPage):
         self.postTitle = DirectLabel(parent=self.postMenu, relief=None, text=TTLocalizer.GroupsPagePostTitle, text_scale=0.065, text_wordwrap=9, textMayChange=1, pos=(0, 0, 0.5))
         self.menuButtons = []
         self.backButton = DirectButton(parent=self.postMenu, relief=DGG.RAISED, borderWidth=(0.01, 0.01), frameColor=(1, 0.8, 0.8, 1), frameSize=(-0.2, 0.2, -0.05, 0.065), text=TTLocalizer.GroupsPageBack, text_scale=0.06, text_fg=(0.55, 0.1, 0.1, 1), pos=(0, 0, -0.6), command=self.__menuBack)
+        # the final "Post it!" is its own big green button, apart from the settings above it
+        circleModel = loader.loadModel('phase_3.5/models/gui/matching_game_gui')
+        circle = circleModel.find('**/minnieCircle')
+        self.postNowButton = DirectButton(parent=self.postMenu, relief=None, image=circle, image_scale=(1.15, 1, 1.15), image_color=(0.45, 0.9, 0.4, 1), text=TTLocalizer.GroupsPageOptPost, text_scale=0.06, text_pos=(0, 0.01), text_fg=(0, 0, 0, 1), pos=(0, 0, -0.33), command=self.__postKind)
+        circleModel.removeNode()
+        self.postNowButton.hide()
         self.postMenu.hide()
         self.menuLevel = 0
 
@@ -94,6 +117,7 @@ class GroupsPage(ShtikerPage.ShtikerPage):
         for b in self.menuButtons:
             b.destroy()
         self.menuButtons = []
+        self.postNowButton.hide()
         top = 0.37
         for i, (label, command, args) in enumerate(entries):
             self.menuButtons.append(DirectButton(parent=self.postMenu, relief=DGG.RAISED, borderWidth=(0.012, 0.012), frameColor=(0.75, 0.9, 1, 1), frameSize=(-0.36, 0.36, -0.045, 0.065),
@@ -109,16 +133,78 @@ class GroupsPage(ShtikerPage.ShtikerPage):
         self.postMenu.show()
 
     def __openCategory(self, index):
-        self.menuLevel = 1
+        self.postCategory = index
         name, kinds = self.CATEGORIES[index]
+        if len(kinds) == 1:
+            return self.__pickKind(kinds[0])        # one choice: straight on
+        self.menuLevel = 1
         self.postTitle['text'] = name
-        self.__fillMenu([(TTLocalizer.GroupKindNames[k], self.__postKind, [k]) for k in kinds])
+        self.__fillMenu([(TTLocalizer.GroupKindNames[k], self.__pickKind, [k]) for k in kinds])
+
+    def __pickKind(self, kind):
+        self.post = {'kind': kind, 'sub': 0, 'size': G.KINDS[kind], 'looking': 0, 'friends': False}
+        if G.SUBS.get(kind):
+            self.__showSubMenu()
+        else:
+            self.__showOptions()
+
+    def __showSubMenu(self):
+        self.menuLevel = 2
+        kind = self.post['kind']
+        self.postTitle['text'] = TTLocalizer.GroupKindNames[kind] + chr(10) + TTLocalizer.GroupsPageSubTitle
+        names = [TTLocalizer.GroupSubAny] + list(TTLocalizer.GroupSubNames.get(kind, []))
+        self.__fillMenu([(name, self.__pickSub, [i]) for i, name in enumerate(names)])
+
+    def __pickSub(self, sub):
+        self.post['sub'] = sub
+        self.__showOptions()
+
+    def __showOptions(self):
+        """The last step before posting: how many Toons, who it is for, who can join. Each button changes its setting and shows the next."""
+        self.menuLevel = 3
+        p = self.post
+        kind = p['kind']
+        subName = ''
+        if p['sub']:
+            subName = ': ' + TTLocalizer.GroupSubNames[kind][p['sub'] - 1]
+        self.postTitle['text'] = TTLocalizer.GroupKindNames[kind] + subName
+        self.__fillMenu([(TTLocalizer.GroupsPageOptToons % p['size'], self.__cycleSize, []),
+                         (TTLocalizer.GroupsPageOptFor % TTLocalizer.GroupLookingNames[p['looking']], self.__cycleLooking, []),
+                         (TTLocalizer.GroupsPageOptWho[1 if p['friends'] else 0], self.__toggleFriends, [])])
+        self.postNowButton.show()
+
+    def __cycleSize(self):
+        top = G.KINDS[self.post['kind']]
+        self.post['size'] = self.post['size'] + 1 if self.post['size'] < top else G.MIN_SIZE
+        self.__showOptions()
+
+    def __cycleLooking(self):
+        self.post['looking'] = (self.post['looking'] + 1) % G.LOOKING_COUNT
+        self.__showOptions()
+
+    def __toggleFriends(self):
+        self.post['friends'] = not self.post['friends']
+        self.__showOptions()
 
     def __menuBack(self):
-        if self.menuLevel == 1:
+        if self.menuLevel == 3:
+            if G.SUBS.get(self.post['kind']):
+                self.__showSubMenu()
+            else:
+                self.__backToKinds()
+        elif self.menuLevel == 2:
+            self.__backToKinds()
+        elif self.menuLevel == 1:
             self.__showPostMenu()
         else:
             self.__hidePostMenu()
+
+    def __backToKinds(self):
+        name, kinds = self.CATEGORIES[self.postCategory]
+        if len(kinds) == 1:
+            self.__showPostMenu()
+        else:
+            self.__openCategory(self.postCategory)
 
     def unload(self):
         taskMgr.remove('GroupsPageRefresh')
@@ -156,6 +242,10 @@ class GroupsPage(ShtikerPage.ShtikerPage):
     # ---- the list
     def __gotList(self, mine, groups):
         self.mine = mine
+        self.allGroups = groups
+        kinds = self.FILTERS[self.filterIndex]
+        if kinds is not None:
+            groups = [g for g in groups if g['kind'] in kinds or g['id'] == mine]
         self.groups = groups
         self.groupById = {g['id']: g for g in groups}
         if self.selectedId not in self.groupById:
@@ -172,7 +262,7 @@ class GroupsPage(ShtikerPage.ShtikerPage):
         self.__showDetail()
 
     def __makeButton(self, g):
-        full = g['size'] >= g['max']
+        full = g['size'] >= g['max'] or g.get('started')
         if g['id'] == self.mine:
             color = Vec4(0.15, 0.6, 0.15, 1)
         elif full:
@@ -180,7 +270,12 @@ class GroupsPage(ShtikerPage.ShtikerPage):
         else:
             color = Vec4(0, 0, 0, 1)
         short = TTLocalizer.GroupKindShort.get(g['kind'], '?')
-        text = '%s %d/%d  %s' % (short, g['size'], g['max'], g['name'][:12])
+        subs = TTLocalizer.GroupSubShort.get(g['kind'], [])
+        if g.get('sub') and g['sub'] <= len(subs):
+            short = '%s %s' % (short, subs[g['sub'] - 1])
+        text = '%s %d/%d %s' % (short, g['size'], g['max'], g['name'][:9])
+        if g.get('started'):
+            text += ' *'
         selected = Vec4(1, 1, 0, 1) if g['id'] == self.selectedId else Vec4(0, 0, 0, 0)
         return DirectButton(relief=None, text=text, text_scale=0.056, text_align=TextNode.ALeft, text_fg=color, text_bg=selected, text1_bg=Vec4(0.5, 0.9, 1, 1), text2_bg=Vec4(1, 1, 0, 1), command=self.__select, extraArgs=[g['id']])
 
@@ -199,12 +294,12 @@ class GroupsPage(ShtikerPage.ShtikerPage):
             return
         self.postButton.show() if not self.mine else self.postButton.hide()
         # with a group open its Join button takes the lower right, so Post a Group goes under it; alone it sits higher up
-        self.postButton.setPos(0.4, 0, -0.62 if g is not None else -0.45)
-        self.postButton.setScale(0.8 if g is not None else 1.0)
-        self.mainButton.setZ(-0.4)
+        self.postButton.setPos(0.4, 0, -0.66 if g is not None else -0.45)
+        self.postButton.setScale(0.65 if g is not None else 1.0)
+        self.mainButton.setZ(-0.5)
         self.mainButton.setX(0)
         self.goButton.hide()
-        self.detailNote.setZ(-0.1)
+        self.detailNote.setZ(-0.24)
         if g is None:
             self.detail.hide()
             self.helpText.show()
@@ -219,6 +314,15 @@ class GroupsPage(ShtikerPage.ShtikerPage):
             pass
         self.detailKind['text'] = TTLocalizer.GroupKindNames.get(g['kind'], '?')
         lines = [TTLocalizer.GroupsPageHost % g['name'], TTLocalizer.GroupsPageSize % (g['size'], g['max'])]
+        subs = TTLocalizer.GroupSubNames.get(g['kind'], [])
+        if g.get('sub') and g['sub'] <= len(subs):
+            lines.append(TTLocalizer.GroupsPageDetailKind % subs[g['sub'] - 1])
+        if g.get('looking'):
+            lines.append(TTLocalizer.GroupsPageDetailFor % TTLocalizer.GroupLookingNames[g['looking']])
+        if g.get('friends'):
+            lines.append(TTLocalizer.GroupsPageDetailFriends)
+        if g.get('members'):
+            lines.append(TTLocalizer.GroupsPageMembers % ', '.join([g['name']] + list(g['members'])))
         if shardName:
             lines.append(TTLocalizer.GroupsPageHelpDistrict % shardName)
         if hoodName:
@@ -239,6 +343,9 @@ class GroupsPage(ShtikerPage.ShtikerPage):
         elif full:
             self.detailNote['text'] = TTLocalizer.GroupsPageFull
             self.mainButton.hide()
+        elif g.get('started'):
+            self.detailNote['text'] = TTLocalizer.GroupsPageStarted
+            self.mainButton.hide()
         elif self.book.safeMode:
             self.detailNote['text'] = ''
             self.mainButton.hide()
@@ -247,7 +354,10 @@ class GroupsPage(ShtikerPage.ShtikerPage):
             self.mainButton['image_color'] = Vec4(0.45, 0.9, 0.4, 1)
             self.detailNote['text'] = ''
             self.mainButton.show()
-
+        if g.get('started') and g['id'] == self.mine:
+            self.goButton.hide()                  # the group is inside its activity: nobody can walk to the host now
+            self.mainButton.setX(0)
+            self.detailNote['text'] = TTLocalizer.GroupsPageStarted
     def __hosting(self):
         return bool(self.mine) and self.mine == getattr(base.cr.toonPresence, 'hostedGroupId', None)
 
@@ -287,9 +397,10 @@ class GroupsPage(ShtikerPage.ShtikerPage):
             self.postMenu.hide()
             self.__showDetail()
 
-    def __postKind(self, kind):
+    def __postKind(self):
+        p = self.post
         self.postMenu.hide()
-        if not base.cr.toonPresence.up_groupPost(kind, G.KINDS[kind]):
+        if not base.cr.toonPresence.up_groupPost(p['kind'], p['size'], p['sub'], p['friends'], p['looking']):
             self.__say(TTLocalizer.GroupsPageNoPlace)
             self.__showDetail()
 
@@ -319,13 +430,13 @@ class GroupsPage(ShtikerPage.ShtikerPage):
                 self.__say(TTLocalizer.GroupsPageClosed)
             gone = groupId if op == G.OP_CLOSED else self.mine
             self.selectedId = None
-            self.__gotList(0, [g for g in self.groups if g['id'] != gone])
+            self.__gotList(0, [g for g in self.allGroups if g['id'] != gone])
             self.__refreshNow()
 
     @staticmethod
     def __codeText(code):
         return {G.GONE: TTLocalizer.GroupsPageGone, G.FULL: TTLocalizer.GroupsPageFullReject, G.BUSY: TTLocalizer.GroupsPageBusy,
-                G.OWN: TTLocalizer.GroupsPageOwn}.get(code, TTLocalizer.GroupsPageBad)
+                G.OWN: TTLocalizer.GroupsPageOwn, G.NOT_FRIEND: TTLocalizer.GroupsPageFriendsOnlyReject, G.STARTED: TTLocalizer.GroupsPageStartedReject}.get(code, TTLocalizer.GroupsPageBad)
 
     def __refreshNow(self):
         taskMgr.remove('GroupsPageRefresh')
