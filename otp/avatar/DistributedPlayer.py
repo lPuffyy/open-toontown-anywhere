@@ -135,12 +135,20 @@ class DistributedPlayer(DistributedAvatar.DistributedAvatar, PlayerBase.PlayerBa
     def displayWhisperPlayer(self, playerId, chatString, whisperType):
         print('WhisperPlayer type %s from %s: %s' % (whisperType, playerId, chatString))
 
+    def _whisperViaUD(self, avId):
+        """True for a friend: friends are reached through the UberDOG (ToonPresence), which knows where they are. A direct update to a toon
+        that has just left or changed district is refused by the server, which then disconnects the sender (the 'crash when whispering')."""
+        try:
+            return any(pair[0] == avId for pair in self.friendsList)
+        except Exception:
+            return False
+
     def whisperSCTo(self, msgIndex, sendToId, toPlayer):
         if toPlayer:
             base.cr.playerFriendsManager.sendSCWhisper(sendToId, msgIndex)
         else:
             messenger.send('wakeup')
-            if sendToId in base.cr.doId2do:
+            if sendToId in base.cr.doId2do and not self._whisperViaUD(sendToId):
                 self.sendUpdate('setWhisperSCFrom', [self.doId, msgIndex], sendToId)
             else:
                 base.cr.toonPresence.up_whisper(sendToId, 1, msgIndex)
@@ -166,7 +174,7 @@ class DistributedPlayer(DistributedAvatar.DistributedAvatar, PlayerBase.PlayerBa
             base.cr.playerFriendsManager.sendSCCustomWhisper(sendToId, msgIndex)
             return
         messenger.send('wakeup')
-        if sendToId in base.cr.doId2do:
+        if sendToId in base.cr.doId2do and not self._whisperViaUD(sendToId):
             self.sendUpdate('setWhisperSCCustomFrom', [self.doId, msgIndex], sendToId)
         else:
             base.cr.toonPresence.up_whisper(sendToId, 2, msgIndex)
@@ -199,7 +207,7 @@ class DistributedPlayer(DistributedAvatar.DistributedAvatar, PlayerBase.PlayerBa
             base.cr.playerFriendsManager.sendSCEmoteWhisper(sendToId, emoteId)
             return
         messenger.send('wakeup')
-        if sendToId in base.cr.doId2do:
+        if sendToId in base.cr.doId2do and not self._whisperViaUD(sendToId):
             self.sendUpdate('setWhisperSCEmoteFrom', [self.doId, emoteId], sendToId)
         else:
             base.cr.toonPresence.up_whisper(sendToId, 3, emoteId)

@@ -462,19 +462,24 @@ class ToontownClientRepository(OTPClientRepository.OTPClientRepository):
         if details:
             experience, inventory, trackAccess, maxHp, hp, shard, lastHood = details
             avatar = pad.avatar
-            try:
-                avatar.setExperience(experience)
-                avatar.setInventory(inventory)
-                avatar.setDefaultShard(shard)
-                avatar.setLastHood(lastHood)
-                if self.doId2do.get(avId) is not avatar:
-                    # a toon we cannot see: fill in the rest too. For a toon beside us these arrive already, and are more up to date.
-                    avatar.setTrackAccess(trackAccess)
-                    avatar.setMaxHp(maxHp)
-                    avatar.setHp(hp)
-                gotData = 1
-            except Exception:
-                self.notify.warning('could not use the details of avatar %d: %s' % (avId, traceback.format_exc()))
+            live = self.doId2do.get(avId) is avatar
+            steps = []
+            if not live:
+                # a toon we cannot see (another district) is a bare object: give it what the gag inventory needs (the track access and the
+                # carry limit) BEFORE the inventory is built from it, or building it fails and the panel shows nothing. For a toon beside
+                # us these fields arrive already, and are more up to date.
+                steps += [lambda: avatar.setTrackAccess(list(trackAccess)), lambda: avatar.setMaxHp(maxHp), lambda: avatar.setHp(hp)]
+            steps += [lambda: avatar.setExperience(experience), lambda: avatar.setInventory(inventory),
+                      lambda: avatar.setDefaultShard(shard), lambda: avatar.setLastHood(lastHood)]
+            failed = 0
+            for step in steps:
+                try:
+                    step()
+                except Exception:
+                    failed += 1
+                    self.notify.warning('could not use part of the details of avatar %d: %s' % (avId, traceback.format_exc()))
+                    print('avatar details: a step failed for %d: %s' % (avId, traceback.format_exc().strip().splitlines()[-1]), flush=True)
+            gotData = 1 if failed < len(steps) else 0
         if isinstance(pad.func, str):
             messenger.send(pad.func, list((gotData, pad.avatar) + pad.args))
         else:

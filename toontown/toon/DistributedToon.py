@@ -596,6 +596,8 @@ class DistributedToon(DistributedPlayer.DistributedPlayer, Toon.Toon, Distribute
 
     def whisperSCToontaskTo(self, taskId, toNpcId, toonProgress, msgIndex, sendToId):
         messenger.send('wakeup')
+        if sendToId not in base.cr.doId2do:
+            return            # a toon that is not here cannot be sent to directly: the server would disconnect us
         self.sendUpdate('setWhisperSCToontaskFrom', [self.doId,
          taskId,
          toNpcId,

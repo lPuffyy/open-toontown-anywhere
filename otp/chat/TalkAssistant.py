@@ -654,7 +654,7 @@ class TalkAssistant(DirectObject.DirectObject):
         error = None
         message = self.plainText(message)
         receiver = base.cr.doId2do.get(receiverAvId)
-        if receiver:
+        if receiver and not base.localAvatar._whisperViaUD(receiverAvId):
             receiver.sendUpdate('setTalkWhisper', [0,
              0,
              '',
