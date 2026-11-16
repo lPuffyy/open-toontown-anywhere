@@ -1034,6 +1034,37 @@ class DistributedGolfGreenGame(BattleBlocker.BattleBlocker):
             self.soundFire.play()
             self.ballLoaded = 0
 
+    def __aimFromScreen(self, mouseX, mouseY, margin):
+        """The aim angle (as aimRadian) for a pointer position, worked out from where the pointer really is on the board: a ray from the
+        camera through the pointer, cut with the plane the balls move in, and the angle from the shooter to that point. The old formula
+        assumed a 4:3 screen and the 4:3 camera, so on a wide phone the balls went somewhere else than the pointer. None if it cannot be done."""
+        try:
+            near = Point3()
+            far = Point3()
+            if not base.camLens.extrude(Point2(mouseX, mouseY), near, far):
+                return None
+            p1 = self.frame.getRelativePoint(base.cam, near)
+            p2 = self.frame.getRelativePoint(base.cam, far)
+            dy = p2.getY() - p1.getY()
+            if abs(dy) < 1e-6:
+                return None
+            t = (self.radiusBall - p1.getY()) / dy
+            if t <= 0.0:
+                return None
+            hitX = p1.getX() + (p2.getX() - p1.getX()) * t
+            hitZ = p1.getZ() + (p2.getZ() - p1.getZ()) * t
+            origin = self.aimbase.getPos()
+            dx = hitX - origin.getX()
+            dz = hitZ - origin.getZ()
+            if dz > 0.0001:
+                angle = math.atan2(dz, dx)
+            else:
+                angle = margin if dx > 0 else pi - margin        # below the shooter: as flat as it may go, on the pointer's side
+            angle = max(margin, min(pi - margin, angle))
+            return -angle
+        except Exception:
+            return None
+
     def __run(self, cont = 1):
         if cont and not self.running:
             taskMgr.add(self.__run, 'GolfGreenGameTask')
@@ -1046,20 +1077,24 @@ class DistributedGolfGreenGame(BattleBlocker.BattleBlocker):
         if base.mouseWatcherNode.hasMouse():
             inputX = base.mouseWatcherNode.getMouseX()
             inputZ = base.mouseWatcherNode.getMouseY()
-            outputZ = inputZ + self.screenSizeZ * (0.5 - self.zGap)
-            if outputZ <= 0.0:
-                outputZ = 0.0001
-            if inputX > 0.0:
-                self.aimRadian = -1.0 * pi + math.atan(outputZ / (inputX * self.XtoZ))
-            elif inputX < 0.0:
-                self.aimRadian = math.atan(outputZ / (inputX * self.XtoZ))
-            else:
-                self.aimRadian = pi * -0.5
             margin = 0.2
-            if self.aimRadian >= -margin:
-                self.aimRadian = -margin
-            elif self.aimRadian <= margin - pi:
-                self.aimRadian = margin - pi
+            aim = self.__aimFromScreen(inputX, inputZ, margin)
+            if aim is not None:
+                self.aimRadian = aim
+            else:
+                outputZ = inputZ + self.screenSizeZ * (0.5 - self.zGap)
+                if outputZ <= 0.0:
+                    outputZ = 0.0001
+                if inputX > 0.0:
+                    self.aimRadian = -1.0 * pi + math.atan(outputZ / (inputX * self.XtoZ))
+                elif inputX < 0.0:
+                    self.aimRadian = math.atan(outputZ / (inputX * self.XtoZ))
+                else:
+                    self.aimRadian = pi * -0.5
+                if self.aimRadian >= -margin:
+                    self.aimRadian = -margin
+                elif self.aimRadian <= margin - pi:
+                    self.aimRadian = margin - pi
             degrees = self.__toDegrees(self.aimRadian)
             self.aimer.setH(degrees)
         self.wallMaxX = self.maxX - self.radiusBall

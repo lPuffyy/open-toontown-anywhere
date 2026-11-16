@@ -465,6 +465,8 @@ class ToontownClientRepository(OTPClientRepository.OTPClientRepository):
             live = self.doId2do.get(avId) is avatar
             steps = []
             if not live:
+                if not hasattr(avatar, 'trackBonusLevel'):
+                    avatar.trackBonusLevel = [-1] * 7          # (the gag inventory asks for the organic bonuses)
                 # a toon we cannot see (another district) is a bare object: give it what the gag inventory needs (the track access and the
                 # carry limit) BEFORE the inventory is built from it, or building it fails and the panel shows nothing. For a toon beside
                 # us these fields arrive already, and are more up to date.
@@ -479,6 +481,14 @@ class ToontownClientRepository(OTPClientRepository.OTPClientRepository):
                     failed += 1
                     self.notify.warning('could not use part of the details of avatar %d: %s' % (avId, traceback.format_exc()))
                     print('avatar details: a step failed for %d: %s' % (avId, traceback.format_exc().strip().splitlines()[-1]), flush=True)
+            if getattr(avatar, 'style', None) is None:
+                # the looks of a friend elsewhere are already known (the friends list has them): the laff meter needs them
+                try:
+                    handle = self.identifyAvatar(avId)
+                    if handle is not None and getattr(handle, 'style', None) is not None:
+                        avatar.style = handle.style
+                except Exception:
+                    pass
             gotData = 1 if failed < len(steps) else 0
         if isinstance(pad.func, str):
             messenger.send(pad.func, list((gotData, pad.avatar) + pad.args))

@@ -211,7 +211,14 @@ class ToonAvatarDetailPanel(DirectFrame):
 
     def __updateLaffInfo(self):
         avatar = self.avatar
-        messenger.send('updateLaffMeter', [avatar, avatar.hp, avatar.maxHp])
+        # a toon in another district is a bare object: without its looks (style) there is no face to put on the laff meter, and asking for one raised
+        # an error inside the network reader, which stopped the game
+        if getattr(avatar, 'style', None) is None:
+            return
+        try:
+            messenger.send('updateLaffMeter', [avatar, avatar.hp, avatar.maxHp])
+        except Exception:
+            self.notify.warning('could not show the laff meter', exc_info=True)
 
     def __updateTrackInfo(self):
         xOffset = -0.501814
