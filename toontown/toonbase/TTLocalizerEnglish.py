@@ -4120,6 +4120,10 @@ DisplaySettingsAccept = 'Press OK to keep the new settings, or Cancel to revert.
 DisplaySettingsRevertUser = 'Your previous display settings have been restored.'
 DisplaySettingsRevertFailed = 'The selected display settings do not work on your computer.  Your previous display settings have been restored.'
 OptionsPageCodesTab = 'Enter Code'
+OptionsPageDeviceTab = 'Device'
+OptionsPageDeviceTitle = 'Device'
+OptionsPageDeviceOpen = 'Open'
+OptionsPageDeviceRestart = 'Restart game now'
 CdrPageTitle = 'Enter a Code'
 CdrInstructions = 'Enter your code to receive a special item in your mailbox.'
 CdrResultSuccess = 'Congratulations! Check your mailbox to claim your item!'
@@ -4181,7 +4185,7 @@ ShardPageHelpWelcomeValley = '  You are currently in the "Welcome Valley" Distri
 ShardPageHelpMove = '  To move to a new District, click on its name.'
 ShardPagePopulationTotal = 'Total Toontown Population: %d'
 ShardPagePopulation = 'Population: %d'
-ShardPageInvasion = '%s are invading Toontown!'
+ShardPageInvasion = '%s are invading!'
 ShardPageScrollTitle = 'Name            Population'
 ShardPageLow = 'Quiet'
 ShardPageMed = 'Ideal'
@@ -4233,7 +4237,7 @@ GroupKindNames = {1: 'Sellbot HQ: VP Fight',
  14: 'Lawbot Buildings',
  15: 'Bossbot Buildings',
  10: 'Cog Invasion',
- 11: 'Cogdominiums'}
+ 11: 'Sellbot Field Offices'}
 GroupKindShort = {1: 'VP',
  2: 'CFO',
  3: 'CJ',
@@ -4248,7 +4252,56 @@ GroupKindShort = {1: 'VP',
  14: 'Law Bldg',
  15: 'Boss Bldg',
  10: 'Invade',
- 11: 'Cogdo'}
+ 11: 'Field Off'}
+GroupSubNames = {1: ['Learning the fight', 'Practice run'],
+ 2: ['Learning the fight', 'Practice run'],
+ 3: ['Learning the fight', 'Practice run'],
+ 4: ['Learning the fight', 'Practice run'],
+ 5: ['Front Entrance', 'Side Entrance'],
+ 6: ['Coin Mint', 'Dollar Mint', 'Bullion Mint'],
+ 7: ['Office A', 'Office B', 'Office C', 'Office D'],
+ 8: ['Front Three', 'Middle Six', 'Back Nine'],
+ 9: ['1 floor', '2 floors', '3 floors', '4 floors', '5 floors'],
+ 10: ['Sellbot', 'Cashbot', 'Lawbot', 'Bossbot'],
+ 11: ['Beginner friendly', 'Steady run', 'Speed run'],
+ 12: ['1 floor', '2 floors', '3 floors', '4 floors', '5 floors'],
+ 13: ['1 floor', '2 floors', '3 floors', '4 floors', '5 floors'],
+ 14: ['1 floor', '2 floors', '3 floors', '4 floors', '5 floors'],
+ 15: ['1 floor', '2 floors', '3 floors', '4 floors', '5 floors']}
+GroupSubShort = {1: ['New', 'Prac'],
+ 2: ['New', 'Prac'],
+ 3: ['New', 'Prac'],
+ 4: ['New', 'Prac'],
+ 5: ['Front', 'Side'],
+ 6: ['Coin', 'Dollar', 'Bullion'],
+ 7: ['A', 'B', 'C', 'D'],
+ 8: ['F3', 'M6', 'B9'],
+ 9: ['1F', '2F', '3F', '4F', '5F'],
+ 10: ['Sell', 'Cash', 'Law', 'Boss'],
+ 11: ['Easy', 'Steady', 'Speed'],
+ 12: ['1F', '2F', '3F', '4F', '5F'],
+ 13: ['1F', '2F', '3F', '4F', '5F'],
+ 14: ['1F', '2F', '3F', '4F', '5F'],
+ 15: ['1F', '2F', '3F', '4F', '5F']}
+GroupSubAny = 'Any'
+GroupLookingNames = ['Anyone', 'Beginners welcome', 'Experienced Toons', 'Quick runs']
+GroupsPageSubTitle = 'Which one?'
+GroupsPageOptionsTitle = 'Group options'
+GroupsPageOptToons = 'Toons: %d'
+GroupsPageOptFor = 'For: %s'
+GroupsPageOptWho = ['Anyone can join', 'Friends only']
+GroupsPageOptPost = 'Post it!'
+GroupsPageDetailKind = 'Type: %s'
+GroupsPageDetailFor = 'For: %s'
+GroupsPageDetailFriends = 'Friends only'
+GroupsPageMembers = 'In the group: %s'
+GroupsPageJoinedNotice = '%s joined your group!'
+GroupsPageLeftNotice = '%s left the group.'
+GroupsPageStarted = 'This group is inside its activity (marked *). Join or meet up when they are back outside.'
+GroupsPageStartedReject = 'That group has already started. Try again when they come back out.'
+GroupsPageFriendsOnlyReject = "That group is only for its host's friends."
+GroupsPageFilter = 'Show: %s'
+GroupsPageFilterNames = ['All groups', 'Cog HQ Bosses', 'Cog Facilities', 'Buildings and Invasions', 'Field Offices']
 SuitPageTitle = 'Cog Gallery'
 SuitPageMystery = DialogQuestion + DialogQuestion + DialogQuestion
 SuitPageQuota = '%s of %s'
