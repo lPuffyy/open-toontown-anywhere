@@ -10,6 +10,8 @@ from otp.speedchat import SCColorScheme
 from otp.speedchat import SCStaticTextTerminal
 from direct.directnotify import DirectNotifyGlobal
 from enum import IntEnum
+import builtins
+import json
 speedChatStyles = ((2000,
   (200 / 255.0, 60 / 255.0, 229 / 255.0),
   (200 / 255.0, 135 / 255.0, 255 / 255.0),
@@ -50,7 +52,7 @@ speedChatStyles = ((2000,
   (170 / 255.0, 120 / 255.0, 20 / 255.0),
   (165 / 255.0, 120 / 255.0, 50 / 255.0),
   (210 / 255.0, 200 / 255.0, 180 / 255.0)))
-PageMode = IntEnum('PageMode', ('Options', 'Codes'), start=0)
+PageMode = IntEnum('PageMode', ('Options', 'Codes', 'Device'), start=0)
 
 class OptionsPage(ShtikerPage.ShtikerPage):
     notify = DirectNotifyGlobal.directNotify.newCategory('OptionsPage')
@@ -64,6 +66,12 @@ class OptionsPage(ShtikerPage.ShtikerPage):
         self.optionsTabPage.hide()
         self.codesTabPage = CodesTabPage(self)
         self.codesTabPage.hide()
+        # the Device page (picture, sound, controls, notifications): the app around the game (the web page, a phone app) supplies the rows
+        self.deviceTabPage = None
+        self.deviceTab = None
+        if getattr(builtins, 'ttaDevice', None) is not None:
+            self.deviceTabPage = DeviceTabPage(self)
+            self.deviceTabPage.hide()
         titleHeight = 0.61
         self.title = DirectLabel(parent=self, relief=None, text=TTLocalizer.OptionsPageTitle, text_scale=0.12, pos=(0, 0, titleHeight))
         normalColor = (1, 1, 1, 1)
@@ -73,6 +81,8 @@ class OptionsPage(ShtikerPage.ShtikerPage):
         gui = loader.loadModel('phase_3.5/models/gui/fishingBook')
         self.optionsTab = DirectButton(parent=self, relief=None, text=TTLocalizer.OptionsPageTitle, text_scale=TTLocalizer.OPoptionsTab, text_align=TextNode.ALeft, text_pos=(0.01, 0.0, 0.0), image=gui.find('**/tabs/polySurface1'), image_pos=(0.55, 1, -0.91), image_hpr=(0, 0, -90), image_scale=(0.033, 0.033, 0.035), image_color=normalColor, image1_color=clickColor, image2_color=rolloverColor, image3_color=diabledColor, text_fg=Vec4(0.2, 0.1, 0, 1), command=self.setMode, extraArgs=[PageMode.Options], pos=(-0.36, 0, 0.77))
         self.codesTab = DirectButton(parent=self, relief=None, text=TTLocalizer.OptionsPageCodesTab, text_scale=TTLocalizer.OPoptionsTab, text_align=TextNode.ALeft, text_pos=(-0.035, 0.0, 0.0), image=gui.find('**/tabs/polySurface2'), image_pos=(0.12, 1, -0.91), image_hpr=(0, 0, -90), image_scale=(0.033, 0.033, 0.035), image_color=normalColor, image1_color=clickColor, image2_color=rolloverColor, image3_color=diabledColor, text_fg=Vec4(0.2, 0.1, 0, 1), command=self.setMode, extraArgs=[PageMode.Codes], pos=(0.11, 0, 0.77))
+        if self.deviceTabPage is not None:
+            self.deviceTab = DirectButton(parent=self, relief=DGG.RAISED, borderWidth=(0.012, 0.012), frameColor=(0.97, 0.85, 0.55, 1), frameSize=(-0.17, 0.17, -0.045, 0.06), text=TTLocalizer.OptionsPageDeviceTab, text_scale=0.055, text_pos=(0, -0.012), text_fg=Vec4(0.2, 0.1, 0, 1), command=self.setMode, extraArgs=[PageMode.Device], pos=(0.62, 0, 0.78))
         return
 
     def enter(self):
@@ -82,10 +92,15 @@ class OptionsPage(ShtikerPage.ShtikerPage):
     def exit(self):
         self.optionsTabPage.exit()
         self.codesTabPage.exit()
+        if self.deviceTabPage is not None:
+            self.deviceTabPage.exit()
         ShtikerPage.ShtikerPage.exit(self)
 
     def unload(self):
         self.optionsTabPage.unload()
+        if self.deviceTabPage is not None:
+            self.deviceTabPage.unload()
+            self.deviceTabPage = None
         del self.title
         ShtikerPage.ShtikerPage.unload(self)
 
@@ -103,6 +118,9 @@ class OptionsPage(ShtikerPage.ShtikerPage):
             self.optionsTabPage.enter()
             self.codesTab['state'] = DGG.NORMAL
             self.codesTabPage.exit()
+            if self.deviceTabPage is not None:
+                self.deviceTab['state'] = DGG.NORMAL
+                self.deviceTabPage.exit()
         elif mode == PageMode.Codes:
             self.mode = PageMode.Codes
             self.title['text'] = TTLocalizer.CdrPageTitle
@@ -110,8 +128,131 @@ class OptionsPage(ShtikerPage.ShtikerPage):
             self.optionsTabPage.exit()
             self.codesTab['state'] = DGG.DISABLED
             self.codesTabPage.enter()
+            if self.deviceTabPage is not None:
+                self.deviceTab['state'] = DGG.NORMAL
+                self.deviceTabPage.exit()
+        elif mode == PageMode.Device and self.deviceTabPage is not None:
+            self.mode = PageMode.Device
+            self.title['text'] = TTLocalizer.OptionsPageDeviceTitle
+            self.optionsTab['state'] = DGG.NORMAL
+            self.optionsTabPage.exit()
+            self.codesTab['state'] = DGG.NORMAL
+            self.codesTabPage.exit()
+            self.deviceTab['state'] = DGG.DISABLED
+            self.deviceTabPage.enter()
         else:
             raise Exception('OptionsPage::setMode - Invalid Mode %s' % mode)
+
+
+class DeviceTabPage(DirectFrame):
+    """The settings that used to be behind the settings cog: picture quality, smooth edges, the speed counter, other apps' audio, on-screen
+    controls, keyboard keys and event notifications. The rows, and what choosing one does, come from the app around the game
+    (builtins.ttaDevice: rows(), get(id), set(id, value), open(what), restart()), so each platform has the settings that make sense for it."""
+    notify = DirectNotifyGlobal.directNotify.newCategory('DeviceTabPage')
+
+    def __init__(self, parent = aspect2d):
+        DirectFrame.__init__(self, parent=parent, relief=None, pos=(0.0, 0.0, 0.0), scale=(1.0, 1.0, 1.0))
+        self.provider = builtins.ttaDevice
+        self.rows = []
+        self.widgets = []
+        self.startValues = {}
+        self.load()
+
+    def load(self):
+        guiButton = loader.loadModel('phase_3/models/gui/quit_button')
+        try:
+            self.rows = self.provider.rows()
+        except Exception:
+            self.notify.warning('could not read the device settings', exc_info=True)
+            self.rows = []
+        top, step = 0.45, 0.115
+        for i, row in enumerate(self.rows[:9]):
+            z = top - i * step
+            label = DirectLabel(parent=self, relief=None, text=row.get('label', ''), text_align=TextNode.ALeft, text_scale=0.052, text_wordwrap=15, pos=(-0.72, 0, z))
+            kind = row.get('type')
+            if kind == 'choice':
+                button = DirectButton(parent=self, relief=None, image=(guiButton.find('**/QuitBtn_UP'), guiButton.find('**/QuitBtn_DN'), guiButton.find('**/QuitBtn_RLVR')), image_scale=(0.9, 1, 1), text='', text_scale=0.05, text_pos=(0, -0.02), textMayChange=1, pos=(0.35, 0, z + 0.02), command=self.__cycle, extraArgs=[i])
+                try:
+                    self.startValues[row['id']] = self.provider.get(row['id'])
+                except Exception:
+                    self.startValues[row['id']] = ''
+            else:
+                button = DirectButton(parent=self, relief=None, image=(guiButton.find('**/QuitBtn_UP'), guiButton.find('**/QuitBtn_DN'), guiButton.find('**/QuitBtn_RLVR')), image_scale=(0.9, 1, 1), text=TTLocalizer.OptionsPageDeviceOpen, text_scale=0.05, text_pos=(0, -0.02), pos=(0.35, 0, z + 0.02), command=self.__open, extraArgs=[row.get('id')])
+            self.widgets.append((label, button))
+        self.noteLabel = DirectLabel(parent=self, relief=None, text='', text_align=TextNode.ACenter, text_scale=0.045, text_fg=(0.6, 0.1, 0.1, 1), text_wordwrap=26, textMayChange=1, pos=(0.0, 0, -0.62))
+        self.restartButton = DirectButton(parent=self, relief=None, image=(guiButton.find('**/QuitBtn_UP'), guiButton.find('**/QuitBtn_DN'), guiButton.find('**/QuitBtn_RLVR')), image_scale=(1.3, 1, 1), text=TTLocalizer.OptionsPageDeviceRestart, text_scale=0.05, text_pos=(0, -0.02), pos=(0.0, 0, -0.72), command=self.__restart)
+        self.restartButton.hide()
+        guiButton.removeNode()
+        self.__refresh()
+
+    def __choiceText(self, row):
+        try:
+            current = self.provider.get(row['id'])
+        except Exception:
+            current = ''
+        for value, text in row.get('choices', []):
+            if str(value) == str(current):
+                return text
+        return str(current)
+
+    def __refresh(self):
+        note = ''
+        for row, (label, button) in zip(self.rows, self.widgets):
+            if row.get('type') == 'choice':
+                button['text'] = self.__choiceText(row)
+                if row.get('restart'):
+                    try:
+                        if self.provider.get(row['id']) != self.startValues.get(row['id']):
+                            note = row['restart']
+                    except Exception:
+                        pass
+        self.noteLabel['text'] = note
+        if note:
+            self.restartButton.show()
+        else:
+            self.restartButton.hide()
+
+    def __cycle(self, index):
+        messenger.send('wakeup')
+        row = self.rows[index]
+        values = [str(v) for v, text in row.get('choices', [])]
+        if not values:
+            return
+        try:
+            current = str(self.provider.get(row['id']))
+            nxt = values[(values.index(current) + 1) % len(values)] if current in values else values[0]
+            self.provider.set(row['id'], nxt)
+        except Exception:
+            self.notify.warning('could not change %s' % row.get('id'), exc_info=True)
+        self.__refresh()
+
+    def __open(self, what):
+        messenger.send('wakeup')
+        try:
+            self.provider.open(what)
+        except Exception:
+            self.notify.warning('could not open %s' % what, exc_info=True)
+
+    def __restart(self):
+        try:
+            self.provider.restart()
+        except Exception:
+            self.notify.warning('could not restart', exc_info=True)
+
+    def enter(self):
+        self.show()
+        self.__refresh()
+
+    def exit(self):
+        self.hide()
+
+    def unload(self):
+        for label, button in self.widgets:
+            button.destroy()
+            label.destroy()
+        self.widgets = []
+        self.restartButton.destroy()
+        self.destroy()
 
 
 class OptionsTabPage(DirectFrame):
