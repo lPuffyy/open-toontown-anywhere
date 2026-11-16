@@ -1,5 +1,9 @@
+import json
+import os
 import random
+import time
 from direct.directnotify import DirectNotifyGlobal
+from toontown.battle import SuitBattleGlobals
 from toontown.suit import SuitDNA
 from toontown.toonbase import GameConfig
 from toontown.toonbase import ToontownGlobals
@@ -20,6 +24,7 @@ class SuitInvasionManagerAI:
         self.numSuits = 0
         self.total = 0
         self.nextUpdate = 0
+        self.endsAt = 0.0
 
     def getInvadingCog(self):
         if self.cogType is None:
@@ -55,10 +60,44 @@ class SuitInvasionManagerAI:
         self.nextUpdate = self.total - max(1, self.total // 10)
         self.notify.warning('invasion begins: %s x%d skeleton=%d' % (cogType, numSuits, self.skeleton))
         self.__broadcast(ToontownGlobals.SuitInvasionBegin)
-        self.__publish()
         taskMgr.remove('suitInvasionTimeout')
-        taskMgr.doMethodLater(max(0.1, float(GameConfig.get('invasion_minutes', self.DurationMinutes))) * 60, self.__timeout, 'suitInvasionTimeout')
+        seconds = max(0.1, float(GameConfig.get('invasion_minutes', self.DurationMinutes))) * 60
+        self.endsAt = time.time() + seconds
+        taskMgr.doMethodLater(seconds, self.__timeout, 'suitInvasionTimeout')
+        taskMgr.remove('suitInvasionTick')
+        taskMgr.doMethodLater(60.0, self.__tick, 'suitInvasionTick')
+        self.__publish()
+        self.__pushNotice()
         return True
+
+    def secondsLeft(self):
+        return max(0, int(self.endsAt - time.time() + 0.999)) if self.getInvading() else 0
+
+    def minutesLeft(self):
+        return (self.secondsLeft() + 59) // 60
+
+    def __tick(self, task):
+        """Every minute the district's statistics are sent again, so every client's countdown on the Districts page stays true."""
+        if not self.getInvading():
+            return task.done
+        self.__publish()
+        return task.again
+
+    def __pushNotice(self):
+        """Ask the server's push service (docker/auth_service.py) to tell the players who turned on Cog invasion notifications. It reads this file
+        every few seconds; it keeps one message per few minutes so three districts invading at once is not three messages."""
+        try:
+            folder = '/ot/data/push'
+            if not os.path.isdir(folder):
+                return
+            attrs = SuitBattleGlobals.SuitAttributes.get(self.cogType)
+            plural = 'Skelecogs' if self.skeleton else (attrs['pluralname'] if attrs else 'Cogs')
+            district = getattr(self.air, 'districtName', '') or 'Toontown'
+            text = '%s are invading %s! About %d minutes left. Join the fight!' % (plural, district, self.minutesLeft())
+            with open(os.path.join(folder, 'auto.jsonl'), 'a') as f:
+                f.write(json.dumps({'topic': 'invasions', 'title': 'Cog invasion!', 'text': text[:200], 'url': '/play/'}) + '\n')
+        except Exception:
+            self.notify.warning('could not queue the invasion notification', exc_info=True)
 
     def __timeout(self, task):
         self.notify.warning('invasion of %s ends: time is up with %d left' % (self.cogType, self.numSuits))
@@ -69,6 +108,8 @@ class SuitInvasionManagerAI:
         if not self.getInvading():
             return
         taskMgr.remove('suitInvasionTimeout')
+        taskMgr.remove('suitInvasionTick')
+        self.endsAt = 0.0
         self.__broadcast(ToontownGlobals.SuitInvasionEnd)
         self.cogType = None
         self.skeleton = 0
@@ -99,4 +140,4 @@ class SuitInvasionManagerAI:
         """Let the Districts page in every district see this one's invasion."""
         stats = getattr(self.air, 'districtStats', None)
         if stats is not None:
-            stats.b_setInvasion(self.cogType or '', self.skeleton, max(0, self.numSuits))
+            stats.b_setInvasion(self.cogType or '', self.skeleton, ToontownGlobals.packInvasionRemaining(max(0, self.numSuits), self.secondsLeft()))

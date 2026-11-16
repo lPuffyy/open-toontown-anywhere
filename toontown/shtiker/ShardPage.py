@@ -74,19 +74,86 @@ class ShardPage(ShtikerPage.ShtikerPage):
             a, b = Point3(), Point3()
             self.globe.calcTightBounds(a, b)
             size = max(b.x - a.x, b.z - a.z, 0.001)
-            k = 0.5 / size
+            k = 0.42 / size
             self.globe.setScale(k)
-            self.globe.setPos(-(a.x + b.x) / 2 * k, 0, -0.02 - (a.z + b.z) / 2 * k)
+            self.globe.setPos(-(a.x + b.x) / 2 * k, 0, 0.0 - (a.z + b.z) / 2 * k)
         icons.removeNode()
         self.cogHead = None
-        self.invasionText = DirectLabel(parent=self.detail, relief=None, text='', text_scale=0.052, text_fg=(0.85, 0.1, 0.1, 1), text_wordwrap=12, textMayChange=1, text_align=TextNode.ACenter, pos=(0, 0, -0.3))
+        self.cogSuit = None
+        self.invasionText = DirectLabel(parent=self.detail, relief=None, text='', text_scale=0.05, text_fg=(0.85, 0.1, 0.1, 1), text_wordwrap=15, textMayChange=1, text_align=TextNode.ACenter, pos=(0, 0, -0.3))
+        self.invasionTimer = DirectLabel(parent=self.detail, relief=None, text='', text_scale=0.115, text_fg=(0.85, 0.1, 0.1, 1), textMayChange=1, text_align=TextNode.ACenter, pos=(0.12, 0, -0.43))
         model = loader.loadModel('phase_3.5/models/gui/matching_game_gui')
         circle = model.find('**/minnieCircle')
-        self.teleportButton = DirectButton(parent=self.detail, relief=None, image=circle, image_scale=(1.3, 1, 1.3), image_color=(0.45, 0.9, 0.4, 1), text='Teleport\nHere!', text_scale=0.048, text_pos=(0, 0.01), text_fg=(0, 0, 0, 1), pos=(0, 0, -0.5), command=self.teleportToSelected)
+        self.teleportButton = DirectButton(parent=self.detail, relief=None, image=circle, image_scale=(1.3, 1, 1.3), image_color=(0.45, 0.9, 0.4, 1), text='Teleport\nHere!', text_scale=0.048, text_pos=(0, 0.01), text_fg=(0, 0, 0, 1), pos=(0, 0, -0.58), command=self.teleportToSelected)
         model.removeNode()
         self.detail.hide()
 
+    def __clearCogHead(self):
+        if self.cogSuit:
+            try:
+                self.cogSuit.delete()
+            except Exception:
+                pass
+            self.cogSuit = None
+            self.cogHead = None
+        if self.cogHead:
+            self.cogHead.removeNode()
+            self.cogHead = None
+
+    def __makeSkeleton(self, invasion):
+        """A Skelecog invasion shows a little Skelecog (the Cog's own head is not what is invading). False if it cannot be made."""
+        suit = None
+        try:
+            from toontown.suit import SuitDNA
+            dna = SuitDNA.SuitDNA()
+            dna.newSuit(invasion)
+            suit = Suit.Suit()
+            suit.setDNA(dna)
+            # a bare Suit lacks what a battle Cog has (level, department name) and makeSkeleton asks for them to build the name
+            suit.getActualLevel = lambda: 1
+            suit.getStyleDept = lambda: SuitDNA.getDeptFullname(dna.dept)
+            suit.getStyleName = lambda: dna.name
+            suit.loop('neutral')              # makeSkeleton carries on the current animation, so there has to be one
+            suit.makeSkeleton()
+            suit.reparentTo(self.detail)
+            suit.setHpr(180, 0, 0)
+            suit.pose('neutral', 0)
+            self.cogSuit = suit
+            self.cogHead = suit
+            return True
+        except Exception:
+            import traceback
+            print('Districts page: could not make a Skelecog: %s' % traceback.format_exc().strip().splitlines()[-1], flush=True)
+            print(traceback.format_exc(), flush=True)
+            try:
+                suit.delete()
+            except Exception:
+                pass
+            return False
+
+    def __startInvasionTimer(self):
+        taskMgr.remove('ShardPageInvasionTimer')
+        self.__tickInvasionTimer(None)
+        taskMgr.doMethodLater(0.5, self.__tickInvasionTimer, 'ShardPageInvasionTimer')
+
+    def __stopInvasionTimer(self):
+        taskMgr.remove('ShardPageInvasionTimer')
+        self.invasionTimer['text'] = ''
+
+    def __tickInvasionTimer(self, task):
+        """The countdown of the picked district's invasion, in minutes and seconds."""
+        district = base.cr.activeDistrictMap.get(self.selectedShardId)
+        endsAt = getattr(district, 'invasionEndsAt', 0) if district else 0
+        if not endsAt or not getattr(district, 'invasionCog', ''):
+            self.invasionTimer['text'] = ''
+            return Task.done if task else None
+        left = max(0, int(endsAt - globalClock.getRealTime() + 0.999))
+        self.invasionTimer['text'] = '%d:%02d' % (left // 60, left % 60)
+        return Task.again if task else None
+
     def unload(self):
+        taskMgr.remove('ShardPageInvasionTimer')
+        self.__clearCogHead()
         if self.cogHead:
             self.cogHead.removeNode()
         self.detail.removeNode()
@@ -319,21 +386,32 @@ class ShardPage(ShtikerPage.ShtikerPage):
         self.detailName['text'] = name
         self.detailName['text_fg'] = Vec4(0.85, 0.1, 0.1, 1) if invading else Vec4(0, 0, 0, 1)
         self.detailPop['text'] = TTLocalizer.ShardPagePopulation % pop
-        if self.cogHead:
-            self.cogHead.removeNode()
-            self.cogHead = None
+        self.__clearCogHead()
         if invading:
             plural = TTLocalizer.SkeletonP if skeleton else SuitBattleGlobals.SuitAttributes[invasion]['pluralname']
             self.invasionText['text'] = TTLocalizer.ShardPageInvasion % plural
+            self.__startInvasionTimer()
             try:
-                self.cogHead = Suit.attachSuitHead(self.detail, invasion)
-                self.cogHead.setScale(self.cogHead.getScale() * 1.2)
-                self.cogHead.setPos(0.5, 0, -0.1)         # beside the globe: nearer the middle it covered the population line
+                if skeleton and self.__makeSkeleton(invasion):
+                    pass
+                else:
+                    self.cogHead = Suit.attachSuitHead(self.detail, invasion)
+                # sized to a fixed width and centred on a spot beside the timer, wherever the model's own origin is
+                shown = self.cogHead
+                bounds = shown.getTightBounds()
+                if bounds:
+                    low, high = bounds
+                    size = max(high.getX() - low.getX(), high.getZ() - low.getZ(), 0.001)
+                    shown.setScale(shown.getScale() * ((0.34 if shown is self.cogSuit else 0.24) / size))
+                    low, high = shown.getTightBounds()
+                    center = (low + high) * 0.5
+                    shown.setPos(shown.getPos() + Point3(-0.27, 0, -0.42) - center)
             except Exception:
                 self.notify.warning('could not show the invading Cog head')
                 self.cogHead = None
         else:
             self.invasionText['text'] = ''
+            self.__stopInvasionTimer()
         if self.selectedShardId == self.getCurrentShardId() or self.book.safeMode:
             self.teleportButton.hide()
         else:
@@ -364,6 +442,7 @@ class ShardPage(ShtikerPage.ShtikerPage):
         self.ignore('shardInfoUpdated')
         self.ignore('confirmDone')
         taskMgr.remove('ShardPageUpdateTask-doLater')
+        taskMgr.remove('ShardPageInvasionTimer')
         ShtikerPage.ShtikerPage.exit(self)
 
     def shardChoiceReject(self, shardId):

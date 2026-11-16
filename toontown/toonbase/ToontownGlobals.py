@@ -1658,3 +1658,13 @@ AV_TOUCH_CHECK_DIST_Z = 5.0
 AV_TOUCH_CHECK_TIMELIMIT_CL = 0.002
 AV_TOUCH_COUNT_LIMIT = 5
 AV_TOUCH_COUNT_TIME = 300
+
+
+def packInvasionRemaining(cogsLeft, secondsLeft):
+    """The district's invasion field is one number: the Cogs left in the low 16 bits and the seconds left in the rest."""
+    return (max(0, min(int(secondsLeft), 0xFFFF)) << 16) | max(0, min(int(cogsLeft), 0xFFFF))
+
+
+def unpackInvasionRemaining(value):
+    """(Cogs left, seconds left) from the district's invasion field. An older server sends only the Cogs left (seconds 0)."""
+    return int(value) & 0xFFFF, (int(value) >> 16) & 0xFFFF

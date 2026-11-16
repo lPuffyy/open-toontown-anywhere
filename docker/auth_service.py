@@ -533,6 +533,26 @@ def push_send(req,by):
     mod_audit(by,"push (%s) to %d: %s"%(topic,n,title))
     threading.Thread(target=push_deliver,args=(rec,title,text,url,by,topic),daemon=True).start()
     return None,{"to":n}
+PUSH_AUTO=os.path.join(PUSH,"auto.jsonl"); PUSH_AUTO_GAP={"invasions":300}; PUSH_AUTO_LAST={}
+def push_auto_loop():
+    """The districts queue messages in a file (a Cog invasion has begun); send each as a push, at most one per kind every few minutes."""
+    while True:
+        time.sleep(5)
+        try:
+            if not os.path.exists(PUSH_AUTO): continue
+            work=PUSH_AUTO+".work"; os.replace(PUSH_AUTO,work)
+            lines=open(work).read().splitlines(); os.remove(work)
+            for ln in lines[:20]:
+                try: e=json.loads(ln)
+                except ValueError: continue
+                topic=e.get("topic")
+                gap=PUSH_AUTO_GAP.get(topic)
+                if gap is None: continue
+                now=time.time()
+                if now-PUSH_AUTO_LAST.get(topic,0)<gap: continue
+                err,_=push_send({"topic":topic,"title":e.get("title"),"text":e.get("text"),"url":e.get("url") or "/play/"},"auto")
+                if not err: PUSH_AUTO_LAST[topic]=now
+        except Exception: pass
 class H(http.server.BaseHTTPRequestHandler):
     def reply(self,code,msg):
         self.send_response(code); self.end_headers(); self.wfile.write(msg.encode())
@@ -623,4 +643,5 @@ class H(http.server.BaseHTTPRequestHandler):
         self.reply(200,"ok")
     def log_message(self,*a): pass
 threading.Thread(target=sweep_bans,daemon=True).start()
+threading.Thread(target=push_auto_loop,daemon=True).start()
 http.server.ThreadingHTTPServer(("0.0.0.0",7381),H).serve_forever()

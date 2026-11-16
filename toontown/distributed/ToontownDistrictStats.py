@@ -95,6 +95,10 @@ class ToontownDistrictStats(DistributedObject.DistributedObject):
             district.invasionCog = cog
             district.invasionSkeleton = skeleton
             district.invasionRemaining = remaining
+            # the server says how many seconds are left; the page counts down from there by itself
+            from toontown.toonbase import ToontownGlobals
+            seconds = ToontownGlobals.unpackInvasionRemaining(remaining)[1]
+            district.invasionEndsAt = globalClock.getRealTime() + seconds if (cog and seconds) else 0
             messenger.send('shardInfoUpdated')
 
     def setStats(self, avatarCount, newAvatarCount):
