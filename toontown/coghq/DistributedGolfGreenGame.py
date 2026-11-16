@@ -528,13 +528,13 @@ class DistributedGolfGreenGame(BattleBlocker.BattleBlocker):
         return
 
     def __acceptExit(self, buttonValue = None):
-        import pdb
-        pdb.set_trace()
         if hasattr(self, 'frame'):
             self.hide()
             self.unload()
             messenger.send(self.doneEvent)
         camera.reparentTo(base.localAvatar)
+        base.camLens.setAspectRatio(base.getAspectRatio())
+        base.camLens.setFov(base.localAvatar.fov)
         base.localAvatar.startUpdateSmartCamera()
 
     def __removeGame(self):
@@ -547,6 +547,8 @@ class DistributedGolfGreenGame(BattleBlocker.BattleBlocker):
         taskMgr.remove(self.timerTaskName)
         self.ignore('mouse1')
         camera.reparentTo(base.localAvatar)
+        base.camLens.setAspectRatio(base.getAspectRatio())
+        base.camLens.setFov(base.localAvatar.fov)
         base.localAvatar.startUpdateSmartCamera()
         base.cr.playGame.getPlace().fsm.request('walk')
         for sprite in self.sprites:
@@ -1307,7 +1309,12 @@ class DistributedGolfGreenGame(BattleBlocker.BattleBlocker):
         camera.setH(0)
         camera.setP(-70)
         camera.reparentTo(self.focusPoint)
-        base.camLens.setFov(60, 46.8265)
+        # keep the board's vertical view (46.8 degrees) but follow the window's shape; a two-angle setFov(60, 46.8) fixes the lens at 4:3,
+        # which squashes everything on a wide screen and stays that way after the game
+        import math
+        asp = base.getAspectRatio()
+        base.camLens.setAspectRatio(asp)
+        base.camLens.setFov(min(150.0, 2.0 * math.degrees(math.atan(math.tan(math.radians(46.8265) / 2.0) * asp))))
         self.focusPoint.setPos(0, 12, 27)
         self.focusPoint.setH(180)
 

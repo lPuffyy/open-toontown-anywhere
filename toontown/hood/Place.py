@@ -218,6 +218,7 @@ class Place(StateData, FriendsListManager):
         try:
             la = base.localAvatar
             if not (la.isPageDown or la.isPageUp):
+                base.camLens.setAspectRatio(base.getAspectRatio())      # a two-angle setFov elsewhere can leave the lens at a fixed shape
                 base.camLens.setFov(la.fov)     # a minigame, shop scene or battle may have left its own view behind
         except Exception:
             pass

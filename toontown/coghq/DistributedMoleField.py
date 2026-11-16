@@ -124,7 +124,7 @@ class DistributedMoleField(DistributedNodePathEntity, MoleFieldBase.MoleFieldBas
         self.centerNode.setPos(self.dimensionX * 0.5, self.dimensionY * 0.5, 0.0)
 
     def loadGui(self):
-        self.frame2D = DirectFrame(scale=1.0, pos=(0.0, 0, 0.9), relief=DGG.FLAT, parent=aspect2d, frameSize=(-0.3,
+        self.frame2D = DirectFrame(scale=1.0, pos=(0.0, 0, 0.76), relief=DGG.FLAT, parent=aspect2d, frameSize=(-0.3,
          0.3,
          -0.05,
          0.05), frameColor=(0.737, 0.573, 0.345, 0.3))
