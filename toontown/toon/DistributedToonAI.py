@@ -2659,6 +2659,10 @@ class DistributedToonAI(DistributedPlayerAI.DistributedPlayerAI, DistributedSmoo
         if not self.hpOwnedByBattle:
             self.hp = clampedHp
         if sendTotal and not self.hpOwnedByBattle:
+            dclass = getattr(self, 'dclass', None)
+            if dclass is not None and dclass.getFieldByName('setHp') is None:
+                # (the same object as above: an NPC, which has no setHp field. Sending it raised out of the interval loop and killed the district)
+                return
             self.d_setHp(clampedHp)
 
     def isToonedUp(self):

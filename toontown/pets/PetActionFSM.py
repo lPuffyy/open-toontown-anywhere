@@ -1,3 +1,4 @@
+import traceback
 from direct.directnotify import DirectNotifyGlobal
 from direct.fsm import FSM
 from direct.interval.IntervalGlobal import *
@@ -99,7 +100,10 @@ class PetActionFSM(FSM.FSM):
                         av = self.pet.air.doId2do.get(avId)
                         if av:
                             if isinstance(av, DistributedToonAI.DistributedToonAI):
-                                av.toonUp(healAmt)
+                                try:
+                                    av.toonUp(healAmt)
+                                except Exception:
+                                    PetActionFSM.notify.warning('could not heal %s: %s' % (avId, traceback.format_exc()))
 
                 self.pet._handleDidTrick(trickId)
                 if not self.pet.isLockedDown():

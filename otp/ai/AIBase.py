@@ -150,7 +150,13 @@ class AIBase:
         return Task.cont
 
     def __ivalLoop(self, state):
-        ivalMgr.step()
+        try:
+            ivalMgr.step()
+        except Exception:
+            # an error in one interval's callback must not stop the district: it used to raise out of the task manager and the whole process died,
+            # taking every player in it off the server
+            import traceback
+            self.notify.warning('an interval raised an error (the district keeps running): %s' % traceback.format_exc())
         return Task.cont
 
     def __igLoop(self, state):
