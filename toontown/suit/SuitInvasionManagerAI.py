@@ -44,10 +44,39 @@ class SuitInvasionManagerAI:
         delay = random.uniform(60, 4 * 60) if first else random.uniform(*self.RandomDelay)      # the first one comes soon after the district opens
         taskMgr.doMethodLater(delay, self.__randomInvasion, 'suitInvasionRandom')
 
+    def __bagFile(self):
+        district = ''.join(c if c.isalnum() else '_' for c in (getattr(self.air, 'districtName', '') or 'district'))
+        return '/ot/data/invasion_bag_%s.json' % district
+
+    def __nextRandomCog(self):
+        """The next cog from this district's shuffled bag: every cog type comes once before any comes twice (the bag is kept in the data folder, so a restart does not reset it)."""
+        names = [n for n in SuitDNA.suitHeadTypes if n not in self.EXCLUDED]
+        bag = []
+        try:
+            with open(self.__bagFile(), encoding='utf-8') as f:
+                bag = [n for n in json.load(f) if n in names]
+        except (OSError, ValueError):
+            bag = []
+        if not bag:
+            bag = list(names)
+            random.shuffle(bag)
+            last = getattr(self, 'lastRandomCog', None)
+            if len(bag) > 1 and bag[-1] == last:          # the cog dealt first (taken from the end) must not repeat the previous one
+                bag[0], bag[-1] = bag[-1], bag[0]
+        cog = bag.pop()
+        self.lastRandomCog = cog
+        try:
+            path = self.__bagFile()
+            with open(path + '.tmp', 'w', encoding='utf-8') as f:
+                json.dump(bag, f)
+            os.replace(path + '.tmp', path)
+        except OSError:
+            self.notify.warning('could not save the invasion bag')
+        return cog
+
     def __randomInvasion(self, task):
         if not self.getInvading():
-            names = [n for n in SuitDNA.suitHeadTypes if n not in self.EXCLUDED]
-            self.startInvasion(random.choice(names), self.RandomCogCount, random.random() < 0.1)
+            self.startInvasion(self.__nextRandomCog(), self.RandomCogCount, random.random() < 0.1)
         self.scheduleRandom(False)
         return task.done
 
