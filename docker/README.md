@@ -53,6 +53,10 @@ Port **80** inside is the only port to publish: nginx serves the page and packs,
 The browser client (the page, its Python glue, and the scripts that build the download packs from your resources) is in
 [Toontown: Anywhere](https://github.com/lPuffyy/toontown-anywhere), in its `web/` folder.
 
+To run the client against your own server, follow "Running the client on your own machine" in that folder's `README.md`. Open the page by the
+machine's network address, not `localhost`: on `localhost` the page tries to unpack a `.tar.gz`, and the browser's Python has no `tarfile` module,
+so it stops at the spinner with `ModuleNotFoundError: No module named 'tarfile'`.
+
 ## Notes
 
 - **Players are ordinary.** `docker/live.prc` makes new accounts `NO_ACCESS`. To make someone staff, set `ACCESS_LEVEL` to
