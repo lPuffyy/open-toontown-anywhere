@@ -129,18 +129,29 @@ def _usedNames():
     if now - _used['checked'] < 20.0:
         return _used['names']
     _used['checked'] = now
-    names = set()
+    toons = {}
+    deleted = set()    # toons the player deleted: the file stays, but the name is free again
     try:
         for f in os.listdir(DB_FOLDER):
             if not f.endswith('.yaml'):
                 continue
             with open(os.path.join(DB_FOLDER, f), encoding='utf8', errors='replace') as fh:
                 text = fh.read()
+            if 'class: AstronAccount' in text:
+                for m in re.finditer(r'^\s+ACCOUNT_AV_SET_DEL: "(.*)"\s*$', text, re.M):
+                    deleted.update(re.findall(r'\{\s*(\d+)\s*,', m.group(1)))
+                continue
             if 'class: DistributedToon' not in text:
                 continue
+            found = set()
             for m in re.finditer(r'^\s+(?:setName|WishName): \("(.*)"\)\s*$', text, re.M):
                 if m.group(1):
-                    names.add(m.group(1).strip().lower())
+                    found.add(m.group(1).strip().lower())
+            toons[f[:-5]] = found
+        names = set()
+        for toonId, found in toons.items():
+            if toonId not in deleted:
+                names |= found
         _used['names'] = names
     except OSError:
         notify.warning('could not read the toon files to look for duplicate names')
