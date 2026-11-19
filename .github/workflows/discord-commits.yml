@@ -1,0 +1,19 @@
+name: Discord commit feed
+on:
+  push:
+    branches: [anywhere]
+permissions:
+  contents: read
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+      - name: Post the commits
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          if [ -z "$DISCORD_WEBHOOK" ]; then echo "DISCORD_WEBHOOK secret is not set, skipping"; exit 0; fi
+          python3 .github/scripts/discord_commits.py
