@@ -998,6 +998,9 @@ class LocalAvatar(DistributedAvatar.DistributedAvatar, DistributedSmoothNode.Dis
         if not self.sleepFlag and not self.noSleep:
             self.b_setAnimState('Sleep', self.animMultiplier)
             self.sleepFlag = 1
+            # remember it: when falling asleep with the book open, tracking was restarted just before this, and without this
+            # the first step after waking finds "Happy" unchanged and never leaves the Sleep animation (the toon glides)
+            self.lastState = 'Sleep'
 
     def forceGotoSleep(self):
         if self.hp > 0:
