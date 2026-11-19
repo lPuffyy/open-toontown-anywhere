@@ -25,6 +25,8 @@ class DistributedTrunkAI(DistributedClosetAI):
 
     def _finish(self):
         taskMgr.remove(self.uniqueName('timeout'))
+        if self.customerId:
+            self.ignore(self.air.getAvatarExitEvent(self.customerId))
         self.customerId = 0
         self.sendUpdate('setState', [ClosetGlobals.CLOSED, 0, self.getOwnerId(), 'm', [], [], [], []])
 

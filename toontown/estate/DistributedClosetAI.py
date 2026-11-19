@@ -35,6 +35,14 @@ class DistributedClosetAI(DistributedFurnitureItemAI):
         self.customerId = avId
         self._state(ClosetGlobals.OPEN, av)
         taskMgr.doMethodLater(ClosetGlobals.TIMEOUT_TIME, self.__timeout, self.uniqueName('timeout'))
+        self.acceptOnce(self.air.getAvatarExitEvent(avId), self.__handleUnexpectedExit, extraArgs=[avId])     # (idea from Toontown Infinite, see NOTICE.md)
+
+    def __handleUnexpectedExit(self, avId):
+        # the customer logged out or lost the connection: free the closet now, not after the 200 second timeout
+        self.notify.warning('avatar %s left the closet unexpectedly' % avId)
+        if self.customerId == avId:
+            self._finish()
+            self.d_setMovie(ClosetGlobals.CLOSET_MOVIE_CLEAR, 0)
 
     def __timeout(self, task):
         avId = self.customerId
@@ -44,6 +52,8 @@ class DistributedClosetAI(DistributedFurnitureItemAI):
 
     def _finish(self):
         taskMgr.remove(self.uniqueName('timeout'))
+        if self.customerId:
+            self.ignore(self.air.getAvatarExitEvent(self.customerId))
         self.customerId = 0
         self.sendUpdate('setState', [ClosetGlobals.CLOSED, 0, self.getOwnerId(), 'm', [], []])
 
