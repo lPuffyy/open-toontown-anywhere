@@ -12,6 +12,9 @@ What this fork adds (everything is on the `anywhere` branch, the default):
 - **[`otpy`](otpy)**: a pure-Python replacement for the compiled `libotp` and `libtoontown`, so the game runs on a plain Linux server and in a browser.
 - Astron compatibility, a server-side friend manager, cross-district friends, invasions, the Districts page, fishing and quest fixes.
 - The Disney classic characters are removed.
+- Parts of the estate, house and catalog code are adapted from [Toontown Infinite](https://github.com/TT-Infinite-Archive/source) (AGPL-3.0, see [NOTICE.md](NOTICE.md)).
+
+**Based on Toontown Infinite** — <https://github.com/TT-Infinite-Archive/source>
 
 ## Run the server
 
