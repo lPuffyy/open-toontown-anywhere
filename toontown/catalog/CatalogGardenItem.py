@@ -109,7 +109,7 @@ class CatalogGardenItem(CatalogItem.CatalogItem):
     def getRequestPurchaseErrorText(self, retcode):
         retval = CatalogItem.CatalogItem.getRequestPurchaseErrorText(self, retcode)
         origText = retval
-        if retval == TTLocalizer.CatalogPurchaseItemAvailable or retval == TTLocalizer.CatalogPurchaseItemOnOrder:
+        if retcode == ToontownGlobals.P_ItemAvailable or retcode == ToontownGlobals.P_ItemOnOrder:
             recipeKey = GardenGlobals.getRecipeKeyUsingSpecial(self.gardenIndex)
             if not recipeKey == -1:
                 retval += GardenGlobals.getPlantItWithString(self.gardenIndex)

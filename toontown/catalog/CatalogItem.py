@@ -173,10 +173,25 @@ class CatalogItem:
     def requestPurchaseCleanup(self):
         pass
 
+    def getDeliveryTimeText(self):
+        """How long this item takes to arrive, in words ('an hour', '4 hours', 'a day')."""
+        minutes = self.getDeliveryTime()
+        if minutes <= 1:
+            return TTLocalizer.CatalogDeliveryMinute
+        if minutes < 60:
+            return TTLocalizer.CatalogDeliveryMinutes % minutes
+        if minutes < 24 * 60:
+            hours = int(round(minutes / 60.0))
+            return TTLocalizer.CatalogDeliveryHour if hours == 1 else TTLocalizer.CatalogDeliveryHours % hours
+        days = int(round(minutes / (24 * 60.0)))
+        return TTLocalizer.CatalogDeliveryDay if days == 1 else TTLocalizer.CatalogDeliveryDays % days
+
     def getRequestPurchaseErrorText(self, retcode):
         if retcode == ToontownGlobals.P_ItemAvailable:
             return TTLocalizer.CatalogPurchaseItemAvailable
         elif retcode == ToontownGlobals.P_ItemOnOrder:
+            if self.getDeliveryTime() > 0:
+                return TTLocalizer.CatalogPurchaseItemOnOrderTime % self.getDeliveryTimeText()
             return TTLocalizer.CatalogPurchaseItemOnOrder
         elif retcode == ToontownGlobals.P_MailboxFull:
             return TTLocalizer.CatalogPurchaseMailboxFull
@@ -189,6 +204,8 @@ class CatalogItem:
         if retcode == ToontownGlobals.P_ItemAvailable:
             return TTLocalizer.CatalogPurchaseGiftItemAvailable
         elif retcode == ToontownGlobals.P_ItemOnOrder:
+            if self.getDeliveryTime() > 0:
+                return TTLocalizer.CatalogPurchaseGiftItemOnOrderTime % self.getDeliveryTimeText()
             return TTLocalizer.CatalogPurchaseGiftItemOnOrder
         elif retcode == ToontownGlobals.P_MailboxFull:
             return TTLocalizer.CatalogPurchaseGiftMailboxFull

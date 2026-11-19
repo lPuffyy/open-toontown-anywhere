@@ -21,6 +21,11 @@ def deliveryMinutes(item):
     return minutes
 
 
+def sentCode(item):
+    """What the buyer is told after an order goes through: on order when it takes time, available when it is instant."""
+    return ToontownGlobals.P_ItemOnOrder if deliveryMinutes(item) > 0 else ToontownGlobals.P_ItemAvailable
+
+
 class DistributedPhoneAI(DistributedFurnitureItemAI):
     notify = DirectNotifyGlobal.directNotify.newCategory('DistributedPhoneAI')
 
@@ -93,7 +98,8 @@ class DistributedPhoneAI(DistributedFurnitureItemAI):
         av.onOrder.append(item)
         av.d_setDeliverySchedule(av.onOrder)
         self.notify.info('%s bought %s for %s, arriving at minute %s' % (av.doId, item, price, item.deliveryDate))
-        return ToontownGlobals.P_ItemAvailable
+        # an order that takes time says "delivered to your mailbox soon"; "start using it right away" is only for instant items
+        return sentCode(found)
 
     def requestPurchaseMessage(self, context, blob, optional):
         avId = self.air.getAvatarIdFromSender()
@@ -154,7 +160,7 @@ class DistributedPhoneAI(DistributedFurnitureItemAI):
                 av.takeMoney(price)
                 target.onGiftOrder.append(item)
                 target.sendUpdate('setGiftSchedule', [target.onGiftOrder.getBlob(CatalogItem.Customization | CatalogItem.DeliveryDate)])
-                return respond(ToontownGlobals.P_ItemAvailable)
+                return respond(sentCode(item))
             mgr = getattr(self.air, 'deliveryManager', None)
             if mgr is None:
                 return self.__giftToOffline(av, targetId, item, price, respond)
@@ -167,7 +173,7 @@ class DistributedPhoneAI(DistributedFurnitureItemAI):
                     if code != ToontownGlobals.P_ItemAvailable:
                         return respond(code)
                     av.takeMoney(price)          # (the price was checked above; the gift is already on their order)
-                    respond(ToontownGlobals.P_ItemAvailable)
+                    respond(sentCode(item))
                 except Exception:
                     self.notify.warning('gift answer failed: %s' % traceback.format_exc())
                     respond(ToontownGlobals.P_NotInCatalog)
@@ -194,7 +200,7 @@ class DistributedPhoneAI(DistributedFurnitureItemAI):
                     return respond(ToontownGlobals.P_NotEnoughMoney)
                 av.takeMoney(price)
                 self.air.dbInterface.updateObject(self.air.dbId, targetId, dclass, {'setGiftSchedule': (gifts.getBlob(store),)})
-                respond(ToontownGlobals.P_ItemAvailable)
+                respond(sentCode(item))
             except Exception:
                 self.notify.warning('offline gift failed: %s' % traceback.format_exc())
                 respond(ToontownGlobals.P_NotInCatalog)
