@@ -33,7 +33,7 @@ class DistributedHouseAI(DistributedObjectAI):
         self.gardenPos = housePos
         self.name = owner.getName()
         # a house keeps its colour: it comes from the owner, not from a dice roll every time the house is built
-        self.color = owner.doId % len(HouseGlobals.houseColors)
+        self.color = self.colorForToon(owner)
         self.interiorWallpaper = b''
         self.interiorWindows = b''
         self.deletedItems = b''
@@ -44,6 +44,19 @@ class DistributedHouseAI(DistributedObjectAI):
         self.interior = None
         self.furnitureMgr = None
         self.mailbox = None
+
+    @staticmethod
+    def colorForToon(owner):
+        """The house takes the house colour closest to the owner's own toon colour (as the original game: a red toon, a reddish house)."""
+        try:
+            from toontown.toon import ToonDNA
+            dna = ToonDNA.ToonDNA()
+            dna.makeFromNetString(owner.getDNAString())
+            c = ToonDNA.allColorsList[dna.headColor]
+            return min(range(len(HouseGlobals.houseColors)),
+                       key=lambda i: sum((c[k] - HouseGlobals.houseColors[i][k]) ** 2 for k in range(3)))
+        except Exception:
+            return owner.doId % len(HouseGlobals.houseColors)
 
     # required fields
     def getHousePos(self):

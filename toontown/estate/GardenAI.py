@@ -203,8 +203,13 @@ class DistributedPlantBaseAI(LawnDecorAI):
         if decay and self.data['water'] > self.attrs['minWaterLevel']:
             self.data['water'] -= 1
             self.sendUpdate('setWaterLevel', [self.data['water']])
+            self.waterChanged()
             changed = True
         return changed
+
+    def waterChanged(self):
+        """Called after the water level moved (a tree uses it to tell the clients it wilted or recovered)."""
+        pass
 
     def waterPlant(self):
         avId = self.air.getAvatarIdFromSender()
@@ -215,6 +220,7 @@ class DistributedPlantBaseAI(LawnDecorAI):
         self.watering = True
         self.data['water'] = min(self.attrs['maxWaterLevel'], max(self.data['water'], 0) + power)
         self.sendUpdate('setWaterLevel', [self.data['water']])
+        self.waterChanged()
         self.d_movie(GardenGlobals.MOVIE_WATER, avId)
         av.b_setWateringCanSkill(av.getWateringCanSkill() + 1)
         self.garden.save()
@@ -259,11 +265,24 @@ class DistributedFlowerAI(DistributedPlantBaseAI):
 
 
 class DistributedGagTreeAI(DistributedPlantBaseAI):
+    def __init__(self, air, garden, index, data):
+        DistributedPlantBaseAI.__init__(self, air, garden, index, data)
+        self.sentWilted = self.getWilted()
+
     def getTypeIndex(self):
         return self.data['type']
 
     def getWilted(self):
         return 1 if self.data['water'] < 0 else 0
+
+    def waterChanged(self):
+        # the client only learns that a tree wilted (or perked up again) from setWilted, and only redraws the model when the growth
+        # level is sent, so send both when the state flips
+        wilted = self.getWilted()
+        if wilted != self.sentWilted:
+            self.sendUpdate('setWilted', [wilted])
+            self.sendUpdate('setGrowthLevel', [self.data['growth']])
+        self.sentWilted = wilted
 
     def requestHarvest(self):
         avId = self.air.getAvatarIdFromSender()
