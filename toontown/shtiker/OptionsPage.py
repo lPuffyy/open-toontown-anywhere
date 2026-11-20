@@ -176,6 +176,19 @@ class DeviceTabPage(DirectFrame):
                     self.startValues[row['id']] = self.provider.get(row['id'])
                 except Exception:
                     self.startValues[row['id']] = ''
+            elif kind == 'slider':
+                # a slider the app around the game keeps the value of (the analog joystick's sensitivity)
+                lo, hi = float(row.get('min', 0)), float(row.get('max', 100))
+                try:
+                    cur = float(self.provider.get(row['id']))
+                except Exception:
+                    cur = (lo + hi) / 2
+                button = DirectSlider(parent=self, range=(lo, hi), value=max(lo, min(hi, cur)), pageSize=(hi - lo) / 10.0, orientation=DGG.HORIZONTAL, scale=0.2, pos=(0.35, 0, z + 0.02),
+                                      frameColor=(0.86, 0.8, 0.6, 1), thumb_relief=DGG.RAISED, thumb_frameColor=(1, 0.85, 0.15, 1), thumb_borderWidth=(0.012, 0.012), thumb_frameSize=(-0.07, 0.07, -0.12, 0.12),
+                                      command=self.__slide, extraArgs=[i])
+                # (a minus and a plus at the ends: the slider sits between two rows of buttons, so words under it would be covered)
+                DirectLabel(parent=button, relief=None, text='-', text_align=TextNode.ACenter, text_scale=0.4, pos=(-1.22, 0, -0.1))
+                DirectLabel(parent=button, relief=None, text='+', text_align=TextNode.ACenter, text_scale=0.4, pos=(1.22, 0, -0.1))
             else:
                 button = DirectButton(parent=self, relief=None, image=(guiButton.find('**/QuitBtn_UP'), guiButton.find('**/QuitBtn_DN'), guiButton.find('**/QuitBtn_RLVR')), image_scale=(0.9, 1, 1), text=TTLocalizer.OptionsPageDeviceOpen, text_scale=0.05, text_pos=(0, -0.02), pos=(0.35, 0, z + 0.02), command=self.__open, extraArgs=[row.get('id')])
             self.widgets.append((label, button))
@@ -225,6 +238,17 @@ class DeviceTabPage(DirectFrame):
         except Exception:
             self.notify.warning('could not change %s' % row.get('id'), exc_info=True)
         self.__refresh()
+
+    def __slide(self, index):
+        if index >= len(self.widgets):
+            return          # (the slider reports its starting value while the page is still being built)
+        row = self.rows[index]
+        try:
+            value = int(round(self.widgets[index][1]['value'] / 5.0) * 5)
+            if str(value) != str(self.provider.get(row['id'])):
+                self.provider.set(row['id'], value)
+        except Exception:
+            self.notify.warning('could not change %s' % row.get('id'), exc_info=True)
 
     def __open(self, what):
         messenger.send('wakeup')
