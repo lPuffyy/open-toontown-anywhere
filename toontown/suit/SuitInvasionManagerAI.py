@@ -144,6 +144,11 @@ class SuitInvasionManagerAI:
         self.skeleton = 0
         self.numSuits = self.total = 0
         self.__publish()
+        for sp in list(getattr(self.air, 'suitPlanners', {}).values()):
+            try:
+                sp.flyAwayInvasionSuits()
+            except Exception:
+                self.notify.warning('could not send the invasion Cogs away', exc_info=True)
 
     def handleSuitDefeated(self):
         if not self.getInvading():

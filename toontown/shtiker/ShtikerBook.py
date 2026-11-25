@@ -394,7 +394,14 @@ class ShtikerBook(DirectFrame, StateData.StateData):
         base.playSfx(self.pageSound)
         self.pages[self.currPageIndex].exit()
         self.currPageIndex = self.currPageIndex + offset
-        messenger.send('stickerBookPageChange-' + str(self.currPageIndex))
+        legacyIndex = self.currPageIndex
+        for groupsIndex, groupsPage in enumerate(self.pages):
+            if getattr(groupsPage, 'pageName', None) == TTLocalizer.GroupsPageTitle:
+                if groupsIndex < legacyIndex:
+                    legacyIndex -= 1
+                break
+
+        messenger.send('stickerBookPageChange-' + str(legacyIndex))
         self.currPageIndex = max(self.currPageIndex, 0)
         self.currPageIndex = min(self.currPageIndex, len(self.pages) - 1)
         self.setPageTabIndex(self.currPageIndex)

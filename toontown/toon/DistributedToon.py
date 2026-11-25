@@ -417,6 +417,12 @@ class DistributedToon(DistributedPlayer.DistributedPlayer, Toon.Toon, Distribute
 
     def setFriendOnline(self, friendId, online):
         cr = base.cr
+        if online == 2:
+            # a quiet reminder that the friend is online (we changed district): no log on message, only refresh what shows who is online
+            if friendId not in cr.friendsOnline:
+                cr.friendsOnline[friendId] = cr.friendsMap.get(friendId) or cr.identifyFriend(friendId)
+                messenger.send('friendsListChanged')
+            return
         if online:
             handle = cr.friendsMap.get(friendId) or cr.identifyFriend(friendId)       # (the details may still be on their way)
             cr.friendsOnline[friendId] = handle

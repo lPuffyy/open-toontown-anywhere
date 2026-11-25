@@ -20,6 +20,7 @@ MOVIE_TIMEOUT = 15.0         # if the client never reports its movie as done
 # the statues made after the characters we removed from this build
 BLOCKED_STATUARY = ()      # (the four character statues were replaced with a hydrant, mailbox, trash can and fountain)
 ACCELERATOR_SPECIES = 202    # the Garden Accelerator statue: while one stands in the garden everything in it grows twice as fast
+FLOWERS_PER_TROPHY = 10     # different flowers collected per garden trophy
 MAX_OFFLINE_TICKS = 14 * 24 * 120    # growth is simulated for at most two weeks away
 PLANT, PLOT, FLOWER, TREE, STATUE, TOON_STATUE = 'plant', 'plot', 'flower', 'tree', 'statue', 'toonstatue'
 
@@ -265,10 +266,25 @@ class DistributedFlowerAI(DistributedPlantBaseAI):
             flower = FlowerBase(self.data['species'], self.data['variety'])
             if av.flowerCollection.collectFlower(flower) != GardenGlobals.COLLECT_NO_UPDATE:
                 av.d_setFlowerCollection(*av.flowerCollection.getNetLists())
+                self.__awardTrophies(av)
             beans = GardenGlobals.getNumBeansRequired(self.data['species'], self.data['variety'])
             if beans == GardenGlobals.getShovelPower(av.getShovel(), av.getShovelSkill()):
                 av.b_setShovelSkill(av.getShovelSkill() + 1)
         self.digUp(avId)
+
+    def __awardTrophies(self, av):
+        """A garden trophy and a Laff point for every 10 different flowers collected (as the fishing trophies are)."""
+        try:
+            trophies = list(av.getGardenTrophies())
+            earned = min(len(av.flowerCollection) // FLOWERS_PER_TROPHY, len(GardenGlobals.TrophyDict))
+            if earned > len(trophies):
+                while len(trophies) < earned:
+                    trophies.append(len(trophies))
+                    av.b_setMaxHp(av.getMaxHp() + 1)
+                av.b_setGardenTrophies(trophies)
+                av.toonUp(av.getMaxHp())
+        except Exception:
+            self.notify.warning(traceback.format_exc())
 
 
 class DistributedGagTreeAI(DistributedPlantBaseAI):
@@ -373,8 +389,7 @@ class EstateGarden:
         return any(getattr(o, 'data', {}).get('kind') == TREE and o.data.get('type') == treeType for o in self.objects.values())
 
     def organicLevels(self):
-        """Per gag track, the highest gag level that is organic (-1: none). A gag is organic once its tree is one growth step short of
-        fully grown (as the original game: a day before it is fully grown), as long as that tree is not wilted and every lower tree of the
+        """Per gag track, the highest gag level that is organic (-1: none). A gag is organic once its tree is full grown (the stage before it bears fruit; harvesting leaves it there), as long as that tree is not wilted and every lower tree of the
         track still stands (chop down a lower tree and the higher gags lose the bonus)."""
         trees = {}
         for o in self.objects.values():
@@ -388,8 +403,8 @@ class EstateGarden:
                 d = trees.get((track, level))
                 if d is None:
                     break
-                top = GardenGlobals.PlantAttributes[d['type']]['growthThresholds'][2]
-                if d['water'] >= 0 and d['growth'] >= top - 1:
+                full = GardenGlobals.PlantAttributes[d['type']]['growthThresholds'][1]      # "full grown" as the client counts it; a harvested tree falls back to exactly this, so it keeps its bonus
+                if d['water'] >= 0 and d['growth'] >= full:
                     best = level
             levels.append(best)
         return levels

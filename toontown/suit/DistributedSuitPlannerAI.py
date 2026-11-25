@@ -381,8 +381,10 @@ class DistributedSuitPlannerAI(DistributedObjectAI.DistributedObjectAI, SuitPlan
                 if cogdoTakeover and suitTrack == None:
                     suitTrack = random.choice(['s'])
         if suitName == None:
-            if not cogdoTakeover:
+            if not cogdoTakeover and self.canonicalZoneId < 10000:      # an invasion is on the streets; a Cog HQ courtyard keeps its own department
                 suitName, skelecog = self.air.suitInvasionManager.getInvadingCog()
+                if suitName != None:
+                    newSuit.invasionSuit = 1
             if suitName == None:
                 suitName = self.defaultSuitName
         if suitType == None and suitName != None:
@@ -1063,6 +1065,12 @@ class DistributedSuitPlannerAI(DistributedObjectAI.DistributedObjectAI, SuitPlan
     def resyncSuits(self):
         for suit in self.suitList:
             suit.resync()
+
+    def flyAwayInvasionSuits(self):
+        """The invasion is over: the street Cogs it brought walk off the street now instead of staying (and filling the street's quota) until Toons defeat them. Cogs in a battle are left alone."""
+        for suit in list(self.suitList):
+            if getattr(suit, 'invasionSuit', 0) and suit.pathState == 1:
+                suit.flyAwayNow()
 
     def flySuits(self):
         for suit in self.suitList:

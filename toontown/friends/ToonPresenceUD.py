@@ -43,21 +43,26 @@ class ToonPresenceUD(DistributedObjectGlobalUD, ToonGroupsUDMixin):
     # ---- from the districts
     # A toon changing district (or going through Go To) leaves its old district a moment before the new one reports it,
     # so its friends are told it left only if it has not turned up again by then.
-    LEFT_GRACE = 15.0
+    LEFT_GRACE = 30.0
 
     def avatarOnline(self, avId, friends, districtName):
         if self.online.get(avId) == set(friends) and self.district.get(avId) == districtName:
             return                       # already known (the districts repeat this every minute to keep the list true)
         self.notify.info('toon %s is playing in %s' % (avId, districtName))
-        returning = taskMgr.hasTaskNamed(self.__leftTask(avId))
+        # returning: this toon is already known (it just changed district, and the new district may report it before the old one reports it gone)
+        returning = avId in self.online or taskMgr.hasTaskNamed(self.__leftTask(avId))
         taskMgr.remove(self.__leftTask(avId))
         known = self.online.get(avId, set())
         self.online[avId] = set(friends)
         self.district[avId] = districtName
         for friendId in friends:
-            if friendId in self.district and not (returning and friendId in known):
-                self.sendUpdateToAvatarId(friendId, 'friendOnline', [avId, 1])
-                self.sendUpdateToAvatarId(avId, 'friendOnline', [friendId, 1])
+            if friendId in self.district:
+                if returning and friendId in known:
+                    # no log on message for a toon that only changed district, but its own client may have lost who is online: say so quietly (2)
+                    self.sendUpdateToAvatarId(avId, 'friendOnline', [friendId, 2])
+                else:
+                    self.sendUpdateToAvatarId(friendId, 'friendOnline', [avId, 1])
+                    self.sendUpdateToAvatarId(avId, 'friendOnline', [friendId, 1])
 
     def avatarOffline(self, avId, districtName):
         if avId not in self.online or self.district.get(avId) != districtName:
