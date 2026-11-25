@@ -29,8 +29,8 @@ class ToonGroupsUDMixin:
         return False
 
     def __result(self, avId, op, code, group=None):
-        gid, shard, hood, zone = (group['id'], group['shard'], group['hood'], group['zone']) if group else (0, 0, 0, 0)
-        self.sendUpdateToAvatarId(avId, 'groupResult', [op, code, gid, shard, hood, zone])
+        gid, shard, hood, zone, host = (group['id'], group['shard'], group['hood'], group['zone'], group['host']) if group else (0, 0, 0, 0, 0)
+        self.sendUpdateToAvatarId(avId, 'groupResult', [op, code, gid, shard, hood, zone, host])
 
     @staticmethod
     def __uint(value):

@@ -230,6 +230,79 @@ class Street(BattlePlace.BattlePlace):
         self.enterZone(zoneId)
         BattlePlace.BattlePlace.enterTeleportIn(self, requestStatus)
 
+    def _placeTeleportInPostZoneComplete(self, requestStatus):
+        BattlePlace.BattlePlace._placeTeleportInPostZoneComplete(self, requestStatus)
+        # Teleporting to a friend puts us at their spot, which may be in a different visgroup than the zone
+        # the request named. That ground is hidden (stashed, with no floor collision), so the toon spawns in a void.
+        try:
+            avId = requestStatus.get('avId', -1)
+            if avId == -1 and requestStatus.get('how') == 'teleportIn':
+                # Group teleport (Groups page): no friend is named, so nothing places us and we keep stale coordinates off the street.
+                self._placeForGroupTeleport()
+                return
+            av = base.cr.doId2do.get(avId) if avId != -1 else None
+            # A friend who has not broadcast a position yet sits at the node origin, which is off the street.
+            if av is not None and self._atOrigin(av):
+                self.notify.warning('teleport: friend %s has no position yet, waiting' % avId)
+                self._tpWaitStart = globalClock.getFrameTime()
+                taskMgr.remove('streetTeleportPosWait')
+                taskMgr.add(self._teleportPosWait, 'streetTeleportPosWait', extraArgs=[avId], appendTask=True)
+                return
+            friendZone = getattr(av, 'zoneId', None)
+            if friendZone is not None and friendZone != self.zoneId and friendZone in self.loader.nodeDict:
+                self.notify.warning('teleport: friend is in zone %s, not %s: switching' % (friendZone, self.zoneId))
+                self.enterZone(friendZone)
+        except Exception:
+            self.notify.warning('teleport zone fix failed', exc_info=True)
+
+    def _placeForGroupTeleport(self):
+        for doId, obj in list(base.cr.doId2do.items()):
+            if obj is base.localAvatar or not hasattr(obj, 'forceToTruePosition') or not hasattr(obj, 'style'):
+                continue
+            try:
+                obj.forceToTruePosition()
+                if self._atOrigin(obj):
+                    continue
+                base.localAvatar.gotoNode(obj)
+                zone = getattr(obj, 'zoneId', None)
+                if zone is not None and zone != self.zoneId and zone in self.loader.nodeDict:
+                    self.enterZone(zone)
+                return
+            except Exception:
+                continue
+        origin = self.loader.geom.find('**/tunnel_origin')
+        if not origin.isEmpty():
+            base.localAvatar.setPosHpr(origin.getPos(render), origin.getHpr(render))
+            self.notify.warning('group teleport: nobody here, used tunnel spawn')
+
+    def _atOrigin(self, node):
+        p = node.getPos(render)
+        return abs(p[0]) < 0.01 and abs(p[1]) < 0.01 and abs(p[2]) < 0.01
+
+    def _teleportPosWait(self, avId, task):
+        av = base.cr.doId2do.get(avId)
+        if av is not None and not self._atOrigin(av):
+            av.forceToTruePosition()
+            base.localAvatar.gotoNode(av)
+            zone = getattr(av, 'zoneId', None)
+            if zone is not None and zone != self.zoneId and zone in self.loader.nodeDict:
+                self.enterZone(zone)
+            return task.done
+        if av is not None and getattr(av, 'smoother', None) is not None:
+            try:
+                if av.smoother.getLatestPosition():
+                    av.forceToTruePosition()
+            except Exception:
+                pass
+        if globalClock.getFrameTime() - self._tpWaitStart > 3.0:
+            # Still nothing: put the toon at the street's tunnel entrance rather than off the map.
+            origin = self.loader.geom.find('**/tunnel_origin')
+            if not origin.isEmpty():
+                base.localAvatar.setPosHpr(origin.getPos(render), origin.getHpr(render))
+                self.notify.warning('teleport: no friend position, used tunnel spawn')
+            return task.done
+        return task.cont
+
     def _teleportToFriend(self, requestStatus):
         avId = requestStatus['avId']
         hoodId = requestStatus['hoodId']

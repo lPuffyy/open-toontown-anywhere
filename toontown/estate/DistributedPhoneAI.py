@@ -49,6 +49,7 @@ class DistributedPhoneAI(DistributedFurnitureItemAI):
             self.sendUpdateToAvatarId(avId, 'freeAvatar', [])
             return
         self.busyAvId = avId
+        self.acceptOnce(self.air.getAvatarExitEvent(avId), self.__handleUnexpectedExit, extraArgs=[avId])
         # the catalog checks purchases against this (how many items are already in the house and attic)
         numHouseItems = 0
         av = self.air.doId2do.get(avId)
@@ -64,10 +65,21 @@ class DistributedPhoneAI(DistributedFurnitureItemAI):
         avId = self.air.getAvatarIdFromSender()
         if avId != self.busyAvId:
             return
+        self.ignore(self.air.getAvatarExitEvent(avId))
         self.busyAvId = 0
         self.d_setMovie(PhoneGlobals.PHONE_MOVIE_HANGUP, avId)
         self.sendUpdateToAvatarId(avId, 'freeAvatar', [])
         self.d_setMovie(PhoneGlobals.PHONE_MOVIE_CLEAR, 0)
+
+    def __handleUnexpectedExit(self, avId):
+        # the caller logged out or lost the connection while shopping: hang up so the phone works for the next toon
+        if self.busyAvId == avId:
+            self.busyAvId = 0
+            self.d_setMovie(PhoneGlobals.PHONE_MOVIE_CLEAR, 0)
+
+    def delete(self):
+        self.ignoreAll()
+        DistributedFurnitureItemAI.delete(self)
 
     def __purchase(self, av, item):
         """Checks the order the way the real server did, takes the money and queues the delivery. Returns a P_ code."""

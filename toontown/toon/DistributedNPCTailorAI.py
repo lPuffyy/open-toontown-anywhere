@@ -161,14 +161,19 @@ class DistributedNPCTailorAI(DistributedNPCToonBaseAI):
     def __handleUnexpectedExit(self, avId):
         self.notify.warning('avatar:' + str(avId) + ' has exited unexpectedly')
         if self.customerId == avId:
-            toon = self.air.doId2do.get(avId)
-            if toon == None:
-                toon = DistributedToonAI.DistributedToonAI(self.air)
-                toon.doId = avId
+            # the customer left in the middle of a change: keep the look they had picked, saved through the database
+            # directly (the old DatabaseObject helper fails on Python 3 and used to take the whole district down)
             if self.customerDNA:
-                toon.b_setDNAString(self.customerDNA.makeNetString())
-                db = DatabaseObject.DatabaseObject(self.air, avId)
-                db.storeObject(toon, ['setDNAString'])
+                try:
+                    netString = self.customerDNA.makeNetString()
+                    toon = self.air.doId2do.get(avId)
+                    if toon is not None:
+                        toon.setDNAString(netString)
+                    self.air.dbInterface.updateObject(self.air.dbId, avId, self.air.dclassesByName['DistributedToonAI'],
+                                                      {'setDNAString': (netString,)})
+                except Exception:
+                    import traceback
+                    self.notify.warning('could not save the look of toon %s: %s' % (avId, traceback.format_exc()))
         else:
             self.notify.warning('invalid customer avId: %s, customerId: %s ' % (avId, self.customerId))
         if self.busy == avId:

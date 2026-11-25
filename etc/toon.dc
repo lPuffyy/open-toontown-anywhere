@@ -2800,7 +2800,7 @@ dclass ToonPresence : DistributedObject {
   groupLeave() airecv clsend;
   groupJoin(uint32) airecv clsend;
   groupListRequest() airecv clsend;
-  groupResult(uint8, uint8, uint32, uint32, uint32, uint32);
+  groupResult(uint8, uint8, uint32, uint32, uint32, uint32, uint32);
   groupList(uint32, uint32[], uint8[], string[], uint8[], uint8[], uint32[], uint32[], uint16[]);
 };
 

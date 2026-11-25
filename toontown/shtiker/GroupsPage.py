@@ -405,7 +405,7 @@ class GroupsPage(ShtikerPage.ShtikerPage):
             self.__showDetail()
 
     # ---- answers
-    def __gotResult(self, op, code, groupId, shard, hood, zone):
+    def __gotResult(self, op, code, groupId, shard, hood, zone, host=0):
         if op == G.OP_POST:
             if code == G.OK:
                 self.selectedId = groupId
@@ -419,7 +419,7 @@ class GroupsPage(ShtikerPage.ShtikerPage):
                 self.__refreshNow()
                 if self.goAfterJoin:
                     self.goAfterJoin = False
-                    self.__teleport(groupId, shard, hood, zone)
+                    self.__teleport(groupId, shard, hood, zone, host)
                 else:
                     self.__say(TTLocalizer.GroupsPageJoinedOk)
             elif code != G.OK:
@@ -442,7 +442,7 @@ class GroupsPage(ShtikerPage.ShtikerPage):
         taskMgr.remove('GroupsPageRefresh')
         taskMgr.doMethodLater(1.2, self.__refresh, 'GroupsPageRefresh')      # the server answers one list a second
 
-    def __teleport(self, groupId, shard, hood, zone):
+    def __teleport(self, groupId, shard, hood, zone, host=0):
         """Join worked: go to where the host is, the way Go To does."""
         canonical = ZoneUtil.getCanonicalZoneId(hood)
         if not hood or not shard:
@@ -459,7 +459,7 @@ class GroupsPage(ShtikerPage.ShtikerPage):
             place = base.cr.playGame.getPlace()
             if place is None:
                 place = base.cr.playGame.hood.place
-            place.requestTeleport(hood, zone, shard, -1)
+            place.requestTeleport(hood, zone, shard, host if host else -1)
         except Exception:
             self.notify.warning('could not teleport to group %s' % groupId, exc_info=True)
             self.__say(TTLocalizer.GroupsPageBad)

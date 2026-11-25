@@ -499,7 +499,12 @@ class DNAFlatBuilding(DNANode):
                 _log("flat building", self.get_name(), "flattened to", wall_holder.get_num_children(), "walls")
                 return parent
             wall = wall_holder.get_child(0)
+            decal_kids = [wall_decal_holder.get_child(i) for i in range(wall_decal_holder.get_num_children())]
             wall_decal_holder.get_children().reparent_to(wall)
+            if _MUL > 1:
+                # the holder's own offset is thrown away with the holder just below, so put it on the windows, doors and cornices themselves
+                for k in decal_kids:
+                    k.set_depth_offset(_MUL)
             wall.reparent_to(internal_node_path)
             wall.node().set_effect(DecalEffect.make())
             wall_holder.remove_node()

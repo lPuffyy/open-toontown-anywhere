@@ -152,8 +152,10 @@ class DistributedFurnitureManagerAI(DistributedObjectAI):
 
     def deleteItemFromRoomMessage(self, blob, doId, context):
         sender = self.air.getAvatarIdFromSender()
+        if not self.__isDirector():
+            return self.sendUpdateToAvatarId(sender, 'deleteItemFromRoomResponse', [NO_PERMISSION, context])
         obj = self.room.pop(doId, None)
-        if not self.__isDirector() or obj is None:
+        if obj is None:
             return self.sendUpdateToAvatarId(sender, 'deleteItemFromRoomResponse', [NOT_FOUND, context])
         self.deleted.append(obj.catalogItem)
         obj.requestDelete()

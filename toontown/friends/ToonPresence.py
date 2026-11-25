@@ -110,7 +110,7 @@ class ToonPresence(DistributedObjectGlobal):
         except Exception:
             self.notify.warning('could not announce the group roster', exc_info=True)
 
-    def groupResult(self, op, code, groupId, shard, hood, zone):
+    def groupResult(self, op, code, groupId, shard, hood, zone, host=0):
         from toontown.friends import ToonGroupsGlobals as G
         if op == G.OP_POST and code == G.OK:
             self.hostedGroupId = groupId
@@ -122,7 +122,7 @@ class ToonPresence(DistributedObjectGlobal):
         elif op == G.OP_MEMBERS:
             self.up_groupListRequest()           # someone joined or left: the new list says who
             return
-        messenger.send('toonGroupResult', [op, code, groupId, shard, hood, zone])
+        messenger.send('toonGroupResult', [op, code, groupId, shard, hood, zone, host])
 
     def groupList(self, mine, ids, kinds, names, sizes, maxes, shards, hoods, ages):
         from toontown.friends import ToonGroupsGlobals as G

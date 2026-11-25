@@ -23,7 +23,18 @@ class DistributedBankAI(DistributedFurnitureItemAI):
             self.d_setMovie(BankGlobals.BANK_MOVIE_NOT_OWNER, avId)
             return
         self.busyAvId = avId
+        self.acceptOnce(self.air.getAvatarExitEvent(avId), self.__handleUnexpectedExit, extraArgs=[avId])
         self.d_setMovie(BankGlobals.BANK_MOVIE_GUI, avId)
+
+    def __handleUnexpectedExit(self, avId):
+        # the customer logged out or lost the connection with the bank open: free it for the next toon
+        if self.busyAvId == avId:
+            self.busyAvId = 0
+            self.d_setMovie(BankGlobals.BANK_MOVIE_CLEAR, 0)
+
+    def delete(self):
+        self.ignoreAll()
+        DistributedFurnitureItemAI.delete(self)
 
     def transferMoney(self, amount):
         avId = self.air.getAvatarIdFromSender()
@@ -44,6 +55,7 @@ class DistributedBankAI(DistributedFurnitureItemAI):
                 av.b_setMoney(av.getMoney() + amount)
                 mode = BankGlobals.BANK_MOVIE_WITHDRAW
         self.d_setMovie(mode, avId)
+        self.ignore(self.air.getAvatarExitEvent(avId))
         self.busyAvId = 0
         self.sendUpdateToAvatarId(avId, 'freeAvatar', [])
         self.d_setMovie(BankGlobals.BANK_MOVIE_CLEAR, 0)

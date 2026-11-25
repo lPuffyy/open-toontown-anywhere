@@ -98,6 +98,9 @@ class DistributedNPCFisherman(DistributedNPCToonBase):
         self.isLocalToon = avId == base.localAvatar.doId
         if mode == NPCToons.SELL_MOVIE_CLEAR:
             return
+        if mode in (NPCToons.SELL_MOVIE_COMPLETE, NPCToons.SELL_MOVIE_TROPHY, NPCToons.SELL_MOVIE_NOFISH) and abs(timeStamp) > 15:
+            # a stale one-shot reply (e.g. replayed when we join the zone): don't repeat the thank-you
+            return
         if mode == NPCToons.SELL_MOVIE_TIMEOUT:
             if self.lerpCameraSeq:
                 self.lerpCameraSeq.finish()

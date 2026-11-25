@@ -13,8 +13,9 @@ from toontown.estate import GardenGlobals
 from toontown.estate.FlowerBase import FlowerBase
 
 SAVE_DIR = 'estate_data'
-GROWTH_TICK = 30.0           # seconds between growth checks (the real game works in days; this is for testing)
-WATER_DECAY_TICKS = 4        # every this many ticks each plant loses a point of water
+GROWTH_TICK = 30.0           # seconds between growth checks (the real game works in days; growing is sped up here)
+WATER_DECAY_TICKS = 360      # a plant loses a point of water this many ticks (3 hours) after it was last watered / last lost one;
+                             # a freshly watered small can (2 points) keeps a tree alive for about 9 hours
 MOVIE_TIMEOUT = 15.0         # if the client never reports its movie as done
 # the statues made after the characters we removed from this build
 BLOCKED_STATUARY = ()      # (the four character statues were replaced with a hydrant, mailbox, trash can and fountain)
@@ -200,11 +201,16 @@ class DistributedPlantBaseAI(LawnDecorAI):
             self.data['growth'] = min(top, self.data['growth'] + steps)
             self.sendUpdate('setGrowthLevel', [self.data['growth']])
             changed = True
-        if decay and self.data['water'] > self.attrs['minWaterLevel']:
-            self.data['water'] -= 1
-            self.sendUpdate('setWaterLevel', [self.data['water']])
-            self.waterChanged()
-            changed = True
+        if decay:
+            # every plant has its own clock, so watering it just before a global decay step doesn't cost it a point at once
+            self.data['dry'] = self.data.get('dry', 0) + 1
+        if decay and self.data['dry'] >= WATER_DECAY_TICKS:
+            self.data['dry'] = 0
+            if self.data['water'] > self.attrs['minWaterLevel']:
+                self.data['water'] -= 1
+                self.sendUpdate('setWaterLevel', [self.data['water']])
+                self.waterChanged()
+                changed = True
         return changed
 
     def waterChanged(self):
@@ -219,6 +225,7 @@ class DistributedPlantBaseAI(LawnDecorAI):
         power = GardenGlobals.getWateringCanPower(av.getWateringCan(), av.getWateringCanSkill())
         self.watering = True
         self.data['water'] = min(self.attrs['maxWaterLevel'], max(self.data['water'], 0) + power)
+        self.data['dry'] = 0
         self.sendUpdate('setWaterLevel', [self.data['water']])
         self.waterChanged()
         self.d_movie(GardenGlobals.MOVIE_WATER, avId)
@@ -438,15 +445,18 @@ class EstateGarden:
         if attrs is None:
             return
         top, lowest = attrs['growthThresholds'][2], attrs['minWaterLevel']
-        water, growth = data['water'], data.get('growth', 0)
+        water, growth, dry = data['water'], data.get('growth', 0), data.get('dry', 0)
         for i in range(1, ticks + 1):
             if water > 0 and growth < top:
                 growth += 1
-            if i % WATER_DECAY_TICKS == 0 and water > lowest:
-                water -= 1
+            dry += 1
+            if dry >= WATER_DECAY_TICKS:
+                dry = 0
+                if water > lowest:
+                    water -= 1
             if water <= lowest and growth >= top or (water <= 0 and water <= lowest):
                 break
-        data['water'], data['growth'] = water, growth
+        data['water'], data['growth'], data['dry'] = water, growth, dry
 
     def save(self):
         try:
@@ -492,15 +502,17 @@ class EstateGarden:
 
     def __tick(self, task):
         self.ticks += 1
-        decay = self.ticks % WATER_DECAY_TICKS == 0
+        decay = True
         changed = False
         boost = 2 if any(getattr(o, 'data', {}).get('species') == ACCELERATOR_SPECIES and getattr(o, 'data', {}).get('kind') == STATUE
                          for o in self.objects.values()) else 1
         for obj in list(self.objects.values()):
             if isinstance(obj, DistributedPlantBaseAI):
                 changed = obj.tick(decay, boost) or changed
-        if changed:
+        if changed or self.ticks % 20 == 0:
+            # (also every 10 minutes: the save stamps the time, so a restart only replays the ticks it really missed)
             self.save()
+        if changed:
             self.updateOrganic()
         return task.again
 

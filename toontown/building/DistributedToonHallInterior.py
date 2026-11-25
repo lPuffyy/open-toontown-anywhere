@@ -603,8 +603,17 @@ class DistributedToonHallInterior(DistributedToonInterior):
         pass
 
     def enterToon(self):
-        self.toonhallView = (Point3(0, -5, 3),
-         Point3(0, 12.0, 7.0),
+        # The view was made for a 4:3 window. The horizontal field of view stays the same on a wide window (a phone is about 2.2:1), so the
+        # vertical view shrinks and the toon fills the screen (only the head showed). Back the camera off by the same ratio to keep the
+        # picture the same height as on 4:3.
+        try:
+            aspect = float(base.getAspectRatio())
+        except Exception:
+            aspect = 4.0 / 3.0
+        k = min(2.0, max(1.0, aspect / (4.0 / 3.0)))
+        # (and the wider the window, the higher the camera and the lower it aims, so the toon sits in the middle instead of at the bottom)
+        self.toonhallView = (Point3(0, -5 * k, 3 + 3.0 * (k - 1)),
+         Point3(0, 12.0, 7.0 - 6.67 * (k - 1)),
          Point3(0.0, 10.0, 5.0),
          Point3(0.0, 10.0, 5.0),
          1)
