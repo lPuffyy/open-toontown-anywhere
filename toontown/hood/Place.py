@@ -748,9 +748,23 @@ class Place(StateData, FriendsListManager):
         base.localAvatar.setSystemMessage(0, message)
 
     def enterTeleportIn(self, requestStatus):
+        self._tiDone = False
         self._tiToken = self.addSetZoneCompleteCallback(Functor(self._placeTeleportInPostZoneComplete, requestStatus), 100)
+        # if the zone never reports complete the screen stays grey for good (only a relog helped): carry on after a while
+        taskMgr.remove('teleportInWatchdog')
+        taskMgr.doMethodLater(15.0, self._teleportInWatchdog, 'teleportInWatchdog', extraArgs=[requestStatus], appendTask=True)
+
+    def _teleportInWatchdog(self, requestStatus, task):
+        if not self._tiDone and hasattr(self, 'fsm'):
+            self.notify.warning('teleport-in never completed; carrying on (%s)' % (requestStatus,))
+            self._placeTeleportInPostZoneComplete(requestStatus)
+        return task.done
 
     def _placeTeleportInPostZoneComplete(self, requestStatus):
+        if getattr(self, '_tiDone', False):
+            return
+        self._tiDone = True
+        taskMgr.remove('teleportInWatchdog')
         teleportDebug(requestStatus, '_placeTeleportInPostZoneComplete(%s)' % (requestStatus,))
         NametagGlobals.setMasterArrowsOn(0)
         base.localAvatar.laffMeter.start()
@@ -788,6 +802,7 @@ class Place(StateData, FriendsListManager):
             self.fsm.request(self.nextState, [1])
 
     def exitTeleportIn(self):
+        taskMgr.remove('teleportInWatchdog')
         self.removeSetZoneCompleteCallback(self._tiToken)
         self._tiToken = None
         NametagGlobals.setMasterArrowsOn(1)
