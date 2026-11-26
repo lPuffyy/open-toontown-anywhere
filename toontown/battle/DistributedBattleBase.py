@@ -1212,7 +1212,9 @@ class DistributedBattleBase(DistributedNode, BattleBase):
         elif mode == 'PETSOSINFO':
             petProxyId = response['id']
             self.notify.debug('got a PETSOSINFO for pet: %d' % petProxyId)
-            if petProxyId in base.cr.doId2do:
+            existingPet = base.cr.doId2do.get(petProxyId)
+            isProxy = existingPet is not None and getattr(existingPet, 'isProxy', lambda: False)()
+            if isProxy:
                 self.notify.debug('pet: %d was already in the repository' % petProxyId)
                 proxyGenerateMessage = 'petProxy-%d-generated' % petProxyId
                 messenger.send(proxyGenerateMessage)

@@ -630,9 +630,22 @@ class TownBattle(StateData.StateData):
         self.accept(self.proxyGenerateMessage, self.__handleProxyGenerated)
         self.accept(self.SOSPetSearchPanelDoneEvent, self.__handleSOSPetSearchPanelDone)
         messenger.send(self.battleEvent, [response])
+        self.__petSearchTries = 0
+        taskMgr.remove('petSearchTimeout')
+        taskMgr.doMethodLater(8.0, self.__petSearchTimedOut, 'petSearchTimeout', extraArgs=[response], appendTask=True)
         return None
 
+    def __petSearchTimedOut(self, response, task):
+        """The district never answered the call: ask once more, then give up and go back to the SOS list instead of waiting blank."""
+        self.__petSearchTries += 1
+        if self.__petSearchTries == 1:
+            messenger.send(self.battleEvent, [response])
+            return task.again
+        self.fsm.request('SOS')
+        return task.done
+
     def exitSOSPetSearch(self):
+        taskMgr.remove('petSearchTimeout')
         self.ignore(self.proxyGenerateMessage)
         self.ignore(self.SOSPetSearchPanelDoneEvent)
         self.SOSPetSearchPanel.exit()
