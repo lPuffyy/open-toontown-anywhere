@@ -181,5 +181,47 @@ class AIBase:
     def getRepository(self):
         return self.air
 
+    @staticmethod
+    def __makeTimersSafe():
+        """A timer whose callback fails would fire again every frame; make it fire once, log the error and finish."""
+        from direct.task import Timer, Task
+        import sys
+        import traceback
+        if getattr(Timer.Timer, '_ttaSafe', False):
+            return
+        original = Timer.Timer._Timer__timerTask
+
+        def safeTimerTask(self, task):
+            try:
+                return original(self, task)
+            except Exception:
+                sys.stderr.write('A timer callback failed and was dropped:\n%s\n' % traceback.format_exc())
+                sys.stderr.flush()
+                self.started = 0
+                return Task.done
+        Timer.Timer._Timer__timerTask = safeTimerTask
+        Timer.Timer._ttaSafe = True
+
     def run(self):
-        self.taskMgr.run()
+        """Run the task manager. An error in one task or timer (say a toon that left in the middle of a battle) used to end the process, and the
+        container restarts every district when one dies. Log it and carry on; only a process that keeps failing is let go."""
+        import time
+        import traceback
+        import sys
+        self.__makeTimersSafe()
+        failures = []
+        while True:
+            try:
+                self.taskMgr.run()
+                return
+            except (KeyboardInterrupt, SystemExit):
+                raise
+            except Exception:
+                now = time.time()
+                failures = [t for t in failures if now - t < 30.0]
+                failures.append(now)
+                sys.stderr.write('A task failed and was skipped (%d in the last 30 s):\n%s\n' % (len(failures), traceback.format_exc()))
+                sys.stderr.flush()
+                if len(failures) > 25:
+                    raise           # failing over and over: restart rather than spin
+                self.taskMgr.running = True
