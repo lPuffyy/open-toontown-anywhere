@@ -772,19 +772,25 @@ class Place(StateData, FriendsListManager):
         base.localAvatar.reconsiderCheesyEffect()
         base.localAvatar.obscureMoveFurnitureButton(1)
         avId = requestStatus.get('avId', -1)
+        teleportNotify.info('teleport-in done loading: %s, zone %s, friend %s is %s' % (self.__class__.__name__, getattr(self, 'zoneId', '?'), avId, 'loaded' if avId in base.cr.doId2do else 'not loaded'))
         if avId != -1:
-            if avId in base.cr.doId2do:
-                teleportDebug(requestStatus, 'teleport to avatar')
-                avatar = base.cr.doId2do[avId]
-                avatar.forceToTruePosition()
-                base.localAvatar.gotoNode(avatar)
-                base.localAvatar.b_teleportGreeting(avId)
-            else:
-                friend = base.cr.identifyAvatar(avId)
-                if friend != None:
-                    teleportDebug(requestStatus, 'friend not here, giving up')
-                    base.localAvatar.setSystemMessage(avId, OTPLocalizer.WhisperTargetLeftVisit % (friend.getName(),))
-                    friend.d_teleportGiveup(base.localAvatar.doId)
+            try:
+                if avId in base.cr.doId2do:
+                    teleportDebug(requestStatus, 'teleport to avatar')
+                    avatar = base.cr.doId2do[avId]
+                    avatar.forceToTruePosition()
+                    base.localAvatar.gotoNode(avatar)
+                    base.localAvatar.b_teleportGreeting(avId)
+                else:
+                    friend = base.cr.identifyAvatar(avId)
+                    if friend != None:
+                        teleportDebug(requestStatus, 'friend not here, giving up')
+                        base.localAvatar.setSystemMessage(avId, OTPLocalizer.WhisperTargetLeftVisit % (friend.getName(),))
+                        friend.d_teleportGiveup(base.localAvatar.doId)
+            except Exception:
+                # an error here used to skip the fade-in below and leave the screen grey for good
+                import traceback
+                teleportNotify.warning('could not place the toon next to friend %s: %s' % (avId, traceback.format_exc()))
 
         base.transitions.irisIn()
         self.nextState = requestStatus.get('nextState', 'walk')

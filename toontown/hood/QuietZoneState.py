@@ -296,9 +296,16 @@ class QuietZoneState(StateData.StateData):
                         visZones.append(zoneId)
                     base.cr.sendSetZoneMsg(zoneId, visZones)
                 elif where in ('cogHQExterior', 'factoryExterior'):
-                    visZones = self.getCogHQViszones(zoneId)
+                    try:
+                        visZones = self.getCogHQViszones(zoneId)
+                    except Exception:
+                        # an error here left the screen grey for good; ask for the zone alone instead
+                        import traceback
+                        self.notify.warning('getCogHQViszones failed for zone %s: %s' % (zoneId, traceback.format_exc()))
+                        visZones = []
                     if zoneId not in visZones:
                         visZones.append(zoneId)
+                self.notify.info('setZone: where=%s zone=%s how=%s viszones=%d' % (where, zoneId, self._requestStatus.get('how'), len(visZones)))
                 if len(visZones) < 1 or (len(visZones) == 1 and visZones[0] == zoneId):
                     base.cr.sendSetZoneMsg(zoneId)
                 else:
@@ -326,7 +333,11 @@ class QuietZoneState(StateData.StateData):
             
             # First, we need to load the DNA file for this Cog HQ.
             dnaStore = DNAStorage()
-            dnaFileName = loader.genDNAFileName(zoneId)
+            # a Cog HQ has one map file per area (11000 -> the courtyard, 11200 -> the factory yard), but a toon walking around changes
+            # zone inside it (11003...), and a teleport to a friend asks for that zone: use the area's own zone for the file name
+            dnaZoneId = ZoneUtil.getBranchZone(zoneId)
+            self.notify.info('getCogHQViszones: zone %s, map file zone %s' % (zoneId, dnaZoneId))
+            dnaFileName = loader.genDNAFileName(dnaZoneId)
             loadDNAFileAI(dnaStore, dnaFileName)
 
             # Next, we need to collect all of the visgroup zone IDs.
@@ -372,6 +383,7 @@ class QuietZoneState(StateData.StateData):
                 nextFunc = delayFunc
             else:
                 nextFunc = self._handleSetZoneComplete
+            self.notify.info('waiting for the zone to finish loading: %s' % (self._requestStatus.get('zoneId'),))
             self.waitForDatabase('WaitForSetZoneComplete')
             self.setZoneDoneEvent = base.cr.getLastSetZoneDoneEvent()
             self.acceptOnce(self.setZoneDoneEvent, nextFunc)
@@ -388,6 +400,7 @@ class QuietZoneState(StateData.StateData):
         return
 
     def _handleSetZoneComplete(self):
+        self.notify.info('zone finished loading')
         self.fsm.request('waitForLocalAvatarOnShard')
 
     def exitWaitForSetZoneComplete(self):
@@ -404,6 +417,7 @@ class QuietZoneState(StateData.StateData):
         if not self.Disable:
             base.cr.handlerArgs = self._requestStatus
             self._onShardEvent = localAvatar.getArrivedOnDistrictEvent()
+            self.notify.info('waiting for the local toon on the district: already there = %s' % bool(localAvatar.isGeneratedOnDistrict(localAvatar.defaultShard)))
             self.waitForDatabase('WaitForLocalAvatarOnShard')
             if localAvatar.isGeneratedOnDistrict(localAvatar.defaultShard):
                 self._announceDone()
