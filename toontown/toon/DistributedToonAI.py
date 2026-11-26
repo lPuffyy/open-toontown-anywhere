@@ -3278,12 +3278,20 @@ class DistributedToonAI(DistributedPlayerAI.DistributedPlayerAI, DistributedSmoo
             self.sendUpdate('cogSummonsResponse', ['fail', suitIndex, 0])
             return
         returnCode = None
-        if type == 'single':
-            returnCode = self.doSummonSingleCog(suitIndex)
-        elif type == 'building':
-            returnCode = self.doBuildingTakeover(suitIndex)
-        elif type == 'invasion':
-            returnCode = self.doCogInvasion(suitIndex)
+        try:
+            if type == 'single':
+                returnCode = self.doSummonSingleCog(suitIndex)
+            elif type == 'building':
+                returnCode = self.doBuildingTakeover(suitIndex)
+            elif type == 'invasion':
+                returnCode = self.doCogInvasion(suitIndex)
+        except Exception:
+            # the player's dialog waits for an answer; without one it sat blank until it timed out
+            import traceback
+            self.notify.warning('cog summons failed: %s' % traceback.format_exc())
+            returnCode = ['fail', suitIndex, 0]
+        if not returnCode:
+            returnCode = ['fail', suitIndex, 0]
         if returnCode:
             if returnCode[0] == 'success':
                 self.air.writeServerEvent('cogSummoned', self.doId, '%s|%s|%s' % (type, suitIndex, self.zoneId))

@@ -88,7 +88,15 @@ class SummonCogDialog(DirectFrame, StateData.StateData):
             self.popup = None
         return
 
+    def __summonsTimedOut(self, task):
+        """No answer from the district: say so and let the player close the dialog, instead of leaving it blank."""
+        if self.isEntered:
+            self.statusLabel['text'] = TTL.SummonDlgInvasionFail
+            self.cancel['state'] = DGG.NORMAL
+        return task.done
+
     def cogSummonsDone(self, returnCode, suitIndex, buildingId):
+        taskMgr.remove('summonCogTimeout')
         self.cancel['state'] = DGG.NORMAL
         if self.summonsType == 'single':
             if returnCode == 'success':
@@ -99,14 +107,19 @@ class SummonCogDialog(DirectFrame, StateData.StateData):
                 self.statusLabel['text'] = TTL.SummonDlgInvasionFail
         elif self.summonsType == 'building':
             if returnCode == 'success':
-                building = base.cr.doId2do.get(buildingId)
-                dnaStore = base.cr.playGame.dnaStore
-                buildingTitle = dnaStore.getTitleFromBlockNumber(building.block)
-                buildingInteriorZone = building.zoneId + 500 + building.block
+                buildingTitle = None
                 npcName = TTLocalizer.SummonDlgShopkeeper
-                npcId = NPCToons.zone2NpcDict.get(buildingInteriorZone)
-                if npcId:
-                    npcName = NPCToons.getNPCName(npcId[0])
+                try:
+                    building = base.cr.doId2do.get(buildingId)
+                    if building is not None:
+                        dnaStore = base.cr.playGame.dnaStore
+                        buildingTitle = dnaStore.getTitleFromBlockNumber(building.block)
+                        buildingInteriorZone = building.zoneId + 500 + building.block
+                        npcId = NPCToons.zone2NpcDict.get(buildingInteriorZone)
+                        if npcId:
+                            npcName = NPCToons.getNPCName(npcId[0])
+                except Exception:
+                    self.notify.warning('could not look up the taken-over building')
                 if buildingTitle:
                     self.statusLabel['text'] = TTL.SummonDlgBldgSuccess % (npcName, buildingTitle)
                 else:
@@ -148,6 +161,8 @@ class SummonCogDialog(DirectFrame, StateData.StateData):
                 self.summonsType = summonsType
                 self.doIssueSummonsText()
                 base.localAvatar.d_reqCogSummons(self.summonsType, self.suitIndex)
+                taskMgr.remove('summonCogTimeout')
+                taskMgr.doMethodLater(15.0, self.__summonsTimedOut, 'summonCogTimeout')
                 self.hideSummonButtons()
                 self.cancel['state'] = DGG.DISABLED
             return
