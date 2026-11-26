@@ -1313,7 +1313,8 @@ class DistributedBattleBaseAI(DistributedObjectAI.DistributedObjectAI, BattleBas
         for toon in self.activeToons:
             toonHpDict[toon] = [0, 0, 0]
             actualToon = self.getToon(toon)
-            self.notify.debug('BEFORE ROUND: toon: %d hp: %d' % (toon, actualToon.hp))
+            if actualToon is not None:      # (a toon that just left or disconnected is gone: that used to take the whole district down)
+                self.notify.debug('BEFORE ROUND: toon: %d hp: %d' % (toon, actualToon.hp))
 
         deadSuits = []
         trapDict = {}
