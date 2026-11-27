@@ -868,6 +868,27 @@ class Holiday(MagicWord):
         return f"Holiday {holidayId} is {'on' if running else 'off'} in this district ({mode})."
 
 
+class CogTakeover(MagicWord):
+    aliases = ["takeoverevent"]
+    desc = "Starts (or ends) the Cog takeover event: every idle toon building on the streets becomes a Cog building for 90 minutes."
+    advancedDesc = "~takeoverevent on / off / status (status shows floors cleared, buildings, top toons). Runs in this district only; the buildings are given back when it ends."
+    execLocation = MagicWordConfig.EXEC_LOC_SERVER
+    affectRange = [MagicWordConfig.AFFECT_SELF]
+    arguments = [("onOff", str, False, "on")]
+
+    def handleWord(self, invoker, avId, toon, *args):
+        from toontown.toonbase import ToontownGlobals
+        manager = self.air.holidayManager
+        if args[0].lower() == 'status':
+            runner = manager.currentHolidays.get(ToontownGlobals.COG_TAKEOVER_EVENT)
+            return runner.shortSummary() if runner is not None else 'The Cog takeover event is not running here.'
+        on = args[0].lower() != 'off'
+        manager.forceHoliday(ToontownGlobals.COG_TAKEOVER_EVENT, on)
+        manager.update()
+        running = ToontownGlobals.COG_TAKEOVER_EVENT in manager.currentHolidays
+        return "The Cog takeover event is %s in this district." % ('on (90 minutes)' if running else 'off')
+
+
 class SillyPhase(MagicWord):
     aliases = ["sillymeter", "setphase"]
     desc = "Moves a phased holiday (the Silly Meter by default) to a phase in this district, until its next phase date."

@@ -1,3 +1,4 @@
+import os
 import traceback
 from otp.ai.AIBaseGlobal import *
 from panda3d.core import *
@@ -212,6 +213,14 @@ class DistributedToonAI(DistributedPlayerAI.DistributedPlayerAI, DistributedSmoo
         DistributedPlayerAI.DistributedPlayerAI.generate(self)
         DistributedSmoothNodeAI.DistributedSmoothNodeAI.generate(self)
 
+    def __showTakeoverResult(self, task):
+        try:
+            from toontown.ai.HolidayEventsAI import CogTakeoverEventAI
+            CogTakeoverEventAI.deliverMessage(self)
+        except Exception:
+            pass
+        return task.done
+
     def announceGenerate(self):
         DistributedPlayerAI.DistributedPlayerAI.announceGenerate(self)
         DistributedSmoothNodeAI.DistributedSmoothNodeAI.announceGenerate(self)
@@ -219,6 +228,8 @@ class DistributedToonAI(DistributedPlayerAI.DistributedPlayerAI, DistributedSmoo
             if self.WantOldGMNameBan:
                 self._checkOldGMName()
             messenger.send('avatarEntered', [self])
+            if os.path.exists('/ot/data/cog_takeover_messages.json'):
+                taskMgr.doMethodLater(8.0, self.__showTakeoverResult, self.uniqueName('takeoverResult'))
             if __astron__:
                 self.sendUpdate('setDefaultShard', [self.air.districtId])
             try:

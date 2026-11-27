@@ -303,6 +303,13 @@ class DistributedBuildingAI(DistributedObjectAI.DistributedObjectAI):
                     self.trophyMgr.addTrophy(avId, name, self.numFloors)
 
     def enterWaitForVictors(self, victorList, savedBy):
+        try:
+            from toontown.ai.HolidayEventsAI import CogTakeoverEventAI
+            event = CogTakeoverEventAI.running(self.air)
+            if event is not None:
+                event.buildingCleared(victorList)
+        except Exception:
+            self.notify.warning('could not count the building for the takeover event')
         activeToons = []
         for t in victorList:
             toon = None

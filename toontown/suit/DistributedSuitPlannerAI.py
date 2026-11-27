@@ -637,7 +637,7 @@ class DistributedSuitPlannerAI(DistributedObjectAI.DistributedObjectAI, SuitPlan
             suitBuildings = self.buildingMgr.getEstablishedSuitBlocks()
             timeoutIndex = min(len(suitBuildings), len(self.SUIT_BUILDING_TIMEOUT) - 1)
             timeout = self.SUIT_BUILDING_TIMEOUT[timeoutIndex]
-            if timeout != None:
+            if timeout != None and not getattr(self, 'takeoverEvent', False):
                 timeout *= 3600.0
                 oldest = None
                 oldestAge = 0
@@ -667,6 +667,8 @@ class DistributedSuitPlannerAI(DistributedObjectAI.DistributedObjectAI, SuitPlan
     def __trimExtraBuildings(self):
         """When a street holds more cog buildings (or Field Offices) than it is meant to, because the town-wide share was lowered or
         the street went over its cap, give the oldest idle one back to the toons now and then. It is not moved to another street."""
+        if getattr(self, 'takeoverEvent', False):
+            return
         now = time.time()
         if now - self.lastTrim < self.TRIM_EVERY:
             return
@@ -733,7 +735,7 @@ class DistributedSuitPlannerAI(DistributedObjectAI.DistributedObjectAI, SuitPlan
         building.cogdoTakeOver(suitTrack, difficulty, buildingHeight)
 
     def recycleBuilding(self, isCogdo):
-        if self.trimming:
+        if self.trimming or getattr(self, 'takeoverEvent', False):
             return
         bmin = self.SuitHoodInfo[self.hoodInfoIdx][self.SUIT_HOOD_INFO_BMIN]
         current = len(self.buildingMgr.getSuitBlocks())

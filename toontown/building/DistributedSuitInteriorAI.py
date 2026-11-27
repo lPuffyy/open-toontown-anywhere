@@ -349,6 +349,13 @@ class DistributedSuitInteriorAI(DistributedObjectAI.DistributedObjectAI):
             taskName = self.taskName('deleteInterior')
             taskMgr.doMethodLater(10, self.__doDeleteInterior, taskName)
         else:
+            try:
+                from toontown.ai.HolidayEventsAI import CogTakeoverEventAI
+                event = CogTakeoverEventAI.running(self.air)
+                if event is not None:
+                    event.floorCleared(toonIds, getattr(self.bldg, 'zoneId', 0))
+            except Exception:
+                self.notify.warning('could not count the floor for the takeover event')
             if self.currentFloor == self.topFloor:
                 self.setState('Reward')
             else:

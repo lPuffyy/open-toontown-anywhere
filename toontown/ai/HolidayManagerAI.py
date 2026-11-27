@@ -48,7 +48,8 @@ name in SCHEDULE. Holidays with a server side (Trick-or-Treat, caroling, firewor
                    ToontownGlobals.JULY4_FIREWORKS: E.FireworkManagerAI,
                    ToontownGlobals.HALLOWEEN: E.HolidaySuitInvasionManagerAI,
                    ToontownGlobals.POLAR_PLACE_EVENT: E.PolarPlaceEventMgrAI,
-                   ToontownGlobals.RESISTANCE_EVENT: E.ResistanceEventMgrAI}
+                   ToontownGlobals.RESISTANCE_EVENT: E.ResistanceEventMgrAI,
+                   ToontownGlobals.COG_TAKEOVER_EVENT: E.CogTakeoverEventAI}
         if holidayId in runners:
             return runners[holidayId]
         if holidayId == ToontownGlobals.TRICK_OR_TREAT:
@@ -164,6 +165,14 @@ name in SCHEDULE. Holidays with a server side (Trick-or-Treat, caroling, firewor
                         runner.stop()
                     self.notify.info('holiday %d ended (the Silly Meter story start changed)' % holidayId)
             self.lastSillyStart = storyStart
+        if not getattr(self, 'checkedEventState', False):
+            self.checkedEventState = True       # an event that was running when this district last stopped comes back (see CogTakeoverEventAI.pendingState)
+            try:
+                from toontown.ai.HolidayEventsAI import CogTakeoverEventAI
+                if CogTakeoverEventAI.pendingState(self.air) is not None:
+                    self.forced[ToontownGlobals.COG_TAKEOVER_EVENT] = True
+            except Exception:
+                self.notify.warning('could not look for a saved takeover event: ' + traceback.format_exc())
         wanted |= {h for h, on in self.forced.items() if on}
         wanted -= {h for h, on in self.forced.items() if not on}
         if wanted == set(self.currentHolidays):
