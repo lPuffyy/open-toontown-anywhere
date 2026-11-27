@@ -176,6 +176,7 @@ class CogTakeoverEventAI(HolidayBaseAI.HolidayBaseAI):
         self.buildingsCleared = 0
         self.byToon = {}                 # avId -> [name, floors, buildings]
         self.byStreet = {}               # street zone -> floors
+        self.hood = int(getattr(air, 'takeoverHood', 0) or 0)     # the playground's zone id (2000 Toontown Central...), 0 for every town
 
     @staticmethod
     def running(air):
@@ -189,8 +190,19 @@ class CogTakeoverEventAI(HolidayBaseAI.HolidayBaseAI):
         toon = self.air.doId2do.get(avId)
         return toon.getName() if toon is not None and hasattr(toon, 'getName') else 'toon %s' % avId
 
+    HOOD_NAMES = {0: 'every playground', 1000: "Donald's Dock", 2000: 'Toontown Central', 3000: 'The Brrrgh', 4000: "Minnie's Melodyland", 5000: "Daisy's Gardens", 9000: 'Dreamland'}
+
+    def inHood(self, zoneId):
+        """Is this street zone in the playground the event is running in?"""
+        return not self.hood or (zoneId - zoneId % 1000) == self.hood
+
+    def hoodName(self):
+        return self.HOOD_NAMES.get(self.hood, 'zone %d' % self.hood)
+
     def floorCleared(self, toonIds, streetZone):
         """A floor of a Cog building was won by these toons (called by the building's interior)."""
+        if not self.inHood(streetZone):
+            return
         self.floors += 1
         self.byStreet[streetZone] = self.byStreet.get(streetZone, 0) + 1
         for avId in toonIds:
@@ -199,8 +211,10 @@ class CogTakeoverEventAI(HolidayBaseAI.HolidayBaseAI):
                 entry[1] += 1
         self.__save()
 
-    def buildingCleared(self, victorIds):
+    def buildingCleared(self, victorIds, streetZone=0):
         """A whole Cog building was won back by these toons."""
+        if streetZone and not self.inHood(streetZone):
+            return
         self.buildingsCleared += 1
         for avId in victorIds:
             if avId:
@@ -210,7 +224,7 @@ class CogTakeoverEventAI(HolidayBaseAI.HolidayBaseAI):
 
     def summary(self):
         top = self.standings()[:5]
-        text = '%d floors cleared, %d buildings taken, %d buildings won back, %d toons took part.' % (self.floors, self.buildingsTaken, self.buildingsCleared, len(self.byToon))
+        text = self.hoodName() + ': %d floors cleared, %d buildings taken, %d buildings won back, %d toons took part.' % (self.floors, self.buildingsTaken, self.buildingsCleared, len(self.byToon))
         if top:
             text += ' Top: ' + ', '.join('%d. %s %d floors (%d beans)' % (place, name, floors, prize) for avId, name, floors, buildings, place, prize in top)
         return text
@@ -219,7 +233,7 @@ class CogTakeoverEventAI(HolidayBaseAI.HolidayBaseAI):
     # Everyone else with at least MIN_FLOORS floors gets PARTICIPATION. gameconfig.json can change them: {"cog_takeover_prizes": [[1, 5000], [2, 3000]]}
     def shortSummary(self):
         """A few short lines that fit in a phone's message box."""
-        lines = ['Floors: %d' % self.floors, 'Taken: %d  Won back: %d' % (self.buildingsTaken, self.buildingsCleared)]
+        lines = [self.hoodName(), 'Floors: %d' % self.floors, 'Taken: %d  Won back: %d' % (self.buildingsTaken, self.buildingsCleared)]
         for avId, name, floors, buildings, place, prize in self.standings()[:3]:
             lines.append('%d. %s - %d' % (place, name[:14], floors))
         return '\n'.join(lines)
@@ -370,6 +384,7 @@ class CogTakeoverEventAI(HolidayBaseAI.HolidayBaseAI):
 
     def __load(self, data):
         self.startedAt = data.get('started', self.startedAt)
+        self.hood = int(data.get('hood', self.hood) or 0)
         self.endsAt = data.get('endsAt', self.endsAt)
         self.floors = data.get('floors', 0)
         self.buildingsTaken = data.get('buildingsTaken', 0)
@@ -382,7 +397,7 @@ class CogTakeoverEventAI(HolidayBaseAI.HolidayBaseAI):
     def __save(self):
         try:
             data = {'active': getattr(self, 'active', True), 'endsAt': getattr(self, 'endsAt', 0), 'taken': [list(t) for t in self.taken],
-                    'started': self.startedAt, 'floors': self.floors, 'buildingsTaken': self.buildingsTaken, 'buildingsCleared': self.buildingsCleared,
+                    'started': self.startedAt, 'hood': self.hood, 'floors': self.floors, 'buildingsTaken': self.buildingsTaken, 'buildingsCleared': self.buildingsCleared,
                     'byToon': {str(a): {'name': e[0], 'floors': e[1], 'buildings': e[2]} for a, e in self.byToon.items()}, 'byStreet': {str(z): n for z, n in self.byStreet.items()},
                     'paid': getattr(self, 'paid', False), 'standings': [{'avId': r[0], 'name': r[1], 'floors': r[2], 'place': r[4], 'prize': r[5]} for r in self.standings()]}
             with open(self.__file(), 'w') as f:
@@ -392,7 +407,7 @@ class CogTakeoverEventAI(HolidayBaseAI.HolidayBaseAI):
 
     def __planners(self):
         for zoneId, sp in list(self.air.suitPlanners.items()):
-            if getattr(sp, 'buildingMgr', None) and zoneId < 10000:
+            if getattr(sp, 'buildingMgr', None) and zoneId < 10000 and self.inHood(zoneId):
                 yield zoneId, sp
 
     def start(self):

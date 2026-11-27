@@ -307,7 +307,7 @@ class DistributedBuildingAI(DistributedObjectAI.DistributedObjectAI):
             from toontown.ai.HolidayEventsAI import CogTakeoverEventAI
             event = CogTakeoverEventAI.running(self.air)
             if event is not None:
-                event.buildingCleared(victorList)
+                event.buildingCleared(victorList, self.zoneId)
         except Exception:
             self.notify.warning('could not count the building for the takeover event')
         activeToons = []

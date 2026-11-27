@@ -870,23 +870,34 @@ class Holiday(MagicWord):
 
 class CogTakeover(MagicWord):
     aliases = ["takeoverevent"]
-    desc = "Starts (or ends) the Cog takeover event: every idle toon building on the streets becomes a Cog building for 90 minutes."
-    advancedDesc = "~takeoverevent on / off / status (status shows floors cleared, buildings, top toons). Runs in this district only; the buildings are given back when it ends."
+    desc = "Starts (or ends) the Cog takeover event in one playground: every idle toon building on its streets becomes a Cog building for 90 minutes."
+    advancedDesc = "~takeoverevent on <playground> / off / status. Playgrounds: ttc, dd, dg, mml, tb, ddl, or all. status shows floors cleared, buildings, top toons. Runs in this district only; the buildings are given back when it ends."
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     affectRange = [MagicWordConfig.AFFECT_SELF]
-    arguments = [("onOff", str, False, "on")]
+    arguments = [("onOff", str, False, "on"), ("playground", str, False, "")]
+
+    HOODS = {'dd': 1000, 'ttc': 2000, 'tb': 3000, 'mml': 4000, 'dg': 5000, 'ddl': 9000, 'all': 0}
 
     def handleWord(self, invoker, avId, toon, *args):
         from toontown.toonbase import ToontownGlobals
         manager = self.air.holidayManager
-        if args[0].lower() == 'status':
-            runner = manager.currentHolidays.get(ToontownGlobals.COG_TAKEOVER_EVENT)
+        mode, where = args[0].lower(), args[1].lower()
+        runner = manager.currentHolidays.get(ToontownGlobals.COG_TAKEOVER_EVENT)
+        if mode == 'status':
             return runner.shortSummary() if runner is not None else 'The Cog takeover event is not running here.'
-        on = args[0].lower() != 'off'
-        manager.forceHoliday(ToontownGlobals.COG_TAKEOVER_EVENT, on)
+        if mode == 'off':
+            manager.forceHoliday(ToontownGlobals.COG_TAKEOVER_EVENT, False)
+            manager.update()
+            return "The Cog takeover event is off in this district."
+        if runner is not None:
+            return "The event is already running here (%s). ~takeoverevent off ends it." % runner.hoodName()
+        if where not in self.HOODS:
+            return "Which playground? ttc, dd, dg, mml, tb or ddl (or all)."
+        self.air.takeoverHood = self.HOODS[where]
+        manager.forceHoliday(ToontownGlobals.COG_TAKEOVER_EVENT, True)
         manager.update()
-        running = ToontownGlobals.COG_TAKEOVER_EVENT in manager.currentHolidays
-        return "The Cog takeover event is %s in this district." % ('on (90 minutes)' if running else 'off')
+        runner = manager.currentHolidays.get(ToontownGlobals.COG_TAKEOVER_EVENT)
+        return "The Cog takeover event is on in %s (90 minutes)." % (runner.hoodName() if runner is not None else where)
 
 
 class SillyPhase(MagicWord):
